@@ -36,4 +36,3 @@ jobs:
         uses: ./.github/actions/gradle-task
         with:
           task: assembleDebug ktfmtCheck
-          gradle-cache-encryption-key: ${{ secrets.GradleEncryptionKey }}

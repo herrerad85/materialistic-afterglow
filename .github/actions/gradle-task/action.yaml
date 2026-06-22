@@ -2,9 +2,6 @@
 name: "gradle-task"
 description: "Runs a gradle task"
 inputs:
-  gradle-cache-encryption-key:
-    description: "Gradle cache encryption key"
-    required: true
   task:
     description: "Gradle task to run"
     required: true
@@ -19,8 +16,6 @@ runs:
         java-version: "21"
     - name: Gradle setup
       uses: gradle/actions/setup-gradle@v6
-      with:
-        cache-encryption-key: ${{ inputs.gradle-cache-encryption-key }}
     - name: Gradle task
       shell: bash
       run: ./gradlew ${{ inputs.task }} --scan

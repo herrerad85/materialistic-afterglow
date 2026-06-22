@@ -24,7 +24,6 @@ jobs:
       - uses: ./.github/actions/gradle-task
         with:
           task: ktfmtCheck
-          gradle-cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -42,7 +41,6 @@ jobs:
         uses: ./.github/actions/gradle-task
         with:
           task: assembleDebug assembleAndroidTest
-          gradle-cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
   test:
     name: Test
     runs-on: ubuntu-latest
@@ -59,7 +57,6 @@ jobs:
         uses: ./.github/actions/gradle-task
         with:
           task: app:testDebugUnitTest
-          gradle-cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
       - name: JUnit Report Action
         uses: mikepenz/action-junit-report@v6
         with:
@@ -83,7 +80,6 @@ jobs:
         uses: ./.github/actions/gradle-task
         with:
           task: lint
-          gradle-cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
       - name: Upload lint report
         uses: actions/upload-artifact@v7
         with:
