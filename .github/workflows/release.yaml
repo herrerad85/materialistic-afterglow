@@ -33,7 +33,6 @@ jobs:
         uses: ./.github/actions/gradle-task
         with:
           task: assembleRelease
-          gradle-cache-encryption-key: ${{ secrets.GradleEncryptionKey }}
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

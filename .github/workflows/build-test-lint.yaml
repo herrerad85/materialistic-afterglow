@@ -68,7 +68,7 @@ jobs:
         with:
           files: ./app/build/reports/coverage/test/debug/report.xml
           flags: unittests
-          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
   lint:
     name: Lint
     needs: build
