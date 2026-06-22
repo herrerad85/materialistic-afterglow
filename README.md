@@ -14,14 +14,7 @@ follows below, preserved for attribution.
 ## Materialistic for Hacker News
 Material design [Hacker News] client for Android, uses official [HackerNews/API], [Dagger] for dependency injection.
 
-[![Get it on Google Play][Play Store Badge]][Play Store]
 
-### Setup
-**Requirements**
-- JDK 11
-- Latest Android SDK tools
-- Latest Android platform tools
-- AndroidX
 
 **Dependencies**
 - [Official Hacker News API][HackerNews/API], user services (e.g. login/create account/vote/comment) rely on redirect requests to Hacker News website
@@ -39,8 +32,6 @@ Material design [Hacker News] client for Android, uses official [HackerNews/API]
 Build with LeakCanary on
 
     ./gradlew assembleDebug -Pleak
-
-Grab your Mercury Web Parser API key [here][mercury] if you want to connect to Mercury.
 
 ### Articles
 - [Supporting multiple themes in your Android app (Part 1)][article-theme1]
@@ -75,10 +66,7 @@ Contributions are always welcome. Please make sure you read [Contributing notes]
 
 [Hacker News]: https://news.ycombinator.com/
 [HackerNews/API]: https://github.com/HackerNews/API
-[Play Store]: https://play.google.com/store/apps/details?id=io.github.hidroh.materialistic&referrer=utm_source%3Dgithub
-[Play Store Badge]: https://play.google.com/intl/en_us/badges/images/badge_new.png
 [Algolia Hacker News Search API]: https://github.com/algolia/hn-search
-[Mercury Web Parser API]: https://mercury.postlight.com/web-parser/
 [AOSP support library]: https://developer.android.com/tools/support-library/features.html
 [Retrofit]: https://github.com/square/retrofit
 [OkHttp]: https://github.com/square/okhttp
