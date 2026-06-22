@@ -1,0 +1,39 @@
+---
+name: Build on push to default branch
+"on":
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/trunk-build.yaml"
+      - ".github/workflows/build-test-lint.yaml"
+      - ".github/workflows/release.yaml"
+      - "app/src/**"
+      - "app/*.pro"
+      - "buildSrc/src/**"
+      - "*.gradle.kts"
+      - "app/*.gradle.kts"
+      - "gradle.properties"
+      - "gradle/wrapper/gradle-wrapper.properties"
+      - "gradle/libs.versions.toml"
+
+concurrency:
+  group: ${{ github.workflow }}-default
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=true -Dorg.gradle.configuration-cache=true -Dorg.gradle.parallel=true -Dorg.gradle.caching=true -Dorg.gradle.jvmargs='-Xmx3096M -Dkotlin.daemon.jvm.options=-Xmx2048M -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8 -XX:+UseParallelGC'"
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Build
+        uses: ./.github/actions/gradle-task
+        with:
+          task: assembleDebug ktfmtCheck
+          gradle-cache-encryption-key: ${{ secrets.GradleEncryptionKey }}

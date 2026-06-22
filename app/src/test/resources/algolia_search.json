@@ -1,0 +1,11 @@
+{
+  "hits": [
+    { "objectID": "8863" },
+    { "objectID": "9224" },
+    { "objectID": "121003" }
+  ],
+  "nbHits": 3,
+  "page": 0,
+  "hitsPerPage": 100,
+  "query": "dropbox"
+}

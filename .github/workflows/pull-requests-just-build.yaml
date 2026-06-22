@@ -1,0 +1,31 @@
+---
+name: PR Opened (Build, Test, and Lint)
+
+"on":
+  pull_request:
+    types: [opened, synchronize]
+    branches:
+      - main
+    paths:
+      - ".github/actions/**"
+      - ".github/workflows/build-test-lint.yaml"
+      - ".github/workflows/pull-requests-just-build.yaml"
+      - "app/src/**"
+      - "app/*.pro"
+      - "buildSrc/src/**"
+      - "*.gradle.kts"
+      - "app/*.gradle.kts"
+      - "gradle.properties"
+      - "gradle/wrapper/gradle-wrapper.properties"
+      - "gradle/libs.versions.toml"
+
+jobs:
+  build-test-lint:
+    name: Build, Test, and Lint
+    permissions:
+      contents: read
+      checks: write
+    uses: ./.github/workflows/build-test-lint.yaml
+    with:
+      ref: ${{ github.sha }}
+    secrets: inherit
