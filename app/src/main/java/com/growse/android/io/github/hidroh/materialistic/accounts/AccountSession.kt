@@ -9,8 +9,8 @@ package com.growse.android.io.github.hidroh.materialistic.accounts
 data class SavedAccount(val username: String)
 
 /**
- * The Active session (see CONTEXT.md): which saved account is signed in, the saved-account roster,
- * and the operations over it. The single seam over the active username
+ * The active Hacker News account session: which saved account is signed in, the saved-account
+ * roster, and the operations over it. The single seam over the active username
  * ([android.content.SharedPreferences] via Preferences) and the stored credentials (Android
  * AccountManager); neither leaks to callers.
  */
