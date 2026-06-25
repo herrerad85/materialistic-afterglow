@@ -138,8 +138,8 @@ public class WebFragment extends LazyLoadFragment
             mReadability = savedInstanceState.getBoolean(STATE_READABILITY, false);
             mItem = savedInstanceState.getParcelable(EXTRA_ITEM);
         } else {
-            // Reader mode is unavailable (the hosted Mercury parser is dead), so a stored
-            // Readability default is coerced to Article. See S0-02 / docs/slice-0-stabilize.
+            // Reader mode is unavailable because the hosted Mercury parser is dead, so a stored
+            // Readability default is coerced to Article.
             mReadability = false;
             mItem = getArguments().getParcelable(EXTRA_ITEM);
         }
@@ -188,8 +188,8 @@ public class WebFragment extends LazyLoadFragment
 
     @Override
     protected void prepareOptionsMenu(Menu menu) {
-        // Reader (Readability) mode is unavailable (the hosted Mercury parser is dead), so the
-        // toggle is removed from menu_article.xml; only font options remain. See S0-02.
+        // Reader (Readability) mode is unavailable because the hosted Mercury parser is dead, so the
+        // toggle is removed from menu_article.xml; only font options remain.
         menu.findItem(R.id.menu_font_options).setVisible(fontEnabled());
     }
 
@@ -285,8 +285,8 @@ public class WebFragment extends LazyLoadFragment
         if (mIsHackerNewsUrl) {
             bindContent();
         } else {
-            // Reader (Readability) mode is unavailable (the hosted Mercury parser is dead);
-            // always fall back to the WebView article. See S0-02.
+            // Reader (Readability) mode is unavailable because the hosted Mercury parser is dead;
+            // always fall back to the WebView article.
             loadUrl();
         }
     }
