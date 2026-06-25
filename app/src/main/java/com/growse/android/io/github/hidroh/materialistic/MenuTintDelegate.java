@@ -17,9 +17,9 @@
 package com.growse.android.io.github.hidroh.materialistic;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import androidx.annotation.DrawableRes;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,8 +35,8 @@ public class MenuTintDelegate {
      * @param context    activity context
      */
     public void onActivityCreated(Context context) {
-        mTextColorPrimary = ContextCompat.getColor(context,
-                AppUtils.getThemedResId(context, android.R.attr.textColorPrimary));
+        mTextColorPrimary = AppUtils.getThemedColor(context,
+                android.R.attr.textColorPrimary, Color.BLACK);
     }
 
     /**

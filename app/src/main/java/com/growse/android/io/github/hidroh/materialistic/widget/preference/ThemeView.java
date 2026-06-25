@@ -18,13 +18,14 @@ package com.growse.android.io.github.hidroh.materialistic.widget.preference;
 
 import android.content.Context;
 import android.content.res.TypedArray;
-import androidx.core.content.ContextCompat;
+import android.graphics.Color;
 import androidx.cardview.widget.CardView;
 import android.util.AttributeSet;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.widget.TextView;
 
+import com.google.android.material.color.DynamicColors;
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
 import com.growse.android.io.github.hidroh.materialistic.R;
 
@@ -37,13 +38,27 @@ public class ThemeView extends CardView {
     public ThemeView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         LayoutInflater.from(context).inflate(R.layout.theme_view, this, true);
-        TypedArray ta = context.obtainStyledAttributes(attrs, new int[]{android.R.attr.theme});
-        ContextThemeWrapper wrapper = new ContextThemeWrapper(context, ta.getResourceId(0, R.style.AppTheme));
-        ta.recycle();
-        int cardBackgroundColor = AppUtils.getThemedResId(wrapper, R.attr.colorCardBackground);
-        int textColor = AppUtils.getThemedResId(wrapper, android.R.attr.textColorTertiary);
-        setCardBackgroundColor(ContextCompat.getColor(wrapper, cardBackgroundColor));
-        ((TextView) findViewById(R.id.content)).setTextColor(ContextCompat.getColor(wrapper, textColor));
+        TypedArray idArray = context.obtainStyledAttributes(attrs, new int[]{android.R.attr.id});
+        boolean dynamicPreview = idArray.getResourceId(0, 0) == R.id.theme_dynamic;
+        idArray.recycle();
+        Context themed;
+        if (dynamicPreview) {
+            // Honest Material You preview: build from a CLEAN AppTheme.DayNight base (never the
+            // host Activity theme, which could be carrying a Dark/Black overlay) and wrap it with
+            // the wallpaper-derived dynamic palette. If dynamic is unavailable the swatch is GONE,
+            // so wrapContextIfAvailable returning the unwrapped base here is harmless.
+            ContextThemeWrapper base =
+                    new ContextThemeWrapper(context.getApplicationContext(), R.style.AppTheme_DayNight);
+            themed = DynamicColors.wrapContextIfAvailable(base);
+        } else {
+            TypedArray ta = context.obtainStyledAttributes(attrs, new int[]{android.R.attr.theme});
+            themed = new ContextThemeWrapper(context, ta.getResourceId(0, R.style.AppTheme));
+            ta.recycle();
+        }
+        setCardBackgroundColor(
+                AppUtils.getThemedColor(themed, R.attr.colorCardBackground, Color.TRANSPARENT));
+        ((TextView) findViewById(R.id.content)).setTextColor(
+                AppUtils.getThemedColor(themed, android.R.attr.textColorTertiary, Color.BLACK));
     }
 
 }

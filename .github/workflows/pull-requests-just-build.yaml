@@ -5,7 +5,7 @@ name: PR Opened (Build, Test, and Lint)
   pull_request:
     types: [opened, synchronize]
     branches:
-      - main
+      - development
     paths:
       - ".github/actions/**"
       - ".github/workflows/build-test-lint.yaml"

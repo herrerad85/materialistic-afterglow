@@ -34,10 +34,15 @@ import android.view.ViewGroup;
 
 import javax.inject.Inject;
 
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager;
 import com.growse.android.io.github.hidroh.materialistic.data.LocalItemManager;
+import com.growse.android.io.github.hidroh.materialistic.data.SyncScheduler;
 import com.growse.android.io.github.hidroh.materialistic.widget.FavoriteRecyclerViewAdapter;
+import com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class FavoriteFragment extends BaseListFragment
         implements FavoriteRecyclerViewAdapter.ActionModeDelegate, LocalItemManager.Observer {
     public static final String EXTRA_FILTER = FavoriteFragment.class.getName() + ".EXTRA_FILTER";
@@ -50,6 +55,9 @@ public class FavoriteFragment extends BaseListFragment
     @Inject FavoriteManager mFavoriteManager;
     @Inject ActionViewResolver mActionViewResolver;
     @Inject AlertDialogBuilder mAlertDialogBuilder;
+    @Inject PopupMenu mPopupMenu;
+    @Inject AccountActions mAccountActions;
+    @Inject SyncScheduler mSyncScheduler;
     private View mEmptySearchView;
     private View mEmptyView;
 
@@ -160,7 +168,11 @@ public class FavoriteFragment extends BaseListFragment
     @Override
     protected FavoriteRecyclerViewAdapter getAdapter() {
         if (mAdapter == null) {
-            mAdapter = new FavoriteRecyclerViewAdapter(getContext(), this);
+            // requireActivity(), not getContext(): @AndroidEntryPoint makes getContext() a Hilt
+            // FragmentContextWrapper, but FavoriteRecyclerViewAdapter (ListRecyclerViewAdapter) casts
+            // its context to the host MultiPaneListener Activity. requireActivity() is that Activity.
+            mAdapter = new FavoriteRecyclerViewAdapter(requireActivity(), mPopupMenu, mAlertDialogBuilder,
+                    mAccountActions, mFavoriteManager, mSyncScheduler, this);
         }
         return mAdapter;
     }

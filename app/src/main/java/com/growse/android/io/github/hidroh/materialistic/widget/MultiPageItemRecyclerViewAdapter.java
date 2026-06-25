@@ -22,8 +22,10 @@ import android.view.ViewGroup;
 
 import java.util.Arrays;
 
+import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder;
 import com.growse.android.io.github.hidroh.materialistic.ItemActivity;
 import com.growse.android.io.github.hidroh.materialistic.R;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 
@@ -32,8 +34,12 @@ public class MultiPageItemRecyclerViewAdapter
     private static final int VIEW_TYPE_FOOTER = -1;
     private final Item[] mItems;
 
-    public MultiPageItemRecyclerViewAdapter(ItemManager itemManager, Item[] items) {
-        super(itemManager);
+    public MultiPageItemRecyclerViewAdapter(ItemManager itemManager,
+                                            AccountActions accountActions,
+                                            PopupMenu popupMenu,
+                                            AlertDialogBuilder alertDialogBuilder,
+                                            Item[] items) {
+        super(itemManager, accountActions, popupMenu, alertDialogBuilder);
         mItems = Arrays.copyOf(items, items.length + 1);
         mItems[items.length] = null; // footer
     }

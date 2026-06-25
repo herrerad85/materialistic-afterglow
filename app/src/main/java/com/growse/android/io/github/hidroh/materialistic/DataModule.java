@@ -16,14 +16,19 @@
 
 package com.growse.android.io.github.hidroh.materialistic;
 
+import android.accounts.AccountManager;
 import androidx.sqlite.db.SupportSQLiteOpenHelper;
 import android.content.Context;
 
-import javax.inject.Named;
+import java.util.concurrent.Executors;
+
 import javax.inject.Singleton;
 
 import dagger.Module;
 import dagger.Provides;
+import dagger.hilt.InstallIn;
+import dagger.hilt.android.qualifiers.ApplicationContext;
+import dagger.hilt.components.SingletonComponent;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServicesClient;
 import com.growse.android.io.github.hidroh.materialistic.data.AlgoliaClient;
@@ -37,30 +42,22 @@ import com.growse.android.io.github.hidroh.materialistic.data.SyncScheduler;
 import com.growse.android.io.github.hidroh.materialistic.data.UserManager;
 import com.growse.android.io.github.hidroh.materialistic.data.android.Cache;
 import okhttp3.Call;
-import rx.Scheduler;
-import rx.android.schedulers.AndroidSchedulers;
-import rx.schedulers.Schedulers;
 
-import static com.growse.android.io.github.hidroh.materialistic.ActivityModule.ALGOLIA;
-import static com.growse.android.io.github.hidroh.materialistic.ActivityModule.HN;
-import static com.growse.android.io.github.hidroh.materialistic.ActivityModule.POPULAR;
-
-@Module(library = true, complete = false, includes = NetworkModule.class)
+@Module(includes = NetworkModule.class)
+@InstallIn(SingletonComponent.class)
 public class DataModule {
-    public static final String MAIN_THREAD = "main";
-    public static final String IO_THREAD = "io";
 
-    @Provides @Singleton @Named(HN)
+    @Provides @Singleton @HackerNews
     public ItemManager provideHackerNewsClient(HackerNewsClient client) {
         return client;
     }
 
-    @Provides @Singleton @Named(ALGOLIA)
+    @Provides @Singleton @Algolia
     public ItemManager provideAlgoliaClient(AlgoliaClient client) {
         return client;
     }
 
-    @Provides @Singleton @Named(POPULAR)
+    @Provides @Singleton @Popular
     public ItemManager provideAlgoliaPopularClient(AlgoliaPopularClient client) {
         return client;
     }
@@ -76,19 +73,10 @@ public class DataModule {
     }
 
     @Provides @Singleton
-    public UserServices provideUserServices(Call.Factory callFactory,
-                                            @Named(IO_THREAD) Scheduler ioScheduler) {
-        return new UserServicesClient(callFactory, ioScheduler);
-    }
-
-    @Provides @Singleton @Named(IO_THREAD)
-    public Scheduler provideIoScheduler() {
-        return Schedulers.io();
-    }
-
-    @Provides @Singleton @Named(MAIN_THREAD)
-    public Scheduler provideMainThreadScheduler() {
-        return AndroidSchedulers.mainThread();
+    public UserServices provideUserServices(Call.Factory callFactory) {
+        // UserServicesClient runs its blocking account-action flow on this executor and posts results
+        // to the main thread itself.
+        return new UserServicesClient(callFactory, Executors.newCachedThreadPool());
     }
 
     @Provides @Singleton
@@ -102,7 +90,12 @@ public class DataModule {
     }
 
     @Provides @Singleton
-    public MaterialisticDatabase provideDatabase(Context context) {
+    public AccountManager provideAccountManager(@ApplicationContext Context context) {
+        return AccountManager.get(context);
+    }
+
+    @Provides @Singleton
+    public MaterialisticDatabase provideDatabase(@ApplicationContext Context context) {
         return MaterialisticDatabase.getInstance(context);
     }
 

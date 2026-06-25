@@ -21,8 +21,10 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.annotation.IdRes
 import androidx.appcompat.app.ActionBar
+import dagger.hilt.android.AndroidEntryPoint
 
-class AboutActivity : InjectableActivity() {
+@AndroidEntryPoint
+class AboutActivity : ThemedActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContentView(R.layout.activity_about)
@@ -30,6 +32,8 @@ class AboutActivity : InjectableActivity() {
 
     supportActionBar!!.displayOptions =
         ActionBar.DISPLAY_SHOW_HOME or ActionBar.DISPLAY_HOME_AS_UP or ActionBar.DISPLAY_SHOW_TITLE
+    AppUtils.padTopSystemBars(findViewById(R.id.toolbar))
+    AppUtils.padBottomSystemBars(findViewById(R.id.about_scroll), false)
 
     var versionName = ""
     var versionCode = 0

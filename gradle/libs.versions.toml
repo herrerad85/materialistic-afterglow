@@ -8,47 +8,71 @@ junit = "4.13.2"
 mockk = "1.14.6"
 robolectric = "4.16"
 androidx-test-core = "1.7.0"
+activity = "1.13.0"
 appcompat = "1.7.1"
+localbroadcastmanager = "1.1.0"
 browser = "1.10.0"
 cardview = "1.0.0"
-dagger = "1.2.5"
+coroutines = "1.11.0"
+fragment = "1.5.4"
+hilt = "2.59.2"
 lifecycle = "2.10.0"
 ktfmt = "0.26.0"
-material = "1.8.0"
+material = "1.14.0"
 okhttp = "5.3.2"
 preference = "1.2.1"
 recyclerview = "1.4.0"
 retrofit = "2.12.0"
 room = "2.8.4"
-rxandroid = "1.2.1"
-rxjava = "1.3.8"
 swiperefreshlayout = "1.2.0"
+work = "2.10.5"
+androidx-hilt = "1.2.0"
+tink-android = "1.18.0"
 
 [libraries]
+# Direct dep so ThemedActivity can call EdgeToEdge.enable() (Android 15+ edge-to-edge) without relying on a
+# hidden transitive. Non-ktx: ThemedActivity is Java. >= 1.8 for EdgeToEdge.
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 androidx-browser = { group = "androidx.browser", name = "browser", version.ref = "browser" }
 androidx-cardview = { group = "androidx.cardview", name = "cardview", version.ref = "cardview" }
+# fragment-ktx must stay >= 1.5.0: only then does `by viewModels()` pass defaultViewModelCreationExtras
+# (SAVED_STATE_REGISTRY_OWNER_KEY) that @HiltViewModel + SavedStateHandle require. The transitive default
+# lagged at 1.3.6 (core was 1.5.4), which crashed the Gate-2 StoryListViewModel at construction.
+androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragment" }
+# Was a transitive of com.google.android.material 1.8.0; material 1.14.0 dropped it. The app still uses the
+# (deprecated) LocalBroadcastManager, so declare it directly. Migrating off LBM is a separate refactor, not E3.
+androidx-localbroadcastmanager = { group = "androidx.localbroadcastmanager", name = "localbroadcastmanager", version.ref = "localbroadcastmanager" }
 androidx-lifecycle-compiler = { group = "androidx.lifecycle", name = "lifecycle-compiler", version.ref = "lifecycle" }
 androidx-lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
 androidx-preference = { group = "androidx.preference", name = "preference", version.ref = "preference" }
 androidx-recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayout" }
-dagger = { group = "com.squareup.dagger", name = "dagger", version.ref = "dagger" }
-dagger-compiler = { group = "com.squareup.dagger", name = "dagger-compiler", version.ref = "dagger" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
+androidx-work-testing = { group = "androidx.work", name = "work-testing", version.ref = "work" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "androidx-hilt" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "androidx-hilt" }
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
-retrofit-adapter-rxjava = { group = "com.squareup.retrofit2", name = "adapter-rxjava", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
-rxandroid = { group = "io.reactivex", name = "rxandroid", version.ref = "rxandroid" }
-rxjava = { group = "io.reactivex", name = "rxjava", version.ref = "rxjava" }
+# Tink AEAD over an Android Keystore master key for the encrypted AI SecretStore (E7-D3). Chosen over
+# androidx.security:security-crypto (EncryptedSharedPreferences), which is long-term alpha/deprecated.
+tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink-android" }
 
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
+# MockWebServer for the AnthropicSummaryProvider test (reuses the okhttp ref).
+mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 androidx-test-core = { group = "androidx.test", name = "core", version.ref = "androidx-test-core" }
 kaspresso = { group = "com.kaspersky.android-components", name = "kaspresso", version.ref = "kaspresso" }
@@ -59,4 +83,5 @@ androidx-test-runner = { group = "androidx.test", name = "runner", version.ref =
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }

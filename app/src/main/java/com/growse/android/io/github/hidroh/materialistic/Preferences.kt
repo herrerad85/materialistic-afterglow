@@ -16,6 +16,7 @@
 package com.growse.android.io.github.hidroh.materialistic
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener
@@ -30,8 +31,10 @@ import androidx.core.content.edit
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
+import com.google.android.material.color.DynamicColors
 import com.growse.android.io.github.hidroh.materialistic.annotation.PublicApi
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic
+import com.growse.android.io.github.hidroh.materialistic.data.AlgoliaClient
 import com.growse.android.io.github.hidroh.materialistic.data.AlgoliaPopularClient
 import com.growse.android.io.github.hidroh.materialistic.preference.ThemePreference
 import com.growse.android.io.github.hidroh.materialistic.preference.ThemePreference.DayNightSpec
@@ -104,6 +107,36 @@ object Preferences {
   @JvmStatic
   fun isListItemCardView(context: Context): Boolean {
     return get(context, R.string.pref_list_item_view, false)
+  }
+
+  /**
+   * Whether reply notifications are enabled (E5-D3). Opt-in: defaults OFF. Non-UI accessor only;
+   * the settings switch and POST_NOTIFICATIONS flow are G3. The reply-poll worker and scheduler
+   * gate all work on this.
+   */
+  @JvmStatic
+  fun isReplyNotificationsEnabled(context: Context): Boolean {
+    return get(context, R.string.pref_reply_notifications, false)
+  }
+
+  /**
+   * Whether AI thread summaries are enabled (E7-D4). Opt-in: defaults OFF. Non-UI accessor only;
+   * the settings switch, one-time consent, and BYO-key entry are wired in the AI settings screen.
+   * The "Summarize thread" action gates on this AND on a stored key being present.
+   */
+  @JvmStatic
+  fun isAiSummariesEnabled(context: Context): Boolean {
+    return get(context, R.string.pref_ai_summaries_enabled, false)
+  }
+
+  /**
+   * The selected AI provider id (E7 provider-selectable). One of the
+   * [com.growse.android.io.github.hidroh.materialistic.ai.AiProviderIds] values; defaults to Gemini
+   * (the recommended free path). The "Summarize thread" flow routes on this.
+   */
+  @JvmStatic
+  fun getAiProvider(context: Context): String {
+    return get(context, R.string.pref_ai_provider, R.string.pref_ai_provider_value_gemini)
   }
 
   @JvmStatic
@@ -179,6 +212,18 @@ object Preferences {
     return get(context, R.string.pref_navigation_vibrate, true)
   }
 
+  // Non-user-facing flag: tracks whether the one-time comment-navigation discovery nudge has been
+  // shown. Not exposed in any settings screen ; it only suppresses repeat nudges across launches.
+  @JvmStatic
+  fun isCommentNavNudgeShown(context: Context): Boolean {
+    return get(context, R.string.pref_comment_nav_nudge_shown, false)
+  }
+
+  @JvmStatic
+  fun setCommentNavNudgeShown(context: Context) {
+    set(context, R.string.pref_comment_nav_nudge_shown, true)
+  }
+
   @JvmStatic
   fun customTabsEnabled(context: Context): Boolean {
     return get(context, R.string.pref_custom_tab, true)
@@ -206,7 +251,7 @@ object Preferences {
   }
 
   @JvmStatic
-  fun setPopularRange(context: Context, @AlgoliaPopularClient.Range range: String) {
+  fun setPopularRange(context: Context, @AlgoliaClient.Range range: String) {
     set(context, R.string.pref_popular_range, range)
   }
 
@@ -457,6 +502,13 @@ object Preferences {
       }
       if (dialogTheme) {
         context.setTheme(AppUtils.getThemedResId(context, R.attr.alertDialogTheme))
+      }
+      // DynamicColors must be the LAST step: it overlays the wallpaper-derived M3 roles onto the
+      // theme, and any setTheme after it (including the dialogTheme branch above) would clobber the
+      // overlay. Only when the picked spec is dynamic, the context is an Activity, and the device
+      // actually supports Material You.
+      if (themeSpec.dynamic && context is Activity && DynamicColors.isDynamicColorAvailable()) {
+        DynamicColors.applyToActivityIfAvailable(context)
       }
     }
 

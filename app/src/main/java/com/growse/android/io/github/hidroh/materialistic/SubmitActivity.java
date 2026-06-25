@@ -40,16 +40,19 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
+import dagger.hilt.android.AndroidEntryPoint;
 
-public class SubmitActivity extends InjectableActivity {
+@AndroidEntryPoint
+public class SubmitActivity extends ThemedActivity {
     private static final String HN_GUIDELINES_URL = "https://news.ycombinator.com/newsguidelines.html";
     private static final String STATE_SUBJECT = "state:subject";
     private static final String STATE_TEXT = "state:text";
     // matching title url without any trailing text
     private static final String REGEX_FUZZY_URL = "(.*)((http|https)://[^\\s]*)$";
-    @Inject UserServices mUserServices;
+    @Inject AccountActions mAccountActions;
     @Inject AlertDialogBuilder mAlertDialogBuilder;
     @Synthetic TextView mTitleEditText;
     private TextView mContentEditText;
@@ -66,6 +69,8 @@ public class SubmitActivity extends InjectableActivity {
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP);
+        AppUtils.padTopSystemBars(findViewById(R.id.toolbar));
+        AppUtils.padBottomSystemBars(findViewById(R.id.submit_content), true);
         mTitleLayout = (TextInputLayout) findViewById(R.id.textinput_title);
         mContentLayout = (TextInputLayout) findViewById(R.id.textinput_content);
         mTitleEditText = (TextView) findViewById(R.id.edittext_title);
@@ -113,7 +118,7 @@ public class SubmitActivity extends InjectableActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
+            onBackPressedCompat();
             return true;
         }
         if (item.getItemId() == R.id.menu_send) {
@@ -152,12 +157,12 @@ public class SubmitActivity extends InjectableActivity {
     }
 
     @Override
-    public void onBackPressed() {
+    protected void onBackPressedCompat() {
         mAlertDialogBuilder
                 .init(this)
                 .setMessage(mSending ? R.string.confirm_no_waiting : R.string.confirm_no_submit)
                 .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(android.R.string.ok, (dialog, which) -> SubmitActivity.super.onBackPressed())
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> SubmitActivity.super.onBackPressedCompat())
                 .show();
     }
 
@@ -175,9 +180,14 @@ public class SubmitActivity extends InjectableActivity {
 
     private void submit(boolean isUrl) {
         toggleControls(true);
-        Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
-        mUserServices.submit(this, mTitleEditText.getText().toString(),
-                mContentEditText.getText().toString(), isUrl, new SubmitCallback(this));
+        if (mAccountActions.submit(mTitleEditText.getText().toString(),
+                mContentEditText.getText().toString(), isUrl, new SubmitCallback(this))
+                == AccountActions.Result.NeedsLogin) {
+            toggleControls(false);
+            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
+        } else {
+            Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Synthetic
@@ -195,7 +205,7 @@ public class SubmitActivity extends InjectableActivity {
                 finish();
             }
         } else if (!isFinishing()) {
-            AppUtils.showLogin(this, mAlertDialogBuilder);
+            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
         }
     }
 
@@ -268,7 +278,7 @@ public class SubmitActivity extends InjectableActivity {
             if (mSubmitActivity.get() != null && !mSubmitActivity.get().isActivityDestroyed()) {
                 if (throwable instanceof UserServices.Exception) {
                     UserServices.Exception e = (UserServices.Exception) throwable;
-                    mSubmitActivity.get().onError(e.message, e.data);
+                    mSubmitActivity.get().onError(e.messageRes, e.data);
                 } else {
                     mSubmitActivity.get().onSubmitted(null);
                 }

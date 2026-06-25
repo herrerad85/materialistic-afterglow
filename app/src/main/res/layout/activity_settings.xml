@@ -26,6 +26,8 @@
     <include layout="@layout/toolbar" />
 
     <ScrollView
+        android:id="@+id/settings_scroll"
+        android:clipToPadding="false"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
@@ -72,6 +74,28 @@
                 android:id="@id/menu_readability"
                 android:text="@string/readability"
                 app:iconStart="@drawable/ic_local_library_white_24dp"
+                style="@style/DrawerTextStyle" />
+
+            <View
+                android:background="@color/blackT12"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/divider" />
+
+            <com.growse.android.io.github.hidroh.materialistic.widget.TintableTextView
+                android:id="@+id/drawer_notifications"
+                android:text="@string/notifications"
+                app:iconStart="@drawable/ic_notification"
+                style="@style/DrawerTextStyle" />
+
+            <View
+                android:background="@color/blackT12"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/divider" />
+
+            <com.growse.android.io.github.hidroh.materialistic.widget.TintableTextView
+                android:id="@+id/drawer_ai"
+                android:text="@string/title_activity_ai"
+                app:iconStart="@drawable/ic_settings_white_24dp"
                 style="@style/DrawerTextStyle" />
 
             <View

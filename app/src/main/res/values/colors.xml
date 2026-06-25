@@ -17,6 +17,8 @@
 
 <resources>
     <color name="white">#FFFFFF</color>
+    <!-- Opaque true-black for AMOLED OLED-off surfaces (blackT87 is alpha #DE000000, not opaque). -->
+    <color name="black">#FF000000</color>
     <color name="whiteT70">#B3FFFFFF</color>
     <color name="whiteT50">#80FFFFFF</color>
     <color name="blackT87">#DE000000</color>

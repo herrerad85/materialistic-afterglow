@@ -29,22 +29,13 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import com.growse.android.io.github.hidroh.materialistic.ActivityModule;
-import com.growse.android.io.github.hidroh.materialistic.Injectable;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 @SuppressWarnings("deprecation")
 public class ItemSyncJobService extends JobService {
     @Inject RestServiceFactory mFactory;
     private final Map<String, SyncDelegate> mSyncDelegates = new HashMap<>();
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        ((Injectable) getApplication())
-                .getApplicationGraph()
-                .plus(new ActivityModule(this))
-                .inject(this);
-    }
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {

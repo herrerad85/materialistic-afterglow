@@ -26,6 +26,15 @@ import android.os.Bundle;
 import com.growse.android.io.github.hidroh.materialistic.LoginActivity;
 
 public class AccountAuthenticator extends EmptyAccountAuthenticator {
+    /**
+     * The account type this app's authenticator owns. It MUST equal android:accountType in
+     * authenticator.xml. It is deliberately the source package, NOT the
+     * (rebrandable) applicationId: AccountManager matches accounts to the registered authenticator
+     * by this exact string, so using applicationId silently persists no account once the two differ.
+     * AuthCharacterizationTest asserts this constant equals the value declared in that XML file.
+     */
+    public static final String ACCOUNT_TYPE = "com.growse.android.io.github.hidroh.materialistic";
+
     private final Context mContext;
 
     public AccountAuthenticator(Context context) {

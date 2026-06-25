@@ -48,16 +48,18 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
-import com.growse.android.io.github.hidroh.materialistic.data.SessionManager;
+import com.growse.android.io.github.hidroh.materialistic.data.ViewedItemStore;
 import com.growse.android.io.github.hidroh.materialistic.data.WebItem;
 import com.growse.android.io.github.hidroh.materialistic.widget.ItemPagerAdapter;
 import com.growse.android.io.github.hidroh.materialistic.widget.NavFloatingActionButton;
 import com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu;
 import com.growse.android.io.github.hidroh.materialistic.widget.ViewPager;
+import dagger.hilt.android.AndroidEntryPoint;
 
 /**
  * List activity that renders alternative layouts for portrait/landscape
  */
+@AndroidEntryPoint
 public abstract class BaseListActivity extends DrawerActivity implements MultiPaneListener {
 
     protected static final String LIST_FRAGMENT_TAG = BaseListActivity.class.getName() +
@@ -71,7 +73,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     private ViewPager mViewPager;
     @Inject ActionViewResolver mActionViewResolver;
     @Inject PopupMenu mPopupMenu;
-    @Inject SessionManager mSessionManager;
+    @Inject ViewedItemStore mViewedItemStore;
     @Inject CustomTabsDelegate mCustomTabsDelegate;
     @Inject KeyDelegate mKeyDelegate;
     private AppBarLayout mAppBar;
@@ -96,6 +98,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
+        AppUtils.padBottomSystemBars(findViewById(android.R.id.list), false);
         setTitle(getDefaultTitle());
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
@@ -248,9 +251,9 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
         }
     }
     @Override
-    public void onBackPressed() {
+    protected void onBackPressedCompat() {
         if (!mIsMultiPane || !mFullscreen) {
-            super.onBackPressed();
+            super.onBackPressedCompat();
         } else {
             LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(
                     WebFragment.ACTION_FULLSCREEN).putExtra(WebFragment.EXTRA_FULLSCREEN, false));
@@ -398,7 +401,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
             mTabLayout.setVisibility(View.VISIBLE);
             mViewPager.setVisibility(View.VISIBLE);
             bindViewPager();
-            mSessionManager.view(mSelectedItem.getId());
+            mViewedItemStore.view(mSelectedItem.getId());
         }
     }
 

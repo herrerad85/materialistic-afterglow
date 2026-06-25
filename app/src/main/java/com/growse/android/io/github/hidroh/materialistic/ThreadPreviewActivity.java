@@ -25,19 +25,23 @@ import android.view.MenuItem;
 import android.view.Window;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
+import dagger.hilt.android.AndroidEntryPoint;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 import com.growse.android.io.github.hidroh.materialistic.widget.CommentItemDecoration;
 import com.growse.android.io.github.hidroh.materialistic.widget.SnappyLinearLayoutManager;
 import com.growse.android.io.github.hidroh.materialistic.widget.ThreadPreviewRecyclerViewAdapter;
 
-public class ThreadPreviewActivity extends InjectableActivity {
+@AndroidEntryPoint
+public class ThreadPreviewActivity extends ThemedActivity {
     public static final String EXTRA_ITEM = ThreadPreviewActivity.class.getName() + ".EXTRA_ITEM";
 
-    @Inject @Named(ActivityModule.HN) ItemManager mItemManager;
+    @Inject @HackerNews ItemManager mItemManager;
     @Inject KeyDelegate mKeyDelegate;
+    @Inject com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions mAccountActions;
+    @Inject com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu mPopupMenu;
+    @Inject AlertDialogBuilder mAlertDialogBuilder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +60,8 @@ public class ThreadPreviewActivity extends InjectableActivity {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new SnappyLinearLayoutManager(this, false));
         recyclerView.addItemDecoration(new CommentItemDecoration(this));
-        recyclerView.setAdapter(new ThreadPreviewRecyclerViewAdapter(mItemManager, item));
+        recyclerView.setAdapter(new ThreadPreviewRecyclerViewAdapter(mItemManager, mAccountActions,
+                mPopupMenu, mAlertDialogBuilder, item));
         mKeyDelegate.setScrollable(
                 new KeyDelegate.RecyclerViewHelper(recyclerView,
                         KeyDelegate.RecyclerViewHelper.SCROLL_ITEM), null);

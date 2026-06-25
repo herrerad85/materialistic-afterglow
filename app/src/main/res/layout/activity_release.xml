@@ -81,6 +81,7 @@
         android:id="@id/button_ok"
         android:text="@string/got_it"
         style="@style/Widget.AppCompat.Button.Borderless.Colored"
+        android:textColor="?attr/colorAccent"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"

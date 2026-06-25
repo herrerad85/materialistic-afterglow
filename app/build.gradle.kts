@@ -2,6 +2,7 @@ plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.android)
   alias(libs.plugins.kotlin.kapt)
+  alias(libs.plugins.hilt.android)
   alias(libs.plugins.ktfmt)
 }
 
@@ -47,7 +48,6 @@ android {
           "proguard-rules.pro",
           "proguard-square.pro",
           "proguard-support.pro",
-          "proguard-rx.pro",
       )
     }
   }
@@ -62,6 +62,13 @@ android {
     xmlReport = false
     textReport = true
     lintConfig = file("${rootProject.rootDir}/lint.xml")
+    // No baseline: the 6 GestureBackNavigation onBackPressed errors were migrated to
+    // OnBackPressedDispatcher in Slice 9 G3, so lint now runs clean and gates every new error.
+    // Lint gates production code only. Test sources are excluded because AGP 9.2.1's analyzer
+    // (Kotlin FIR) crashes resolving supertypes of Kotlin activity tests whose activity-under-test
+    // extends the migrated back-handling base (RAW_FIR -> SUPER_TYPES). Test issues were never
+    // gated (checkTestSources defaults off), so this changes no gating, only sidesteps the bug.
+    ignoreTestSources = true
     abortOnError = true
     explainIssues = false
     absolutePaths = false
@@ -74,38 +81,58 @@ kotlin { jvmToolchain(21) }
 
 // S0-06: export the Room schema so DB migrations are verifiable.
 // The generated app/schemas/ JSON is committed by a later stage.
-kapt { arguments { arg("room.schemaLocation", "$projectDir/schemas") } }
+//
+// dagger.hilt.android.internal.disableAndroidSuperclassValidation: under AGP 9's new task
+// model the Hilt Gradle plugin's bytecode transform runs after kapt, so the Hilt annotation
+// processor never sees the @AndroidEntryPoint/@HiltAndroidApp superclass value it normally
+// injects and fails with "Expected @AndroidEntryPoint to have a value." This is the same
+// processor option the Hilt Gradle plugin contributes; setting it explicitly lets the
+// processor defer superclass validation to the (still-applied) plugin transform.
+kapt {
+  arguments {
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("dagger.hilt.android.internal.disableAndroidSuperclassValidation", "true")
+  }
+}
 
 dependencies {
+  implementation(libs.androidx.activity)
   implementation(libs.androidx.appcompat)
+  implementation(libs.androidx.localbroadcastmanager)
+  implementation(libs.androidx.fragment.ktx)
   implementation(libs.androidx.recyclerview)
   implementation(libs.androidx.cardview)
   implementation(libs.androidx.swiperefreshlayout)
   implementation(libs.material)
   implementation(libs.androidx.preference)
   implementation(libs.androidx.browser)
-  implementation(libs.dagger)
+  implementation(libs.hilt.android)
+  implementation(libs.kotlinx.coroutines.android)
   implementation(libs.retrofit)
   implementation(libs.retrofit.converter.gson)
-  implementation(libs.retrofit.adapter.rxjava)
   implementation(libs.okhttp)
   implementation(libs.okhttp.logging.interceptor)
-  implementation(libs.rxandroid)
-  implementation(libs.rxjava)
   implementation(libs.androidx.room.runtime)
   implementation(libs.androidx.lifecycle.viewmodel.ktx)
   implementation(libs.androidx.lifecycle.livedata.ktx)
+  implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.lifecycle.compiler)
+  implementation(libs.androidx.work.runtime.ktx)
+  implementation(libs.androidx.hilt.work)
+  implementation(libs.tink.android)
 
   kapt(libs.androidx.room.compiler)
-  kapt(libs.dagger.compiler)
+  kapt(libs.hilt.compiler)
+  kapt(libs.androidx.hilt.compiler)
   kaptTest(libs.androidx.room.compiler)
-  kaptTest(libs.dagger.compiler)
 
   testImplementation(libs.junit)
   testImplementation(libs.mockk)
   testImplementation(libs.robolectric)
   testImplementation(libs.androidx.test.core)
+  testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(libs.androidx.work.testing)
+  testImplementation(libs.mockwebserver)
 
   androidTestImplementation(libs.kaspresso)
   androidTestImplementation(libs.junit)

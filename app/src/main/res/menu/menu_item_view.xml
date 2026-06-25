@@ -19,9 +19,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@id/menu_find_in_thread"
+        android:title="@string/find_in_thread"
+        android:icon="@drawable/ic_search_white_24dp"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@id/menu_comments"
         android:title="@string/display_options"
         android:icon="@drawable/ic_format_size_white_24dp"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@id/menu_summarize_thread"
+        android:title="@string/summarize_thread"
+        app:showAsAction="never" />
 
 </menu>

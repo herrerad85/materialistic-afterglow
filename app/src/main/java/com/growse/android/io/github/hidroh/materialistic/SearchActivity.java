@@ -27,7 +27,9 @@ import android.view.MenuItem;
 import com.growse.android.io.github.hidroh.materialistic.data.AlgoliaClient;
 import com.growse.android.io.github.hidroh.materialistic.data.HackerNewsClient;
 import com.growse.android.io.github.hidroh.materialistic.data.SearchRecentSuggestionsProvider;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class SearchActivity extends BaseListActivity {
 
     private static final int MAX_RECENT_SUGGESTIONS = 10;
@@ -64,6 +66,7 @@ public class SearchActivity extends BaseListActivity {
     public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(AlgoliaClient.sSortByTime ? R.id.menu_sort_recent : R.id.menu_sort_popular)
                 .setChecked(true);
+        menu.findItem(dateRangeMenuId(AlgoliaClient.sDateRange)).setChecked(true);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -74,7 +77,44 @@ public class SearchActivity extends BaseListActivity {
             sort(item.getItemId() == R.id.menu_sort_recent);
             return true;
         }
+        if (item.getGroupId() == R.id.menu_date_group) {
+            item.setChecked(true);
+            setDateRange(dateRangeForMenuId(item.getItemId()));
+            return true;
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    private static int dateRangeMenuId(String range) {
+        if (AlgoliaClient.LAST_24H.equals(range)) {
+            return R.id.menu_date_24h;
+        }
+        if (AlgoliaClient.PAST_WEEK.equals(range)) {
+            return R.id.menu_date_week;
+        }
+        if (AlgoliaClient.PAST_MONTH.equals(range)) {
+            return R.id.menu_date_month;
+        }
+        if (AlgoliaClient.PAST_YEAR.equals(range)) {
+            return R.id.menu_date_year;
+        }
+        return R.id.menu_date_any;
+    }
+
+    private static String dateRangeForMenuId(int itemId) {
+        if (itemId == R.id.menu_date_24h) {
+            return AlgoliaClient.LAST_24H;
+        }
+        if (itemId == R.id.menu_date_week) {
+            return AlgoliaClient.PAST_WEEK;
+        }
+        if (itemId == R.id.menu_date_month) {
+            return AlgoliaClient.PAST_MONTH;
+        }
+        if (itemId == R.id.menu_date_year) {
+            return AlgoliaClient.PAST_YEAR;
+        }
+        return null;
     }
 
     @Override
@@ -100,6 +140,19 @@ public class SearchActivity extends BaseListActivity {
         }
         AlgoliaClient.sSortByTime = byTime;
         Preferences.setSortByRecent(this, byTime);
+        ListFragment listFragment = (ListFragment) getSupportFragmentManager()
+                .findFragmentByTag(LIST_FRAGMENT_TAG);
+        if (listFragment != null) {
+            listFragment.filter(mQuery);
+        }
+    }
+
+    private void setDateRange(String range) {
+        if (TextUtils.equals(AlgoliaClient.sDateRange, range)) {
+            return;
+        }
+        // Transient per-search refinement, not persisted to Preferences (unlike sort).
+        AlgoliaClient.sDateRange = range;
         ListFragment listFragment = (ListFragment) getSupportFragmentManager()
                 .findFragmentByTag(LIST_FRAGMENT_TAG);
         if (listFragment != null) {

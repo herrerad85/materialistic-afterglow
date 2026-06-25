@@ -34,11 +34,12 @@
         <![CDATA[
             <p><a href="https://github.com/square/retrofit">Square Retrofit</a> - Apache License v2.0</p>
             <p><a href="https://github.com/square/okhttp">Square OkHttp</a> - Apache License v2.0</p>
-            <p><a href="https://github.com/square/dagger">Square Dagger</a> - Apache License v2.0</p>
-            <p><a href="https://github.com/square/leakcanary">Square LeakCanary</a> - Apache License v2.0</p>
-            <p><a href="https://github.com/ReactiveX/RxJava">RxJava</a> - Apache License v2.0</p>
-            <p><a href="https://github.com/ReactiveX/RxAndroid">RxAndroid</a> - Apache License v2.0</p>
-            <p><a href="https://developer.android.com/jetpack">Android Jetpack</a> - Apache License v2.0</p>
+            <p><a href="https://github.com/google/gson">Google Gson</a> - Apache License v2.0</p>
+            <p><a href="https://dagger.dev/hilt/">Hilt</a> - Apache License v2.0</p>
+            <p><a href="https://github.com/Kotlin/kotlinx.coroutines">Kotlin Coroutines</a> - Apache License v2.0</p>
+            <p><a href="https://github.com/material-components/material-components-android">Material Components for Android</a> - Apache License v2.0</p>
+            <p><a href="https://github.com/tink-crypto/tink-java">Google Tink</a> - Apache License v2.0</p>
+            <p><a href="https://developer.android.com/jetpack">Android Jetpack (AppCompat, Activity, Fragment, Lifecycle, Room, WorkManager, RecyclerView, Preference, Browser, SwipeRefreshLayout, CardView)</a> - Apache License v2.0</p>
             <p><a href="https://github.com/algolia/hn-search">algolia/hn-search</a> - MIT License</p>
             <p><a href="https://github.com/mozilla/pdf.js">PDF.js</a> - Apache License v2.0</p>
             <p><a href="https://github.com/google/material-design-icons">Material design icons</a> - Creative Common Attribution 4.0 International License</p>

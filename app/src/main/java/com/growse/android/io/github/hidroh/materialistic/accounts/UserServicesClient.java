@@ -16,18 +16,16 @@
 
 package com.growse.android.io.github.hidroh.materialistic.accounts;
 
-import android.content.Context;
 import android.net.Uri;
-import androidx.core.util.Pair;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.util.concurrent.Executor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.inject.Inject;
 
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
 import com.growse.android.io.github.hidroh.materialistic.R;
@@ -36,9 +34,6 @@ import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.Response;
-import rx.Observable;
-import rx.Scheduler;
-import rx.android.schedulers.AndroidSchedulers;
 
 public class UserServicesClient implements UserServices {
     private static final String BASE_WEB_URL = "https://news.ycombinator.com";
@@ -74,61 +69,61 @@ public class UserServicesClient implements UserServices {
     private static final String HEADER_COOKIE = "cookie";
     private static final String HEADER_SET_COOKIE = "set-cookie";
     private final Call.Factory mCallFactory;
-    private final Scheduler mIoScheduler;
+    private final Executor mIoExecutor;
+    private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
-    @Inject
-    public UserServicesClient(Call.Factory callFactory, Scheduler ioScheduler) {
+    public UserServicesClient(Call.Factory callFactory, Executor ioExecutor) {
         mCallFactory = callFactory;
-        mIoScheduler = ioScheduler;
+        mIoExecutor = ioExecutor;
+    }
+
+    @FunctionalInterface
+    private interface Action {
+        // Fully qualified: the unqualified name Exception would bind to the inherited nested
+        // UserServices.Exception (this class implements UserServices), not java.lang.Exception.
+        boolean perform() throws java.lang.Exception;
+    }
+
+    // Runs the blocking account-action flow on the io executor, then delivers the result on the main
+    // thread via the main-looper handler. Replaces the old Rx subscribeOn(io)/observeOn(main) wrapper:
+    // network work stays off the main thread, onDone/onError still arrive on the main thread, and any
+    // thrown exception (including UserServices.Exception) becomes onError, exactly as the old chains did.
+    private void dispatch(Action action, Callback callback) {
+        mIoExecutor.execute(() -> {
+            try {
+                boolean result = action.perform();
+                mMainHandler.post(() -> callback.onDone(result));
+            } catch (Throwable t) {
+                mMainHandler.post(() -> callback.onError(t));
+            }
+        });
     }
 
     @Override
     public void login(String username, String password, boolean createAccount, Callback callback) {
-        execute(postLogin(username, password, createAccount))
-                .flatMap(response -> {
-                    if (response.code() == HttpURLConnection.HTTP_OK) {
-                        return Observable.error(new UserServices.Exception(parseLoginError(response)));
-                    }
-                    return Observable.just(response.code() == HttpURLConnection.HTTP_MOVED_TEMP);
-                })
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callback::onDone, callback::onError);
+        dispatch(() -> {
+            Response response = exec(postLogin(username, password, createAccount));
+            if (response.code() == HttpURLConnection.HTTP_OK) {
+                throw new UserServices.Exception(parseLoginError(response));
+            }
+            return response.code() == HttpURLConnection.HTTP_MOVED_TEMP;
+        }, callback);
     }
 
     @Override
-    public boolean voteUp(Context context, String itemId, Callback callback) {
-        Pair<String, String> credentials = AppUtils.getCredentials(context);
-        if (credentials == null) {
-            return false;
-        }
-        Toast.makeText(context, R.string.sending, Toast.LENGTH_SHORT).show();
-        execute(postVote(credentials.first, credentials.second, itemId))
-                .map(response -> response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callback::onDone, callback::onError);
-        return true;
+    public void voteUp(Credentials credentials, String itemId, Callback callback) {
+        dispatch(() -> exec(postVote(credentials.getUsername(), credentials.getPassword(), itemId))
+                .code() == HttpURLConnection.HTTP_MOVED_TEMP, callback);
     }
 
     @Override
-    public void reply(Context context, String parentId, String text, Callback callback) {
-        Pair<String, String> credentials = AppUtils.getCredentials(context);
-        if (credentials == null) {
-            callback.onDone(false);
-            return;
-        }
-        execute(postReply(parentId, text, credentials.first, credentials.second))
-                .map(response -> response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callback::onDone, callback::onError);
+    public void reply(Credentials credentials, String parentId, String text, Callback callback) {
+        dispatch(() -> exec(postReply(parentId, text, credentials.getUsername(), credentials.getPassword()))
+                .code() == HttpURLConnection.HTTP_MOVED_TEMP, callback);
     }
 
     @Override
-    public void submit(Context context, String title, String content, boolean isUrl, Callback callback) {
-        Pair<String, String> credentials = AppUtils.getCredentials(context);
-        if (credentials == null) {
-            callback.onDone(false);
-            return;
-        }
+    public void submit(Credentials credentials, String title, String content, boolean isUrl, Callback callback) {
         /*
           The flow:
           POST /submit with acc, pw
@@ -138,39 +133,32 @@ public class UserServicesClient implements UserServices {
            if 302 to /x, considered error, maybe duplicate or invalid input
            if 200 or anything else, considered error
          */
-        // fetch submit page with given credentials
-        execute(postSubmitForm(credentials.first, credentials.second))
-                .flatMap(response -> response.code() != HttpURLConnection.HTTP_MOVED_TEMP ?
-                        Observable.just(response) :
-                        Observable.error(new IOException()))
-                .flatMap(response -> {
-                    try {
-                        return Observable.just(new String[]{
-                                response.header(HEADER_SET_COOKIE),
-                                response.body().string()
-                        });
-                    } catch (IOException e) {
-                        return Observable.error(e);
-                    } finally {
-                        response.close();
-                    }
-                })
-                .map(array -> {
-                    array[1] = getInputValue(array[1], SUBMIT_PARAM_FNID);
-                    return array;
-                })
-                .flatMap(array -> !TextUtils.isEmpty(array[1]) ?
-                        Observable.just(array) :
-                        Observable.error(new IOException()))
-                .flatMap(array -> execute(postSubmit(title, content, isUrl, array[0], array[1])))
-                .flatMap(response -> response.code() == HttpURLConnection.HTTP_MOVED_TEMP ?
-                        Observable.just(Uri.parse(response.header(HEADER_LOCATION))) :
-                        Observable.error(new IOException()))
-                .flatMap(uri -> TextUtils.equals(uri.getPath(), DEFAULT_SUBMIT_REDIRECT) ?
-                        Observable.just(true) :
-                        Observable.error(buildException(uri)))
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(callback::onDone, callback::onError);
+        dispatch(() -> {
+            // fetch submit page with given credentials; a 302 here is the /login redirect = failed auth
+            Response formResponse = exec(postSubmitForm(credentials.getUsername(), credentials.getPassword()));
+            if (formResponse.code() == HttpURLConnection.HTTP_MOVED_TEMP) {
+                throw new IOException();
+            }
+            String cookie = formResponse.header(HEADER_SET_COOKIE);
+            String fnid;
+            try {
+                fnid = getInputValue(formResponse.body().string(), SUBMIT_PARAM_FNID);
+            } finally {
+                formResponse.close();
+            }
+            if (TextUtils.isEmpty(fnid)) {
+                throw new IOException();
+            }
+            Response submitResponse = exec(postSubmit(title, content, isUrl, cookie, fnid));
+            if (submitResponse.code() != HttpURLConnection.HTTP_MOVED_TEMP) {
+                throw new IOException();
+            }
+            Uri uri = Uri.parse(submitResponse.header(HEADER_LOCATION));
+            if (TextUtils.equals(uri.getPath(), DEFAULT_SUBMIT_REDIRECT)) {
+                return true;
+            }
+            throw buildException(uri);
+        }, callback);
     }
 
     private Request postLogin(String username, String password, boolean createAccount) {
@@ -251,17 +239,11 @@ public class UserServicesClient implements UserServices {
         return builder.build();
     }
 
-    private Observable<Response> execute(Request request) {
-        return Observable.defer(() -> {
-            try {
-                return Observable.just(mCallFactory.newCall(request).execute());
-            } catch (IOException e) {
-                return Observable.error(e);
-            }
-        }).subscribeOn(mIoScheduler);
+    private Response exec(Request request) throws IOException {
+        return mCallFactory.newCall(request).execute();
     }
 
-    private Throwable buildException(Uri uri) {
+    private IOException buildException(Uri uri) {
         switch (uri.getPath()) {
             case ITEM_PATH:
                 UserServices.Exception exception = new UserServices.Exception(R.string.item_exist);

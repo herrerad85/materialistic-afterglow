@@ -32,8 +32,13 @@ import javax.inject.Inject;
 
 import com.growse.android.io.github.hidroh.materialistic.widget.ListRecyclerViewAdapter;
 import com.growse.android.io.github.hidroh.materialistic.widget.SnappyLinearLayoutManager;
+import dagger.hilt.android.AndroidEntryPoint;
 
-abstract class BaseListFragment extends BaseFragment implements Scrollable {
+// public (was package-private): the Kotlin ListFragment subclass cannot be public while exposing a
+// package-private supertype (Kotlin is stricter than Java here). Matches the other public fragment
+// bases (BaseFragment, LazyLoadFragment). E1 Gate-2 Kotlin-interop accommodation; base stays Java.
+@AndroidEntryPoint
+public abstract class BaseListFragment extends BaseFragment implements Scrollable {
     private static final String STATE_ADAPTER = "state:adapter";
     @Inject CustomTabsDelegate mCustomTabsDelegate;
     private KeyDelegate.RecyclerViewHelper mScrollableHelper;

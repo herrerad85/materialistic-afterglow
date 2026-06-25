@@ -31,6 +31,9 @@ import javax.net.SocketFactory;
 
 import dagger.Module;
 import dagger.Provides;
+import dagger.hilt.InstallIn;
+import dagger.hilt.android.qualifiers.ApplicationContext;
+import dagger.hilt.components.SingletonComponent;
 import com.growse.android.io.github.hidroh.materialistic.data.AlgoliaClient;
 import com.growse.android.io.github.hidroh.materialistic.data.FileDownloader;
 import com.growse.android.io.github.hidroh.materialistic.data.HackerNewsClient;
@@ -44,8 +47,9 @@ import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.logging.HttpLoggingInterceptor;
 
-@Module(library = true, complete = false)
-class NetworkModule {
+@Module
+@InstallIn(SingletonComponent.class)
+public class NetworkModule {
     private static final String TAG_OK_HTTP = "OkHttp";
     private static final long CACHE_SIZE = 20 * 1024 * 1024; // 20 MB
 
@@ -55,7 +59,7 @@ class NetworkModule {
     }
 
     @Provides @Singleton
-    public Call.Factory provideCallFactory(Context context) {
+    public Call.Factory provideCallFactory(@ApplicationContext Context context) {
         return new OkHttpClient.Builder()
                 .socketFactory(new SocketFactory() {
                     private SocketFactory mDefaultFactory = SocketFactory.getDefault();
@@ -104,7 +108,7 @@ class NetworkModule {
     }
 
     @Provides @Singleton
-    public FileDownloader provideFileDownloader(Context context, Call.Factory callFactory) {
+    public FileDownloader provideFileDownloader(@ApplicationContext Context context, Call.Factory callFactory) {
         return new FileDownloader(context, callFactory);
     }
 

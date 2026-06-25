@@ -17,6 +17,12 @@
 
 <resources>
     <string translatable="false" name="pref_ad_block">pref_ad_block</string>
+    <string translatable="false" name="pref_ai_summaries_enabled">pref_ai_summaries_enabled</string>
+    <string translatable="false" name="pref_ai_api_key">pref_ai_api_key</string>
+    <string translatable="false" name="pref_ai_consent_accepted">pref_ai_consent_accepted</string>
+    <string translatable="false" name="pref_ai_provider">pref_ai_provider</string>
+    <string translatable="false" name="pref_ai_provider_value_gemini">gemini</string>
+    <string translatable="false" name="pref_ai_provider_value_anthropic">anthropic</string>
     <string translatable="false" name="pref_auto_viewed">pref_auto_viewed</string>
     <string translatable="false" name="pref_category">pref_category</string>
     <string translatable="false" name="pref_color_code">pref_color_code</string>
@@ -44,9 +50,11 @@
     <string translatable="false" name="pref_max_lines">pref_max_lines</string>
     <string translatable="false" name="pref_multi_window">pref_multi_window</string>
     <string translatable="false" name="pref_navigation">pref_navigation</string>
+    <string translatable="false" name="pref_comment_nav_nudge_shown">pref_comment_nav_nudge_shown</string> <!-- non-user-facing flag, not in any settings screen -->
     <string translatable="false" name="pref_navigation_help">pref_navigation_help</string>
     <string translatable="false" name="pref_navigation_vibrate">pref_navigation_vibrate</string>
     <string translatable="false" name="pref_popular_range">pref_popular_range</string>
+    <string translatable="false" name="pref_reply_notifications">pref_reply_notifications</string>
     <string translatable="false" name="pref_readability_font">pref_readability_font</string>
     <string translatable="false" name="pref_readability_line_height">pref_readability_line_height</string>
     <string translatable="false" name="pref_readability_text_size">pref_readability_text_size</string>

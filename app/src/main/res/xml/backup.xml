@@ -15,4 +15,10 @@
   ~ limitations under the License.
   -->
 
-<full-backup-content />
+<full-backup-content>
+    <!-- The encrypted BYO AI key store and its Keystore-wrapped keyset are device-bound; never
+         back them up (E7-G2). The keyset is useless off-device, and the ciphertext store must not
+         travel. -->
+    <exclude domain="sharedpref" path="ai_secret_store.xml" />
+    <exclude domain="sharedpref" path="ai_secret_keyset.xml" />
+</full-backup-content>

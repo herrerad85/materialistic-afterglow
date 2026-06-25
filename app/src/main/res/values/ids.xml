@@ -82,6 +82,13 @@
     <item type="id" name="menu_sort_group" />
     <item type="id" name="menu_sort_recent" />
     <item type="id" name="menu_sort_popular" />
+    <item type="id" name="menu_date" />
+    <item type="id" name="menu_date_group" />
+    <item type="id" name="menu_date_any" />
+    <item type="id" name="menu_date_24h" />
+    <item type="id" name="menu_date_week" />
+    <item type="id" name="menu_date_month" />
+    <item type="id" name="menu_date_year" />
     <item type="id" name="menu_list" />
     <item type="id" name="menu_contextual_save" />
     <item type="id" name="menu_contextual_vote" />
@@ -93,6 +100,8 @@
     <item type="id" name="menu_quote" />
     <item type="id" name="menu_guidelines" />
     <item type="id" name="menu_comments" />
+    <item type="id" name="menu_find_in_thread" />
+    <item type="id" name="menu_summarize_thread" />
     <item type="id" name="menu_article" />
     <item type="id" name="menu_zoom_in" />
     <item type="id" name="menu_zoom_out" />
@@ -113,5 +122,6 @@
     <item type="id" name="empty_selection" />
     <item type="id" name="empty_search" />
     <item type="id" name="content" />
+    <item type="id" name="comment_find_bar" />
 
 </resources>

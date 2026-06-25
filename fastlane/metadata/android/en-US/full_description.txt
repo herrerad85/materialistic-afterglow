@@ -1,13 +1,16 @@
-Afterglow is a modern fork of the Materialistic Hacker News client for Android (https://github.com/hidroh/materialistic).
+Afterglow is a Material Design Hacker News client for Android. A modern fork of Materialistic (https://github.com/hidroh/materialistic) by Ha Duy Trung.
+
+Afterglow is under active development and has not yet reached a stable 1.0 release.
 
 Features:
-- Browse the top, new, best, ask, show and jobs stories on Hacker News
-- Read and post comments
-- Search stories using Algolia Hacker News Search
+- Browse the top, new, best, ask, show, and jobs stories
+- Log in to Hacker News to vote, comment, reply, and submit
+- Threaded comment navigation: jump to parent, in-thread search, collapse, and swipe gestures
+- Reply notifications for your threads, with indicators for new comments since your last visit
+- Search powered by Algolia, including a date-range filter
+- Material 3 and Material You design with dynamic color, plus light, dark, and true-black AMOLED themes
 - Save stories and comments for offline reading
-- Multiple themes including light, dark, and AMOLED dark
-- Read article content via the built-in web view
-- Share stories and comments
-- Supports Android custom tabs for opening links
+- Optional AI thread summaries, off by default: bring your own API key (Google Gemini or Anthropic Claude). Thread text is sent only when you opt in and tap Summarize
+- Open links in the built-in reader or Android Custom Tabs
 
-Uses the official Hacker News API. User actions such as voting, commenting, and submitting stories require a Hacker News account.
+Uses the official Hacker News API. Voting, commenting, and submitting require a Hacker News account.

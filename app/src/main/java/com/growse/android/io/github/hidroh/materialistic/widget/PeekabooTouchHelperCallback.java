@@ -18,10 +18,10 @@ package com.growse.android.io.github.hidroh.materialistic.widget;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import android.view.View;
@@ -38,8 +38,8 @@ abstract class PeekabooTouchHelperCallback extends ItemTouchHelper.SimpleCallbac
 
     PeekabooTouchHelperCallback(Context context) {
         super(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
-        mDefaultTextColor = ContextCompat.getColor(context,
-                AppUtils.getThemedResId(context, android.R.attr.textColorPrimary));
+        mDefaultTextColor = AppUtils.getThemedColor(context,
+                android.R.attr.textColorPrimary, Color.BLACK);
         mPaint.setTextSize(context.getResources().getDimensionPixelSize(R.dimen.text_size_small));
         mPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
         mPadding = context.getResources().getDimensionPixelSize(R.dimen.activity_horizontal_margin);

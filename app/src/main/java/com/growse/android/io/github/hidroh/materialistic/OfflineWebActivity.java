@@ -29,8 +29,10 @@ import android.widget.ProgressBar;
 
 import com.growse.android.io.github.hidroh.materialistic.widget.AdBlockWebViewClient;
 import com.growse.android.io.github.hidroh.materialistic.widget.CacheableWebView;
+import dagger.hilt.android.AndroidEntryPoint;
 
-public class OfflineWebActivity extends InjectableActivity {
+@AndroidEntryPoint
+public class OfflineWebActivity extends ThemedActivity {
     static final String EXTRA_URL = OfflineWebActivity.class.getName() + ".EXTRA_URL";
 
     @SuppressWarnings("ConstantConditions")
@@ -44,6 +46,7 @@ public class OfflineWebActivity extends InjectableActivity {
         }
         setTitle(url);
         setContentView(R.layout.activity_offline_web);
+        AppUtils.padBottomSystemBars(findViewById(R.id.web_view_container), false);
         final NestedScrollView scrollView = (NestedScrollView) findViewById(R.id.nested_scroll_view);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setOnClickListener(v -> scrollView.smoothScrollTo(0, 0));

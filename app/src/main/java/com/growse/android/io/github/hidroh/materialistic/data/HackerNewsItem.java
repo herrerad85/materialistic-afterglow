@@ -18,13 +18,13 @@ package com.growse.android.io.github.hidroh.materialistic.data;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Parcel;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
-import androidx.core.content.ContextCompat;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -272,8 +272,9 @@ class HackerNewsItem implements Item {
             if (TextUtils.isEmpty(by)) {
                 displayedAuthor = new SpannableString("");
             } else {
-                defaultColor = ContextCompat.getColor(context, AppUtils.getThemedResId(context,
-                        linkify ? android.R.attr.textColorLink : android.R.attr.textColorSecondary));
+                defaultColor = AppUtils.getThemedColor(context,
+                        linkify ? android.R.attr.textColorLink : android.R.attr.textColorSecondary,
+                        Color.BLACK);
                 displayedAuthor = createAuthorSpannable(linkify);
             }
         }

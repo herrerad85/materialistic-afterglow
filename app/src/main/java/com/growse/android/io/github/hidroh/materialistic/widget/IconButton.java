@@ -19,6 +19,7 @@ package com.growse.android.io.github.hidroh.materialistic.widget;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
@@ -48,10 +49,10 @@ public class IconButton extends AppCompatImageButton {
         super(context, attrs, defStyleAttr);
         setBackgroundResource(AppUtils.getThemedResId(context, R.attr.selectableItemBackgroundBorderless));
         TypedArray ta = context.getTheme().obtainStyledAttributes(attrs, R.styleable.IconButton, 0, 0);
-        int colorDisabled = ContextCompat.getColor(context,
-                AppUtils.getThemedResId(context, android.R.attr.textColorSecondary));
-        int colorDefault = ContextCompat.getColor(context,
-                AppUtils.getThemedResId(context, android.R.attr.textColorPrimary));
+        int colorDisabled =
+                AppUtils.getThemedColor(context, android.R.attr.textColorSecondary, Color.BLACK);
+        int colorDefault =
+                AppUtils.getThemedColor(context, android.R.attr.textColorPrimary, Color.BLACK);
         int colorEnabled = ta.getColor(R.styleable.IconButton_tint, colorDefault);
         mColorStateList = new ColorStateList(STATES, new int[]{colorEnabled, colorDisabled});
         mTinted = ta.hasValue(R.styleable.IconButton_tint);

@@ -38,22 +38,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.inject.Inject;
-
+import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder;
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
 import com.growse.android.io.github.hidroh.materialistic.ComposeActivity;
 import com.growse.android.io.github.hidroh.materialistic.MenuTintDelegate;
 import com.growse.android.io.github.hidroh.materialistic.R;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.Favorite;
+import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 import com.growse.android.io.github.hidroh.materialistic.data.SyncScheduler;
 
 public class FavoriteRecyclerViewAdapter extends ListRecyclerViewAdapter
         <ListRecyclerViewAdapter.ItemViewHolder, Favorite> {
 
-    @Inject SyncScheduler mSyncScheduler;
+    private final SyncScheduler mSyncScheduler;
 
     public interface ActionModeDelegate {
 
@@ -122,8 +123,15 @@ public class FavoriteRecyclerViewAdapter extends ListRecyclerViewAdapter
     @Synthetic final ArrayMap<Integer, String> mSelected = new ArrayMap<>();
     private int mPendingAdd = -1;
 
-    public FavoriteRecyclerViewAdapter(Context context, ActionModeDelegate actionModeDelegate) {
-        super(context);
+    public FavoriteRecyclerViewAdapter(Context context,
+                                       PopupMenu popupMenu,
+                                       AlertDialogBuilder alertDialogBuilder,
+                                       AccountActions accountActions,
+                                       FavoriteManager favoriteManager,
+                                       SyncScheduler syncScheduler,
+                                       ActionModeDelegate actionModeDelegate) {
+        super(context, popupMenu, alertDialogBuilder, accountActions, favoriteManager);
+        mSyncScheduler = syncScheduler;
         mActionModeDelegate = actionModeDelegate;
         mMenuTintDelegate = new MenuTintDelegate();
         mMenuTintDelegate.onActivityCreated(this.context);
@@ -296,7 +304,11 @@ public class FavoriteRecyclerViewAdapter extends ListRecyclerViewAdapter
     }
 
     private void vote(final Favorite item) {
-        mUserServices.voteUp(context, item.getId(), new VoteCallback(this));
+        if (mAccountActions.vote(item.getId(), new VoteCallback(this)) == AccountActions.Result.NeedsLogin) {
+            AppUtils.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession());
+        } else {
+            Toast.makeText(context, R.string.sending, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Synthetic
@@ -306,7 +318,7 @@ public class FavoriteRecyclerViewAdapter extends ListRecyclerViewAdapter
         } else if (successful) {
             Toast.makeText(context, R.string.voted, Toast.LENGTH_SHORT).show();
         } else {
-            AppUtils.showLogin(context, mAlertDialogBuilder);
+            AppUtils.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession());
         }
     }
 

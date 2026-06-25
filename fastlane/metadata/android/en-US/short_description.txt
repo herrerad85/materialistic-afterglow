@@ -1,1 +1,1 @@
-Material design Hacker News client for Android
+Material You Hacker News reader: accounts, comments, search, themes, offline

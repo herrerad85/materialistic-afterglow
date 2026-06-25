@@ -47,6 +47,7 @@ import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
@@ -54,27 +55,36 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.material.color.MaterialColors;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.AttrRes;
+import androidx.annotation.ColorInt;
 import androidx.annotation.DimenRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StyleRes;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.browser.customtabs.CustomTabsSession;
-import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
 import androidx.core.util.Pair;
 import androidx.core.view.GravityCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountSession;
+import com.growse.android.io.github.hidroh.materialistic.accounts.SavedAccount;
 import com.growse.android.io.github.hidroh.materialistic.annotation.PublicApi;
 import com.growse.android.io.github.hidroh.materialistic.data.HackerNewsClient;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.WebItem;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
 import com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu;
+
+import dagger.hilt.android.EntryPointAccessors;
 
 @SuppressWarnings("WeakerAccess")
 @PublicApi
@@ -258,6 +268,17 @@ public class AppUtils {
         return resId;
     }
 
+    /**
+     * Resolves a colour attribute to a concrete @ColorInt. Unlike getThemedResId + ContextCompat,
+     * this is correct whether the attr bottoms out at a @color reference OR a direct colour int
+     * (the latter happens under dynamic colour / M3 roles). Use getThemedResId only for non-colour
+     * attrs (selectableItemBackground, alertDialogTheme, dimens, drawables).
+     */
+    @ColorInt
+    public static int getThemedColor(Context context, @AttrRes int attr, @ColorInt int fallback) {
+        return MaterialColors.getColor(context, attr, fallback);
+    }
+
     public static float getDimension(Context context, @StyleRes int styleResId, @AttrRes int attr) {
         TypedArray a = context.getTheme().obtainStyledAttributes(styleResId, new int[]{attr});
         float size = a.getDimension(0, 0);
@@ -273,10 +294,6 @@ public class AppUtils {
     public static int getDimensionInDp(Context context, @DimenRes int dimenResId) {
         return (int) (context.getResources().getDimension(dimenResId) /
                         context.getResources().getDisplayMetrics().density);
-    }
-
-    public static void restart(Activity activity, boolean transition) {
-        activity.recreate();
     }
 
     public static String getAbbreviatedTimeSpan(long timeMillis) {
@@ -310,20 +327,55 @@ public class AppUtils {
         return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
     }
 
-    @SuppressLint("MissingPermission")
-    public static Pair<String, String> getCredentials(Context context) {
-        String username = Preferences.getUsername(context);
-        if (TextUtils.isEmpty(username)) {
-            return null;
-        }
-        AccountManager accountManager = AccountManager.get(context);
-        Account[] accounts = accountManager.getAccountsByType(BuildConfig.APPLICATION_ID);
-        for (Account account : accounts) {
-            if (TextUtils.equals(username, account.name)) {
-                return Pair.create(username, accountManager.getPassword(account));
-            }
-        }
-        return null;
+    /** Pads view's top by the status-bar/cutout inset (Android 15+ edge-to-edge). For toolbars on
+     *  non-CoordinatorLayout screens (CoordinatorLayout screens use fitsSystemWindows instead). */
+    public static void padTopSystemBars(View view) {
+        padSystemBars(view, true, false, false);
+    }
+
+    /** Pads view's bottom by the nav-bar inset (+ IME when includeIme) so content/controls are not
+     *  occluded under the transparent system bars. */
+    public static void padBottomSystemBars(View view, boolean includeIme) {
+        padSystemBars(view, false, true, includeIme);
+    }
+
+    /** Pads view's top AND bottom in a single listener. Use this instead of stacking
+     *  padTopSystemBars + padBottomSystemBars on the same view (which would clobber, see padSystemBars). */
+    public static void padVerticalSystemBars(View view, boolean includeIme) {
+        padSystemBars(view, true, true, includeIme);
+    }
+
+    /** Shared impl: every pad*SystemBars helper delegates here so a view ends up with exactly ONE
+     *  OnApplyWindowInsetsListener. ViewCompat.setOnApplyWindowInsetsListener REPLACES any prior
+     *  listener, so two helpers on the same view clobber each other; pad both edges in one call.
+     *  The horizontal (left/right) inset is ALWAYS applied: in landscape the side nav bar or a display
+     *  cutout would otherwise occlude edge-aligned content (e.g. preference switches under a 3-button
+     *  nav bar). It is zero in portrait and under gesture nav, so this is a no-op there. The top/bottom
+     *  flags only gate the vertical insets. */
+    private static void padSystemBars(View view, boolean top, boolean bottom, boolean includeIme) {
+        final int l = view.getPaddingLeft(), t = view.getPaddingTop(),
+                r = view.getPaddingRight(), b = view.getPaddingBottom();
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            int mask = WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout();
+            if (includeIme) mask |= WindowInsetsCompat.Type.ime();
+            Insets i = insets.getInsets(mask);
+            v.setPadding(l + i.left, top ? t + i.top : t, r + i.right, bottom ? b + i.bottom : b);
+            return insets;
+        });
+    }
+
+    /** Adds the nav-bar inset to view's bottom margin (for FABs / floating controls). */
+    public static void marginBottomSystemBars(View view) {
+        final ViewGroup.MarginLayoutParams base = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
+        final int bottom = base.bottomMargin;
+        ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+            Insets i = insets.getInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+            lp.bottomMargin = bottom + i.bottom;
+            v.setLayoutParams(lp);
+            return insets;
+        });
     }
 
     /**
@@ -334,32 +386,20 @@ public class AppUtils {
      * @param context activity context
      * @param alertDialogBuilder dialog builder
      */
-    @SuppressLint("MissingPermission")
-    public static void showLogin(Context context, AlertDialogBuilder alertDialogBuilder) {
-        Account[] accounts = AccountManager.get(context).getAccountsByType(BuildConfig.APPLICATION_ID);
-        if (accounts.length == 0) { // no accounts, ask to login or re-login
+    public static void showLogin(Context context, AlertDialogBuilder alertDialogBuilder, AccountSession session) {
+        if (session.savedAccounts().isEmpty()) { // no saved accounts -> login screen
             context.startActivity(new Intent(context, LoginActivity.class));
-        } else if (!TextUtils.isEmpty(Preferences.getUsername(context))) { // stale account, ask to re-login
+        } else if (session.getActiveUsername() != null) { // active but action failed -> re-login
             context.startActivity(new Intent(context, LoginActivity.class));
-        } else { // logged out, choose from existing accounts to log in
-            showAccountChooser(context, alertDialogBuilder, accounts);
+        } else { // logged out, saved accounts exist -> choose one
+            // E5-D3: reached only at runtime (real Hilt app), so self-source the scheduler here and
+            // keep showAccountChooser's scheduler an injected param so it stays unit-testable.
+            ReplyNotificationScheduler scheduler = EntryPointAccessors
+                    .fromApplication(context.getApplicationContext(),
+                            Application.ReplyNotificationEntryPoint.class)
+                    .replyNotificationScheduler();
+            showAccountChooser(context, alertDialogBuilder, session, scheduler);
         }
-    }
-
-    @SuppressLint("MissingPermission")
-    public static void registerAccountsUpdatedListener(final Context context) {
-        AccountManager.get(context).addOnAccountsUpdatedListener(accounts -> {
-            String username = Preferences.getUsername(context);
-            if (TextUtils.isEmpty(username)) {
-                return;
-            }
-            for (Account account : accounts) {
-                if (TextUtils.equals(account.name, username)) {
-                    return;
-                }
-            }
-            Preferences.setUsername(context, null);
-        }, null, true);
     }
 
     @SuppressWarnings("deprecation")
@@ -376,16 +416,17 @@ public class AppUtils {
         }
     }
 
-    @SuppressLint("MissingPermission")
     public static void showAccountChooser(final Context context, AlertDialogBuilder alertDialogBuilder,
-                                           Account[] accounts) {
-        String username = Preferences.getUsername(context);
-        final String[] items = new String[accounts.length];
+                                          AccountSession session,
+                                          final ReplyNotificationScheduler replyNotificationScheduler) {
+        List<SavedAccount> accounts = session.savedAccounts();
+        String activeUsername = session.getActiveUsername();
+        final String[] items = new String[accounts.size()];
         int checked = -1;
-        for (int i = 0; i < accounts.length; i++) {
-            String accountName = accounts[i].name;
+        for (int i = 0; i < accounts.size(); i++) {
+            String accountName = accounts.get(i).getUsername();
             items[i] = accountName;
-            if (TextUtils.equals(accountName, username)) {
+            if (TextUtils.equals(accountName, activeUsername)) {
                 checked = i;
             }
         }
@@ -397,7 +438,13 @@ public class AppUtils {
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                     case DialogInterface.BUTTON_POSITIVE:
-                        Preferences.setUsername(context, items[selection]);
+                        if (selection < 0) {
+                            break;
+                        }
+                        session.setActive(items[selection]);
+                        // E5-D3: new active account -> seed/reconcile reply polling now, not at the
+                        // next periodic wakeup. reconcile() is idempotent and the single source of truth.
+                        replyNotificationScheduler.reconcile();
                         Toast.makeText(context,
                                 context.getString(R.string.welcome, items[selection]),
                                 Toast.LENGTH_SHORT)
@@ -414,12 +461,10 @@ public class AppUtils {
                         if (selection < 0) {
                             break;
                         }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
-                            AccountManager.get(context).removeAccount(accounts[selection], null, null, null);
-                        } else {
-                            //noinspection deprecation
-                            AccountManager.get(context).removeAccount(accounts[selection], null, null);
-                        }
+                        session.removeAccount(items[selection]);
+                        // E5-D3: removing the active account clears the session -> reconcile() cancels
+                        // its periodic work; removing a non-active one is a no-op reconcile.
+                        replyNotificationScheduler.reconcile();
                         dialog.dismiss();
                         break;
                     default:
@@ -466,8 +511,8 @@ public class AppUtils {
     }
 
     public static String toHtmlColor(Context context, @AttrRes int colorAttr) {
-        return String.format(FORMAT_HTML_COLOR, 0xFFFFFF & ContextCompat.getColor(context,
-                AppUtils.getThemedResId(context, colorAttr)));
+        return String.format(FORMAT_HTML_COLOR,
+                0xFFFFFF & getThemedColor(context, colorAttr, Color.BLACK));
     }
 
     public static void toggleWebViewZoom(WebSettings webSettings, boolean enabled) {
@@ -478,8 +523,7 @@ public class AppUtils {
 
     public static void setStatusBarDim(Window window, boolean dim) {
         setStatusBarColor(window, dim ? Color.TRANSPARENT :
-                ContextCompat.getColor(window.getContext(),
-                        AppUtils.getThemedResId(window.getContext(), R.attr.colorPrimaryDark)));
+                getThemedColor(window.getContext(), R.attr.colorPrimaryDark, Color.BLACK));
     }
 
     public static void setStatusBarColor(Window window, int color) {
@@ -588,8 +632,7 @@ public class AppUtils {
                                            String url, @Nullable CustomTabsSession session) {
         if (Preferences.customTabsEnabled(context)) {
             CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(session)
-                    .setToolbarColor(ContextCompat.getColor(context,
-                            AppUtils.getThemedResId(context, R.attr.colorPrimary)))
+                    .setToolbarColor(getThemedColor(context, R.attr.colorPrimary, Color.BLACK))
                     .setShowTitle(true)
                     .enableUrlBarHiding()
                     .addDefaultShareMenuItem();

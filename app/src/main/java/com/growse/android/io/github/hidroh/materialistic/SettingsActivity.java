@@ -27,7 +27,9 @@ import android.view.MenuItem;
 import javax.inject.Inject;
 
 import com.growse.android.io.github.hidroh.materialistic.data.SearchRecentSuggestionsProvider;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class SettingsActivity extends DrawerActivity {
     @Inject AlertDialogBuilder mAlertDialogBuilder;
 
@@ -39,6 +41,8 @@ public class SettingsActivity extends DrawerActivity {
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_SHOW_TITLE);
+        AppUtils.padTopSystemBars(findViewById(R.id.toolbar));
+        AppUtils.padBottomSystemBars(findViewById(R.id.settings_scroll), false);
         findViewById(R.id.drawer_display).setOnClickListener(v ->
                 startActivity(new Intent(SettingsActivity.this, PreferencesActivity.class)
                         .putExtra(PreferencesActivity.EXTRA_TITLE, R.string.display)
@@ -59,6 +63,14 @@ public class SettingsActivity extends DrawerActivity {
                 startActivity(new Intent(SettingsActivity.this, PreferencesActivity.class)
                         .putExtra(PreferencesActivity.EXTRA_TITLE, R.string.readability)
                         .putExtra(PreferencesActivity.EXTRA_PREFERENCES, R.xml.preferences_readability)));
+        findViewById(R.id.drawer_notifications).setOnClickListener(v ->
+                startActivity(new Intent(SettingsActivity.this, PreferencesActivity.class)
+                        .putExtra(PreferencesActivity.EXTRA_TITLE, R.string.notifications)
+                        .putExtra(PreferencesActivity.EXTRA_PREFERENCES, R.xml.preferences_notifications)));
+        findViewById(R.id.drawer_ai).setOnClickListener(v ->
+                startActivity(new Intent(SettingsActivity.this, PreferencesActivity.class)
+                        .putExtra(PreferencesActivity.EXTRA_TITLE, R.string.title_activity_ai)
+                        .putExtra(PreferencesActivity.EXTRA_PREFERENCES, R.xml.preferences_ai)));
         findViewById(R.id.drawer_about).setOnClickListener(v ->
                 startActivity(new Intent(SettingsActivity.this, AboutActivity.class)));
         findViewById(R.id.drawer_release).setOnClickListener(v ->
@@ -94,7 +106,7 @@ public class SettingsActivity extends DrawerActivity {
                     .setNegativeButton(android.R.string.cancel, null)
                     .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                         Preferences.reset(SettingsActivity.this);
-                        AppUtils.restart(SettingsActivity.this, false);
+                        SettingsActivity.this.recreate();
                     })
                     .create()
                     .show();

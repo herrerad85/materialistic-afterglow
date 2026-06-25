@@ -23,17 +23,23 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder;
 import com.growse.android.io.github.hidroh.materialistic.ItemActivity;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.ThreadPreviewActivity;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 
 public class SubmissionRecyclerViewAdapter extends ItemRecyclerViewAdapter<SubmissionViewHolder> {
     private final Item[] mItems;
 
-    public SubmissionRecyclerViewAdapter(ItemManager itemManager, @NonNull Item[] items) {
-        super(itemManager);
+    public SubmissionRecyclerViewAdapter(ItemManager itemManager,
+                                         AccountActions accountActions,
+                                         PopupMenu popupMenu,
+                                         AlertDialogBuilder alertDialogBuilder,
+                                         @NonNull Item[] items) {
+        super(itemManager, accountActions, popupMenu, alertDialogBuilder);
         mItems = items;
     }
 

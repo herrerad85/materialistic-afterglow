@@ -27,6 +27,13 @@
     <style name="AppDrawerArrowToggle" parent="Widget.AppCompat.DrawerArrowToggle">
         <item name="color">?android:attr/textColorPrimary</item>
     </style>
+    <!-- Gate 1 parity alias: under the Material3 base, an un-tinted FAB picks up the M3 default
+         colorPrimaryContainer (pale lavender). Restore the accent-coloured FAB from the existing palette.
+         Per-instance tints (e.g. NavFloatingActionButton's white bg) still override this default. -->
+    <style name="AppFab" parent="Widget.Material3.FloatingActionButton.Primary">
+        <item name="backgroundTint">?attr/colorAccent</item>
+        <item name="tint">@android:color/white</item>
+    </style>
 
     <!-- =================== -->
     <!-- Preference themes   -->
@@ -197,9 +204,24 @@
     <!-- =========== -->
     <!-- Card styles -->
     <!-- =========== -->
+    <!-- The cards are MaterialCardView. Control the M3 defaults: pin the fill to the theme card role,
+         pin the corner radius to the legacy 0dp (MaterialCardView otherwise defaults to a 12dp M3 radius),
+         and read the AMOLED-only outline from themed attrs (transparent/0dp on non-AMOLED themes).
+         The materialThemeOverlay disables the tonal elevation overlay so elevation gives shadow only,
+         no surface lightening (load-bearing for true-black AMOLED). -->
     <style name="BaseAppCardView" parent="CardView">
         <item name="cardPreventCornerOverlap">false</item>
         <item name="cardUseCompatPadding">true</item>
+        <item name="cardBackgroundColor">?attr/colorCardBackground</item>
+        <item name="cardCornerRadius">0dp</item>
+        <item name="strokeColor">?attr/cardStrokeColor</item>
+        <item name="strokeWidth">?attr/cardStrokeWidth</item>
+        <item name="materialThemeOverlay">@style/AppCardViewOverlay</item>
+    </style>
+
+    <!-- Overlay applied to the card context so elevation never tints the surface (no tonal lightening). -->
+    <style name="AppCardViewOverlay">
+        <item name="elevationOverlayEnabled">false</item>
     </style>
 
     <style name="AppCardView" parent="BaseAppCardView">

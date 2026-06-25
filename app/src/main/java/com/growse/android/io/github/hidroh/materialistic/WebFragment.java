@@ -51,7 +51,6 @@ import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -59,6 +58,7 @@ import androidx.core.widget.NestedScrollView;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import dagger.hilt.android.AndroidEntryPoint;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.FileDownloader;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
@@ -74,6 +74,7 @@ import okhttp3.Call;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
 
+@AndroidEntryPoint
 public class WebFragment extends LazyLoadFragment
         implements Scrollable, KeyDelegate.BackInterceptor {
     public static final String EXTRA_ITEM = WebFragment.class.getName() +".EXTRA_ITEM";
@@ -88,7 +89,7 @@ public class WebFragment extends LazyLoadFragment
     @Synthetic WebView mWebView;
     private NestedScrollView mScrollView;
     @Synthetic boolean mExternalRequired = false;
-    @Inject @Named(ActivityModule.HN) ItemManager mItemManager;
+    @Inject @HackerNews ItemManager mItemManager;
     @Inject PopupMenu mPopupMenu;
     private KeyDelegate.NestedScrollViewHelper mScrollableHelper;
     private final Preferences.Observable mPreferenceObservable = new Preferences.Observable();
@@ -138,7 +139,7 @@ public class WebFragment extends LazyLoadFragment
             mItem = savedInstanceState.getParcelable(EXTRA_ITEM);
         } else {
             // Reader mode is unavailable (the hosted Mercury parser is dead), so a stored
-            // Readability default is coerced to Article.
+            // Readability default is coerced to Article. See S0-02 / docs/slice-0-stabilize.
             mReadability = false;
             mItem = getArguments().getParcelable(EXTRA_ITEM);
         }
@@ -159,6 +160,7 @@ public class WebFragment extends LazyLoadFragment
             mButtonNext = mFragmentView.findViewById(R.id.button_next);
             mButtonNext.setEnabled(false);
             mEditText = (EditText) mFragmentView.findViewById(R.id.edittext);
+            AppUtils.padBottomSystemBars(mFragmentView.findViewById(R.id.web_view_container), false);
             setUpWebControls(mFragmentView);
             setUpWebView(mFragmentView);
         }

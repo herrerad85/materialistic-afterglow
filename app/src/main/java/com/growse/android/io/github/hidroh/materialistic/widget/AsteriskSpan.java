@@ -18,6 +18,7 @@ package com.growse.android.io.github.hidroh.materialistic.widget;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -33,8 +34,7 @@ public class AsteriskSpan extends ReplacementSpan {
 
     public AsteriskSpan(Context context) {
         super();
-        mBackgroundColor = ContextCompat.getColor(context,
-                AppUtils.getThemedResId(context, R.attr.colorAccent));
+        mBackgroundColor = AppUtils.getThemedColor(context, R.attr.colorAccent, Color.BLACK);
         mTextColor = ContextCompat.getColor(context, android.R.color.transparent);
         mPadding = context.getResources().getDimension(R.dimen.padding_asterisk);
     }

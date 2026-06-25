@@ -18,13 +18,12 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <string name="app_name">Afterglow</string>
-    <string name="app_tagline">A modern fork of Materialistic for Hacker News.</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_list">Top Stories</string>
     <string name="title_activity_best">Best Stories</string>
     <string name="title_activity_item">Comments</string>
     <string name="title_activity_release">What\'s New</string>
-    <string name="filter_title_item">Materialistic</string>
+    <string name="filter_title_item">Afterglow</string>
     <string name="open_drawer">Open drawer</string>
     <string name="close_drawer">Close drawer</string>
     <string name="view_in_browser">View in external browser</string>
@@ -36,8 +35,10 @@
     <string name="application_info_title">Application Info</string>
     <string name="application_info_text">
         <![CDATA[
+            <p>Afterglow</p>
+            <p>A modern fork of Materialistic for Hacker News.</p>
             <p>Version: %1$s (%2$d)</p>
-            <p>This application is open source at <a href="https://github.com/hidroh/materialistic">github.com/hidroh/materialistic</a></p>
+            <p>This application is open source at <a href="https://github.com/herrerad85/materialistic-afterglow">github.com/herrerad85/materialistic-afterglow</a></p>
         ]]>
     </string>
     <string name="libraries_title">Libraries &amp; Resources</string>
@@ -143,7 +144,7 @@
     <string name="comment_hint">Comment</string>
     <string name="feedback_note">
         <![CDATA[
-            Your feedback will be made public as a <a href="https://github.com/hidroh/materialistic/issues">Materialistic Github issue</a>.
+            Your feedback will be made public as an <a href="https://github.com/herrerad85/materialistic-afterglow/issues">Afterglow Github issue</a>.
         ]]>
     </string>
     <string name="title_required">Title is required</string>
@@ -199,6 +200,7 @@
     <string name="theme_transparent">Transparent</string>
     <string name="theme_solarized_dark">Solarized Dark</string>
     <string name="theme_solarized">Solarized</string>
+    <string name="theme_dynamic">Dynamic (Material You)</string>
     <string name="comment_display_multiple">Multiple pages</string>
     <string name="comment_display_single">Single page - auto expand</string>
     <string name="comment_display_collapsed">Single page - collapsed</string>
@@ -206,6 +208,12 @@
     <string name="story_display_comments">Comments</string>
     <string name="search_sort_recent">More recent</string>
     <string name="search_sort_popularity">Popularity</string>
+    <string name="search_date_title">Time period</string>
+    <string name="search_date_any">Any time</string>
+    <string name="search_date_24h">Past 24 hours</string>
+    <string name="search_date_week">Past week</string>
+    <string name="search_date_month">Past month</string>
+    <string name="search_date_year">Past year</string>
     <string name="story_display_readability">Readability</string>
     <string name="font_options">Font options</string>
     <string name="read_more" tools:ignore="PluralsCandidate">Read all %1$d lines</string>
@@ -305,6 +313,15 @@
     <string name="article_link">Article link</string>
     <string name="hint_drag">Drag to reposition</string>
     <string name="hint_nav_short">Swipe \u2191 \u2193 \u2192 \u2190 to navigate\nLong press to reposition</string>
+    <string name="comment_nav_nudge">Tip: turn on the navigation pad in Settings to jump between comments and parents.</string>
+    <string name="comment_nav_nudge_action">Settings</string>
+    <string name="find_in_thread">Find in thread</string>
+    <string name="find_in_thread_hint">Find in loaded comments</string>
+    <string name="comment_search_count">%1$d / %2$d</string>
+    <string name="comment_search_no_matches">No matches in loaded comments</string>
+    <string name="comment_search_previous">Previous match</string>
+    <string name="comment_search_next">Next match</string>
+    <string name="comment_search_close">Close find</string>
     <string name="konami">You got the Konami code! Give me 5 stars?</string>
     <string name="end_of_thread">End of thread</string>
     <string name="save_draft">Save draft</string>
@@ -322,6 +339,44 @@
     <string name="share_file">Share file</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="notification_channel_downloads">Downloads</string>
+    <string name="notification_channel_replies">Replies</string>
+    <string name="notifications">Notifications</string>
+    <string name="pref_reply_notifications_title">Reply notifications</string>
+    <string name="pref_reply_notifications_summary">Notify me when someone replies to my comments or stories</string>
+    <string name="reply_notification_title">%1$s replied to you</string>
+    <string name="reply_notification_text">on \"%1$s\"</string>
+    <string name="reply_notification_text_generic">Tap to open the thread</string>
+    <plurals name="reply_notification_summary">
+        <item quantity="one">%d new reply</item>
+        <item quantity="other">%d new replies</item>
+    </plurals>
+    <string name="reply_notifications_permission_denied">Reply notifications need notification permission</string>
     <string name="reply">Reply</string>
+    <string name="title_activity_ai">AI</string>
+    <string name="pref_ai_summaries_title">AI summaries</string>
+    <string name="pref_ai_summaries_summary">Summarize long comment threads (opt-in, bring your own key)</string>
+    <string name="pref_ai_api_key_title">API key</string>
+    <string name="pref_ai_provider_title">AI provider</string>
+    <string name="ai_provider_gemini">Gemini (Google, free tier)</string>
+    <string name="ai_provider_anthropic">Anthropic (Claude)</string>
+    <string name="ai_consent_title">Enable AI summaries?</string>
+    <string name="ai_consent_message">Afterglow will send the comments of the thread you choose to your selected AI provider (Gemini or Claude) using your API key to generate a summary, subject to that provider\'s privacy policy. Your key is stored encrypted on this device and is never sent anywhere else. Summaries run only when you tap Summarize. Note: on the Gemini free tier, Google may use your prompts and the generated summaries to improve its products, and reviewers may read them, so avoid summarizing private or sensitive threads.</string>
+    <string name="ai_consent_enable">Enable</string>
+    <string name="ai_key_required">Enter your API key in Settings to use summaries.</string>
+    <string name="ai_key_set">API key set</string>
+    <string name="ai_key_not_set">Not set</string>
+    <string name="summarize_thread">Summarize thread</string>
+    <string name="summary_copy">Copy</string>
+    <string name="summary_close">Close</string>
+    <string name="summary_copied">Summary copied</string>
+    <string name="ai_summary_error">Couldn\'t summarize this thread. Check your connection and try again.</string>
+    <string-array name="ai_provider_entries">
+        <item>@string/ai_provider_gemini</item>
+        <item>@string/ai_provider_anthropic</item>
+    </string-array>
+    <string-array name="ai_provider_values" translatable="false">
+        <item>@string/pref_ai_provider_value_gemini</item>
+        <item>@string/pref_ai_provider_value_anthropic</item>
+    </string-array>
 
 </resources>

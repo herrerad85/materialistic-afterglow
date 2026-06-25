@@ -1,63 +1,56 @@
-# Afterglow
+## Afterglow
+Afterglow is a Material Design [Hacker News] client for Android. It is a modern, actively maintained fork of [Materialistic] by Ha Duy Trung.
 
-A modern fork of Materialistic for Hacker News.
+> Afterglow is under active development and has not yet reached a stable 1.0 release.
 
-Afterglow is a maintained, modernized fork of the [Materialistic][upstream-hidroh] Hacker News client
-for Android (continuing [growse/materialistic-nouveau][upstream-growse]). The upstream project README
-follows below, preserved for attribution.
+### Features
+- Browse top, new, best, ask, show, and jobs stories
+- Working Hacker News account actions: log in, vote, comment, reply, and submit
+- Threaded comment navigation: jump to parent, in-thread search, collapse, and swipe gestures
+- Reply notifications for your threads, plus indicators for new comments since your last visit
+- Search powered by Algolia, including a date-range filter
+- Material 3 / Material You design with dynamic color, plus light, dark, and true-black AMOLED themes
+- Save stories and comments for offline reading
+- Optional AI thread summaries, off by default: bring your own API key (Google Gemini or Anthropic Claude). Thread text is sent only when you opt in and tap Summarize
+- Open links in the built-in reader or Android Custom Tabs
 
-[upstream-hidroh]: https://github.com/hidroh/materialistic
-[upstream-growse]: https://github.com/growse/materialistic-nouveau
+Uses the official Hacker News API. Account actions use your Hacker News credentials and talk to news.ycombinator.com directly.
 
----
-
-## Materialistic for Hacker News
-Material design [Hacker News] client for Android, uses official [HackerNews/API], [Dagger] for dependency injection.
-
-
-
-**Dependencies**
-- [Official Hacker News API][HackerNews/API], user services (e.g. login/create account/vote/comment) rely on redirect requests to Hacker News website
-- [Algolia Hacker News Search API]
-- [Mercury Web Parser API]
-- [Android Jetpack]: appcompat-v7 / recyclerview-v7 / design / cardview-v7 / preference-v7 / customtabs
-- Square [Retrofit] / [OkHttp] / [AssertJ] / [Dagger] / [LeakCanary]
-- [RxJava] & [RxAndroid]
-- [PDF.js]
+### Setup
+**Requirements**
+- JDK 21
+- Latest Android SDK command-line and platform tools
 
 **Build**
 
     ./gradlew assembleDebug
 
-Build with LeakCanary on
-
-    ./gradlew assembleDebug -Pleak
-
-### Articles
-- [Supporting multiple themes in your Android app (Part 1)][article-theme1]
-- [Supporting multiple themes in your Android app (Part 2)][article-theme2] [![][Android Weekly 144 Badge]][Android Weekly 144]
-- [Building custom preferences with preference-v7][article-preference]
-- [Hacking up an ad blocker for Android][article-adblocker]
-- [Bottom sheet everything][article-bottom-sheet] [![][AndroidDev Digest 99 Badge]][AndroidDev Digest 99] [![][Android Weekly 227 Badge]][Android Weekly 227]
-
-### Screenshots
-<img src="assets/screenshot-1.png" width="200px" />
-<img src="assets/screenshot-2.png" width="200px" />
-<img src="assets/screenshot-3.png" width="200px" />
-<img src="assets/screenshot-4.png" width="600px" />
+### Built with
+- [Hilt] for dependency injection
+- Kotlin [Coroutines] with AndroidX [Lifecycle] ViewModel and Flow
+- [Retrofit] and [OkHttp] with [Gson] for networking
+- AndroidX [Room] for local storage and [WorkManager] for background reply polling
+- [Material Components for Android][Material] (Material 3)
+- Google [Tink] for encrypting the optional AI API key on device
+- AndroidX Jetpack: AppCompat, Activity, Fragment, RecyclerView, Preference, Browser (Custom Tabs), SwipeRefreshLayout, CardView
+- [Official Hacker News API][HackerNews/API] and the [Algolia Hacker News Search API]
+- [PDF.js] for in-app PDF rendering
 
 ### Contributing
-Contributions are always welcome. Please make sure you read [Contributing notes](CONTRIBUTING.md) first.
+Contributions are welcome. Development happens on the `development` branch, so please open pull requests against `development`. Please read the [Contributing notes](CONTRIBUTING.md) first.
+
+### Attribution
+Afterglow is a fork of [Materialistic] by Ha Duy Trung, continued from the [materialistic-nouveau] fork by growse, and used under the Apache License 2.0. The original copyright notice is retained below and in the source file headers.
 
 ### License
     Copyright 2015 Ha Duy Trung
-    
+
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-    
+
         http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,25 +59,17 @@ Contributions are always welcome. Please make sure you read [Contributing notes]
 
 [Hacker News]: https://news.ycombinator.com/
 [HackerNews/API]: https://github.com/HackerNews/API
+[Materialistic]: https://github.com/hidroh/materialistic
+[materialistic-nouveau]: https://github.com/growse/materialistic-nouveau
 [Algolia Hacker News Search API]: https://github.com/algolia/hn-search
-[AOSP support library]: https://developer.android.com/tools/support-library/features.html
 [Retrofit]: https://github.com/square/retrofit
 [OkHttp]: https://github.com/square/okhttp
-[AssertJ]: https://github.com/square/assertj-android
-[Dagger]: https://github.com/square/dagger
-[LeakCanary]: https://github.com/square/leakcanary
-[RxJava]: https://github.com/ReactiveX/RxJava
-[RxAndroid]: https://github.com/ReactiveX/RxAndroid
-[mercury]: https://mercury.postlight.com/web-parser/
-[article-theme1]: http://www.hidroh.com/2015/02/16/support-multiple-themes-android-app/
-[article-theme2]: http://www.hidroh.com/2015/02/25/support-multiple-themes-android-app-part-2/
-[article-preference]: http://www.hidroh.com/2015/11/30/building-custom-preferences-v7/
-[article-adblocker]: http://www.hidroh.com/2016/05/19/hacking-up-ad-blocker-android/
-[article-bottom-sheet]: http://www.hidroh.com/2016/06/17/bottom-sheet-everything/
-[Android Weekly 144 Badge]: https://img.shields.io/badge/android--weekly-144-blue.svg
-[Android Weekly 227 Badge]: https://img.shields.io/badge/android--weekly-227-blue.svg
-[Android Weekly 144]: http://androidweekly.net/issues/issue-144
-[Android Weekly 227]: http://androidweekly.net/issues/issue-227
-[AndroidDev Digest 99 Badge]: https://img.shields.io/badge/androiddev--digest-99-blue.svg
-[AndroidDev Digest 99]: https://www.androiddevdigest.com/digest-99/
+[Gson]: https://github.com/google/gson
+[Hilt]: https://dagger.dev/hilt/
+[Coroutines]: https://github.com/Kotlin/kotlinx.coroutines
+[Lifecycle]: https://developer.android.com/jetpack/androidx/releases/lifecycle
+[Room]: https://developer.android.com/jetpack/androidx/releases/room
+[WorkManager]: https://developer.android.com/jetpack/androidx/releases/work
+[Material]: https://github.com/material-components/material-components-android
+[Tink]: https://github.com/tink-crypto/tink-java
 [PDF.js]: https://mozilla.github.io/pdf.js/

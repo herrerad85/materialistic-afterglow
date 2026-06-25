@@ -21,7 +21,14 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 
 public interface UserManager {
+    /** Cached fetch (the 30-min HN-host response cache); use for the profile UI. */
     void getUser(String username, final ResponseListener<User> listener);
+
+    /**
+     * @param forceNetwork true bypasses the 30-min response cache. Used only by the reply poller so a
+     *     reply to a just-submitted item is seen this poll instead of up to ~30 min later (E5-FU-03).
+     */
+    void getUser(String username, final ResponseListener<User> listener, boolean forceNetwork);
 
     interface User extends Parcelable {
         String getId();

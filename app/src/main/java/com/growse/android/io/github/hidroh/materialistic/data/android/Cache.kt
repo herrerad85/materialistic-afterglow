@@ -16,12 +16,11 @@
 
 package com.growse.android.io.github.hidroh.materialistic.data.android
 
+import android.os.Handler
+import android.os.Looper
 import com.growse.android.io.github.hidroh.materialistic.data.LocalCache
 import com.growse.android.io.github.hidroh.materialistic.data.MaterialisticDatabase
 import javax.inject.Inject
-import javax.inject.Named
-import rx.Observable
-import rx.Scheduler
 
 class Cache
 @Inject
@@ -30,8 +29,11 @@ constructor(
     private val savedStoriesDao: MaterialisticDatabase.SavedStoriesDao,
     private val readStoriesDao: MaterialisticDatabase.ReadStoriesDao,
     private val readableDao: MaterialisticDatabase.ReadableDao,
-    @Named("main") private val mainScheduler: Scheduler,
 ) : LocalCache {
+
+  // Delivers the read-uri LiveData notification on the main thread, replacing the old
+  // observeOn(mainScheduler). The DAO insert in setViewed stays synchronous on the caller's thread.
+  private val mainHandler = Handler(Looper.getMainLooper())
 
   override fun getReadability(itemId: String?) = readableDao.selectByItemId(itemId)?.content
 
@@ -43,10 +45,7 @@ constructor(
 
   override fun setViewed(itemId: String?) {
     readStoriesDao.insert(MaterialisticDatabase.ReadStory(itemId))
-    Observable.just(itemId)
-        .map { database.createReadUri(it) }
-        .observeOn(mainScheduler)
-        .subscribe { database.setLiveValue(it) }
+    mainHandler.post { database.setLiveValue(database.createReadUri(itemId)) }
   }
 
   override fun isFavorite(itemId: String?) = savedStoriesDao.selectByItemId(itemId) != null

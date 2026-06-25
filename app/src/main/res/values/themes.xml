@@ -20,15 +20,27 @@
     <!-- =================== -->
     <!-- Application themes  -->
     <!-- =================== -->
-    <style name="BaseAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="BaseAppTheme" parent="Theme.Material3.Light.NoActionBar">
         <!-- color palette -->
         <item name="colorPrimary">@color/orange300</item>
         <item name="colorPrimaryDark">@color/orange400</item>
         <item name="colorAccent">@color/redA200</item>
-        <item name="colorCardBackground">@color/grey100</item>
-        <item name="colorCardHighlight">@color/orange100</item>
+        <item name="colorSurfaceContainer">@color/grey100</item>
+        <item name="colorSurfaceContainerHigh">@color/orange100</item>
         <item name="android:textColorPrimary">@color/blackT87</item>
         <item name="android:textColorSecondary">@color/blackT50</item>
+
+        <!-- legacy card attrs are aliases of M3 surface roles (one palette, no parallel literals) -->
+        <item name="colorCardBackground">?attr/colorSurfaceContainer</item>
+        <item name="colorCardHighlight">?attr/colorSurfaceContainerHigh</item>
+        <!-- Resting rank/score column tracks the highlight by default; the AMOLED Black overlay
+             decouples it to pure black so resting cards carry no grey rail. -->
+        <item name="colorRankColumnBackground">?attr/colorCardHighlight</item>
+        <!-- activated legacy controls (switch/checkbox/radio/cursor) read the theme accent, not M3 default -->
+        <item name="colorControlActivated">?attr/colorAccent</item>
+        <!-- no card outline by default; the AMOLED Black overlay turns this on -->
+        <item name="cardStrokeColor">@android:color/transparent</item>
+        <item name="cardStrokeWidth">0dp</item>
 
         <!-- default theme override -->
         <item name="android:windowDisablePreview">true</item>
@@ -41,6 +53,8 @@
         <item name="preferenceTheme">@style/AppPreferenceThemeOverlay</item>
         <item name="popupMenuStyle">@style/Widget.AppCompat.Light.PopupMenu.Overflow</item>
         <item name="drawerArrowStyle">@style/AppDrawerArrowToggle</item>
+        <item name="floatingActionButtonStyle">@style/AppFab</item>
+        <item name="switchStyle">@style/AppSwitch</item>
 
         <!-- custom themed attributes -->
         <item name="titleTextSize">@dimen/text_size_medium</item>
@@ -49,15 +63,27 @@
         <item name="backgroundDrawerHeader">@drawable/bg_drawer_light</item>
     </style>
 
-    <style name="BaseAppTheme.Dark" parent="Theme.AppCompat.NoActionBar">
+    <style name="BaseAppTheme.Dark" parent="Theme.Material3.Dark.NoActionBar">
         <!-- color palette -->
         <item name="colorPrimary">@color/grey900</item>
         <item name="colorPrimaryDark">@color/blackT87</item>
         <item name="colorAccent">@color/redA100</item>
-        <item name="colorCardBackground">@color/grey900</item>
-        <item name="colorCardHighlight">@color/grey800</item>
+        <item name="colorSurfaceContainer">@color/grey900</item>
+        <item name="colorSurfaceContainerHigh">@color/grey800</item>
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColorSecondary">@color/whiteT50</item>
+
+        <!-- legacy card attrs are aliases of M3 surface roles (one palette, no parallel literals) -->
+        <item name="colorCardBackground">?attr/colorSurfaceContainer</item>
+        <item name="colorCardHighlight">?attr/colorSurfaceContainerHigh</item>
+        <!-- Resting rank/score column tracks the highlight by default; the AMOLED Black overlay
+             decouples it to pure black so resting cards carry no grey rail. -->
+        <item name="colorRankColumnBackground">?attr/colorCardHighlight</item>
+        <!-- activated legacy controls (switch/checkbox/radio/cursor) read the theme accent, not M3 default -->
+        <item name="colorControlActivated">?attr/colorAccent</item>
+        <!-- no card outline by default; the AMOLED Black overlay turns this on -->
+        <item name="cardStrokeColor">@android:color/transparent</item>
+        <item name="cardStrokeWidth">0dp</item>
 
         <!-- default theme override -->
         <item name="android:windowDisablePreview">true</item>
@@ -70,6 +96,8 @@
         <item name="preferenceTheme">@style/AppPreferenceThemeOverlay</item>
         <item name="popupMenuStyle">@style/Widget.AppCompat.PopupMenu.Overflow</item>
         <item name="drawerArrowStyle">@style/AppDrawerArrowToggle</item>
+        <item name="floatingActionButtonStyle">@style/AppFab</item>
+        <item name="switchStyle">@style/AppSwitch</item>
 
         <!-- custom themed attributes -->
         <item name="titleTextSize">@dimen/text_size_medium</item>
@@ -78,7 +106,20 @@
         <item name="backgroundDrawerHeader">@drawable/bg_drawer_dark</item>
     </style>
 
-    <style name="BaseAppTheme.DayNight.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="BaseAppTheme.DayNight.NoActionBar" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- legacy card attrs are aliases of M3 surface roles (one palette, no parallel literals).
+             The surface roles themselves are set per day/night by BaseAppTheme.DayNight. -->
+        <item name="colorCardBackground">?attr/colorSurfaceContainer</item>
+        <item name="colorCardHighlight">?attr/colorSurfaceContainerHigh</item>
+        <!-- Resting rank/score column tracks the highlight by default; the AMOLED Black overlay
+             decouples it to pure black so resting cards carry no grey rail. -->
+        <item name="colorRankColumnBackground">?attr/colorCardHighlight</item>
+        <!-- activated legacy controls (switch/checkbox/radio/cursor) read the theme accent, not M3 default -->
+        <item name="colorControlActivated">?attr/colorAccent</item>
+        <!-- no card outline by default; the AMOLED Black overlay turns this on -->
+        <item name="cardStrokeColor">@android:color/transparent</item>
+        <item name="cardStrokeWidth">0dp</item>
+
         <!-- default theme override -->
         <item name="android:windowDisablePreview">true</item>
         <item name="android:textColorTertiary">?android:textColorPrimary</item>
@@ -88,6 +129,8 @@
         <item name="preferenceTheme">@style/AppPreferenceThemeOverlay</item>
         <item name="popupMenuStyle">@style/Widget.AppCompat.Light.PopupMenu.Overflow</item>
         <item name="drawerArrowStyle">@style/AppDrawerArrowToggle</item>
+        <item name="floatingActionButtonStyle">@style/AppFab</item>
+        <item name="switchStyle">@style/AppSwitch</item>
 
         <!-- custom themed attributes -->
         <item name="titleTextSize">@dimen/text_size_medium</item>
@@ -95,13 +138,19 @@
         <item name="contentTextSize">@dimen/text_size_small</item>
     </style>
 
+    <!-- SwitchCompat (preference switches) reads ?attr/switchStyle for its tint, not colorControlActivated.
+         The Material3 default switchStyle drives the checked colour from an M3 role that leaks purple under
+         DayNight night. Parenting on the AppCompat switch makes the checked state honour colorControlActivated
+         (pinned to ?colorAccent on the base themes), so switches read the theme accent in every theme + night. -->
+    <style name="AppSwitch" parent="Widget.AppCompat.CompoundButton.Switch" />
+
     <style name="BaseAppTheme.DayNight" parent="BaseAppTheme.DayNight.NoActionBar">
         <!-- color palette -->
         <item name="colorPrimary">@color/orange300</item>
         <item name="colorPrimaryDark">@color/orange400</item>
         <item name="colorAccent">@color/redA200</item>
-        <item name="colorCardBackground">@color/grey100</item>
-        <item name="colorCardHighlight">@color/orange100</item>
+        <item name="colorSurfaceContainer">@color/grey100</item>
+        <item name="colorSurfaceContainerHigh">@color/orange100</item>
         <item name="android:textColorPrimary">@color/blackT87</item>
         <item name="android:textColorSecondary">@color/blackT50</item>
 
@@ -135,11 +184,25 @@
     </style>
 
     <style name="Black">
+        <!-- Toolbar/app-bar stays grey900 as deliberate chrome (not black) so the bar/list boundary
+             survives and M3 liftOnScroll surface tint has somewhere to read from. -->
         <item name="colorPrimary">@color/grey900</item>
-        <item name="colorPrimaryDark">@color/blackT87</item>
+        <item name="colorPrimaryDark">@color/black</item>
         <item name="colorAccent">@color/redA100</item>
-        <item name="colorCardBackground">@color/blackT87</item>
-        <item name="colorCardHighlight">@color/grey900</item>
+        <!-- True-black AMOLED: every resting/window surface role is opaque #000000 so empty areas are
+             OLED-off and the window cannot fall back to M3 dark-grey. -->
+        <item name="colorSurface">@color/black</item>
+        <item name="colorSurfaceContainer">@color/black</item>
+        <item name="android:colorBackground">@color/black</item>
+        <item name="android:windowBackground">@color/black</item>
+        <!-- Selection/highlight fill stays grey900 so a selected card reads on a pure-black resting card. -->
+        <item name="colorSurfaceContainerHigh">@color/grey900</item>
+        <!-- Resting rank/score column matches the card surface (pure black) so every resting AMOLED
+             card is full #000; grey900 above stays the selection/highlight fill only. -->
+        <item name="colorRankColumnBackground">?attr/colorCardBackground</item>
+        <!-- Cards are pure black on a pure-black window; a thin low-emphasis outline gives separation. -->
+        <item name="cardStrokeColor">@color/grey800</item>
+        <item name="cardStrokeWidth">1dp</item>
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColorSecondary">@color/whiteT70</item>
         <item name="alertDialogTheme">@style/AppAlertDialog.Dark</item>
@@ -149,7 +212,7 @@
     <style name="Sepia">
         <item name="colorPrimary">@color/orange300</item>
         <item name="colorPrimaryDark">@color/orange400</item>
-        <item name="colorCardBackground">@color/orange50</item>
+        <item name="colorSurfaceContainer">@color/orange50</item>
         <item name="android:textColorPrimary">@color/brown800</item>
         <item name="android:textColorSecondary">@color/brown400</item>
         <item name="alertDialogTheme">@style/AppAlertDialog.Sepia</item>
@@ -159,8 +222,8 @@
     <style name="Green">
         <item name="colorPrimary">@color/teal300</item>
         <item name="colorPrimaryDark">@color/teal400</item>
-        <item name="colorCardBackground">@color/teal50</item>
-        <item name="colorCardHighlight">@color/teal100</item>
+        <item name="colorSurfaceContainer">@color/teal50</item>
+        <item name="colorSurfaceContainerHigh">@color/teal100</item>
         <item name="android:textColorPrimary">@color/teal900</item>
         <item name="android:textColorSecondary">@color/teal600</item>
         <item name="alertDialogTheme">@style/AppAlertDialog.Green</item>
@@ -171,8 +234,8 @@
         <item name="colorPrimary">@color/orange300</item>
         <item name="colorPrimaryDark">@color/orange400</item>
         <item name="colorAccent">@color/solarizedOrange</item>
-        <item name="colorCardBackground">@color/solarizedBase3</item>
-        <item name="colorCardHighlight">@color/solarizedBase2</item>
+        <item name="colorSurfaceContainer">@color/solarizedBase3</item>
+        <item name="colorSurfaceContainerHigh">@color/solarizedBase2</item>
         <item name="android:textColorPrimary">@color/solarizedBase01</item>
         <item name="android:textColorSecondary">@color/solarizedBase1</item>
         <item name="alertDialogTheme">@style/AppAlertDialog.Solarized</item>
@@ -183,8 +246,8 @@
         <item name="colorPrimary">@color/grey900</item>
         <item name="colorPrimaryDark">@color/blackT87</item>
         <item name="colorAccent">@color/solarizedOrange</item>
-        <item name="colorCardBackground">@color/solarizedBase03</item>
-        <item name="colorCardHighlight">@color/solarizedBase02</item>
+        <item name="colorSurfaceContainer">@color/solarizedBase03</item>
+        <item name="colorSurfaceContainerHigh">@color/solarizedBase02</item>
         <item name="android:textColorPrimary">@color/solarizedBase2</item>
         <item name="android:textColorSecondary">@color/solarizedBase1</item>
         <item name="alertDialogTheme">@style/AppAlertDialog.Dark.Solarized</item>
@@ -197,6 +260,14 @@
     <!-- =================== -->
     <!-- Alert dialog themes -->
     <!-- =================== -->
+    <!-- Visible dialog button labels: under the Material3 base theme the AppCompat alert-dialog
+         buttons lose a contrasting label colour, rendering OK/CANCEL/Enable invisible. Force the
+         accent colour onto the button-bar styles (inherited by all AppAlertDialog.* variants below).
+         Used by the AI consent + BYO-key dialogs. -->
+    <style name="AppAlertDialogButton" parent="Widget.AppCompat.Button.ButtonBar.AlertDialog">
+        <item name="android:textColor">?attr/colorAccent</item>
+    </style>
+
     <style name="AppAlertDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
         <item name="colorPrimary">@color/orange400</item>
         <item name="colorAccent">@color/redA200</item>
@@ -207,6 +278,9 @@
         <item name="colorCardBackground">@color/grey100</item>
         <item name="colorCardHighlight">@color/orange100</item>
         <item name="backgroundDrawerHeader">@drawable/bg_drawer_light</item>
+        <item name="buttonBarPositiveButtonStyle">@style/AppAlertDialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/AppAlertDialogButton</item>
+        <item name="buttonBarNeutralButtonStyle">@style/AppAlertDialogButton</item>
     </style>
 
     <style name="AppAlertDialog.Dark" parent="Theme.AppCompat.Dialog.Alert">
@@ -218,6 +292,9 @@
         <item name="colorCardBackground">@color/cardDarkBackground</item>
         <item name="colorCardHighlight">@color/grey800</item>
         <item name="backgroundDrawerHeader">@drawable/bg_drawer_dark</item>
+        <item name="buttonBarPositiveButtonStyle">@style/AppAlertDialogButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/AppAlertDialogButton</item>
+        <item name="buttonBarNeutralButtonStyle">@style/AppAlertDialogButton</item>
     </style>
 
     <style name="AppAlertDialog.Sepia">

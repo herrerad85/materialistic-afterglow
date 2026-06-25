@@ -19,7 +19,9 @@ package com.growse.android.io.github.hidroh.materialistic;
 import androidx.annotation.NonNull;
 
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class BestActivity extends BaseStoriesActivity {
     @NonNull
     @Override

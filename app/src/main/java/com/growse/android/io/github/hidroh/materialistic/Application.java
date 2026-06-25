@@ -16,25 +16,33 @@
 
 package com.growse.android.io.github.hidroh.materialistic;
 
-import android.content.Context;
 import android.graphics.Typeface;
 import android.os.StrictMode;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.hilt.work.HiltWorkerFactory;
+import androidx.work.Configuration;
 
-import dagger.ObjectGraph;
+import javax.inject.Inject;
+
+import dagger.hilt.EntryPoint;
+import dagger.hilt.InstallIn;
+import dagger.hilt.android.EntryPointAccessors;
+import dagger.hilt.android.HiltAndroidApp;
+import dagger.hilt.components.SingletonComponent;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountSession;
 import com.growse.android.io.github.hidroh.materialistic.data.AlgoliaClient;
-import rx.schedulers.Schedulers;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
 
-public class Application extends android.app.Application implements Injectable {
+@HiltAndroidApp
+public class Application extends android.app.Application implements Configuration.Provider {
 
     public static Typeface TYPE_FACE = null;
-    private ObjectGraph mApplicationGraph;
 
-    @Override
-    protected void attachBaseContext(Context base) {
-        super.attachBaseContext(base);
-        mApplicationGraph = ObjectGraph.create();
-    }
+    // Supplies the @HiltWorker factory so WorkManager can construct the injected reply-poll worker.
+    // Injected (not entry-point-fetched) because getWorkManagerConfiguration() can run before
+    // onCreate; field injection is available by the time Hilt has built the application component.
+    @Inject HiltWorkerFactory mWorkerFactory;
 
     @Override
     public void onCreate() {
@@ -53,17 +61,48 @@ public class Application extends android.app.Application implements Injectable {
         }
         Preferences.migrate(this);
         TYPE_FACE = FontCache.getInstance().get(this, Preferences.Theme.getTypeface(this));
-        AppUtils.registerAccountsUpdatedListener(this);
-        AdBlocker.init(this, Schedulers.io());
+        com.growse.android.io.github.hidroh.materialistic.accounts.AccountSession accountSession =
+                EntryPointAccessors.fromApplication(this, AccountSessionEntryPoint.class)
+                        .accountSession();
+        accountSession.startAccountMonitor();
+        // Slice 9 G2: drop the legacy "Materialistic" offline-sync account the deleted SyncAdapter
+        // path created, so it stops showing as a phantom entry in the account chooser. Idempotent.
+        accountSession.purgeLegacySyncAccount();
+        // App-start reply-poll reconciliation (E5-D3): the scheduler is idempotent, so re-running it
+        // on every launch is safe and re-establishes the schedule if it was lost.
+        EntryPointAccessors.fromApplication(this, ReplyNotificationEntryPoint.class)
+                .replyNotificationScheduler()
+                .reconcile();
+        AdBlocker.init(this);
     }
 
+    @NonNull
     @Override
-    public void inject(Object object) {
-        getApplicationGraph().inject(object);
+    public Configuration getWorkManagerConfiguration() {
+        return new Configuration.Builder()
+                .setWorkerFactory(mWorkerFactory)
+                .build();
     }
 
-    @Override
-    public ObjectGraph getApplicationGraph() {
-        return mApplicationGraph;
+    /**
+     * Composition-root access to the {@link AccountSession} singleton for the one-time account-monitor
+     * startup hook. Confined to Application (which cannot be constructor-injected); not a general
+     * service locator.
+     */
+    @EntryPoint
+    @InstallIn(SingletonComponent.class)
+    interface AccountSessionEntryPoint {
+        AccountSession accountSession();
+    }
+
+    /**
+     * Composition-root access to the {@link ReplyNotificationScheduler} for the app-start reconcile
+     * hook (E5-D3). Mirrors {@link AccountSessionEntryPoint}: narrow, Application-confined, not a
+     * general service locator.
+     */
+    @EntryPoint
+    @InstallIn(SingletonComponent.class)
+    public interface ReplyNotificationEntryPoint {
+        ReplyNotificationScheduler replyNotificationScheduler();
     }
 }

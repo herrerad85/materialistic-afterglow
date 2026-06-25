@@ -20,7 +20,9 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
+import dagger.hilt.android.AndroidEntryPoint;
 
+@AndroidEntryPoint
 public class NewActivity extends BaseStoriesActivity {
     public static final String EXTRA_REFRESH = NewActivity.class.getName() + ".EXTRA_REFRESH";
 

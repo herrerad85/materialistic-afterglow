@@ -26,9 +26,11 @@ import android.view.ViewGroup;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder;
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
 import com.growse.android.io.github.hidroh.materialistic.ItemActivity;
 import com.growse.android.io.github.hidroh.materialistic.R;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 
@@ -38,8 +40,12 @@ public class ThreadPreviewRecyclerViewAdapter extends ItemRecyclerViewAdapter<Su
     private int mLevelIndicatorWidth;
     private final String mUsername;
 
-    public ThreadPreviewRecyclerViewAdapter(ItemManager itemManager, Item item) {
-        super(itemManager);
+    public ThreadPreviewRecyclerViewAdapter(ItemManager itemManager,
+                                            AccountActions accountActions,
+                                            PopupMenu popupMenu,
+                                            AlertDialogBuilder alertDialogBuilder,
+                                            Item item) {
+        super(itemManager, accountActions, popupMenu, alertDialogBuilder);
         mItems.add(item);
         mUsername = item.getBy();
     }

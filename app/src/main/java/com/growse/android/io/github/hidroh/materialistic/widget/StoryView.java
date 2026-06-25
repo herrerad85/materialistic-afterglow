@@ -18,6 +18,7 @@ package com.growse.android.io.github.hidroh.materialistic.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import androidx.annotation.NonNull;
@@ -89,14 +90,15 @@ public class StoryView extends RelativeLayout implements Checkable {
                 R.attr.colorCardBackground,
                 R.attr.colorCardHighlight
         });
-        mTertiaryTextColorResId = ContextCompat.getColor(context, a.getResourceId(0, 0));
-        mSecondaryTextColorResId = ContextCompat.getColor(context, a.getResourceId(1, 0));
-        mBackgroundColor = ContextCompat.getColor(context, a.getResourceId(2, 0));
-        mHighlightColor = ContextCompat.getColor(context, a.getResourceId(3, 0));
+        // Read each colour attr as a direct @ColorInt: correct whether the attr resolves to a
+        // @color reference or a direct colour int (the latter under dynamic colour / M3 roles).
+        mTertiaryTextColorResId = a.getColor(0, Color.BLACK);
+        mSecondaryTextColorResId = a.getColor(1, Color.BLACK);
+        mBackgroundColor = a.getColor(2, Color.TRANSPARENT);
+        mHighlightColor = a.getColor(3, Color.TRANSPARENT);
         mPromotedColorResId = ContextCompat.getColor(context, R.color.greenA700);
         mHotColorResId = ContextCompat.getColor(context, R.color.orange500);
-        mAccentColorResId = ContextCompat.getColor(getContext(),
-                AppUtils.getThemedResId(getContext(), R.attr.colorAccent));
+        mAccentColorResId = AppUtils.getThemedColor(getContext(), R.attr.colorAccent, Color.BLACK);
         mCommentDrawable = DrawableCompat.wrap(ContextCompat.getDrawable(context,
                 R.drawable.ic_comment_white_24dp).mutate());
         DrawableCompat.setTint(mCommentDrawable, mAccentColorResId);

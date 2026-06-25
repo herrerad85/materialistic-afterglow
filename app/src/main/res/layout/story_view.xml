@@ -84,7 +84,7 @@
 
     <ViewSwitcher
         android:id="@+id/vote_switcher"
-        android:background="?attr/colorCardHighlight"
+        android:background="?attr/colorRankColumnBackground"
         android:inAnimation="@anim/slide_in_up"
         android:outAnimation="@anim/slide_out_down"
         android:layout_alignTop="@id/title"
@@ -125,7 +125,7 @@
         android:text="128 pts"
         style="@style/textSubtitleStyle"
         android:maxLines="1"
-        android:background="?attr/colorCardHighlight"
+        android:background="?attr/colorRankColumnBackground"
         android:gravity="center|top"
         android:layout_gravity="center"
         android:layout_below="@id/vote_switcher"
@@ -133,7 +133,7 @@
         android:layout_height="wrap_content"/>
 
     <View
-        android:background="?attr/colorCardHighlight"
+        android:background="?attr/colorRankColumnBackground"
         android:layout_below="@id/score"
         android:layout_alignBottom="@id/comment"
         android:layout_width="@dimen/cardview_min_height"

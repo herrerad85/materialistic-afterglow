@@ -16,21 +16,17 @@
 
 package com.growse.android.io.github.hidroh.materialistic.data;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -41,7 +37,6 @@ import android.text.format.DateUtils;
 import android.webkit.WebView;
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 import javax.inject.Inject;
@@ -53,7 +48,6 @@ import androidx.annotation.UiThread;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
-import com.growse.android.io.github.hidroh.materialistic.BuildConfig;
 import com.growse.android.io.github.hidroh.materialistic.ItemActivity;
 import com.growse.android.io.github.hidroh.materialistic.Preferences;
 import com.growse.android.io.github.hidroh.materialistic.R;
@@ -66,7 +60,6 @@ import retrofit2.Callback;
 public class SyncDelegate {
     static final String SYNC_PREFERENCES_FILE = "_syncpreferences";
     private static final String NOTIFICATION_GROUP_KEY = "group";
-    private static final String SYNC_ACCOUNT_NAME = "Materialistic";
     private static final long TIMEOUT_MILLIS = DateUtils.MINUTE_IN_MILLIS;
     private static final String DOWNLOADS_CHANNEL_ID = "downloads";
 
@@ -112,36 +105,25 @@ public class SyncDelegate {
 
     @UiThread
     static void scheduleSync(Context context, Job job) {
-        if (!Preferences.Offline.isEnabled(context)) {
+        // Single-story save-for-offline only (JobScheduler -> ItemSyncJobService). The legacy
+        // full-sync path (empty id -> ContentResolver.requestSync via the SyncAdapter framework, which
+        // created a "Materialistic" sync account) was dead and was deleted in Slice 9 G2; nothing
+        // schedules an empty-id job any more.
+        if (!Preferences.Offline.isEnabled(context) || TextUtils.isEmpty(job.id)) {
             return;
         }
-        if (!TextUtils.isEmpty(job.id)) {
-            JobInfo.Builder builder = new JobInfo.Builder(Long.valueOf(job.id).intValue(),
-                    new ComponentName(context.getPackageName(),
-                            ItemSyncJobService.class.getName()))
-                    .setRequiredNetworkType(Preferences.Offline.isWifiOnly(context) ?
-                            JobInfo.NETWORK_TYPE_UNMETERED :
-                            JobInfo.NETWORK_TYPE_ANY)
-                    .setExtras(job.toPersistableBundle());
-            if (Preferences.Offline.currentConnectionEnabled(context)) {
-                builder.setOverrideDeadline(0);
-            }
-            ((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE))
-                    .schedule(builder.build());
-        } else {
-            Bundle extras = new Bundle(job.toBundle());
-            extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-            Account syncAccount;
-            AccountManager accountManager = AccountManager.get(context);
-            Account[] accounts = accountManager.getAccountsByType(BuildConfig.APPLICATION_ID);
-            if (accounts.length == 0) {
-                syncAccount = new Account(SYNC_ACCOUNT_NAME, BuildConfig.APPLICATION_ID);
-                accountManager.addAccountExplicitly(syncAccount, null, null);
-            } else {
-                syncAccount = accounts[0];
-            }
-            ContentResolver.requestSync(syncAccount, SyncContentProvider.PROVIDER_AUTHORITY, extras);
+        JobInfo.Builder builder = new JobInfo.Builder(Long.valueOf(job.id).intValue(),
+                new ComponentName(context.getPackageName(),
+                        ItemSyncJobService.class.getName()))
+                .setRequiredNetworkType(Preferences.Offline.isWifiOnly(context) ?
+                        JobInfo.NETWORK_TYPE_UNMETERED :
+                        JobInfo.NETWORK_TYPE_ANY)
+                .setExtras(job.toPersistableBundle());
+        if (Preferences.Offline.currentConnectionEnabled(context)) {
+            builder.setOverrideDeadline(0);
         }
+        ((JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE))
+                .schedule(builder.build());
     }
 
     void subscribe(ProgressListener listener) {
@@ -151,22 +133,14 @@ public class SyncDelegate {
     void performSync(@NonNull Job job) {
         // assume that connection wouldn't change until we finish syncing
         mJob = job;
-        if (!TextUtils.isEmpty(mJob.id)) {
-            Message message = Message.obtain(mHandler, this::stopSync);
-            message.what = Integer.valueOf(mJob.id);
-            mHandler.sendMessageDelayed(message, TIMEOUT_MILLIS);
-            mSyncProgress = new SyncProgress(mJob);
-            sync(mJob.id);
-        } else {
-            syncDeferredItems();
+        if (TextUtils.isEmpty(mJob.id)) {
+            return; // empty-id (full-sync) jobs only came from the deleted SyncAdapter path (G2)
         }
-    }
-
-    private void syncDeferredItems() {
-        Set<String> itemIds = mSharedPreferences.getAll().keySet();
-        for (String itemId : itemIds) {
-            scheduleSync(mContext, new JobBuilder(mContext, itemId).setNotificationEnabled(false).build());
-        }
+        Message message = Message.obtain(mHandler, this::stopSync);
+        message.what = Integer.valueOf(mJob.id);
+        mHandler.sendMessageDelayed(message, TIMEOUT_MILLIS);
+        mSyncProgress = new SyncProgress(mJob);
+        sync(mJob.id);
     }
 
     private void sync(String itemId) {
@@ -410,15 +384,6 @@ public class SyncDelegate {
             notificationEnabled = bundle.getInt(EXTRA_NOTIFICATION_ENABLED) == 1;
         }
 
-        Job(Bundle bundle) {
-            id = bundle.getString(EXTRA_ID);
-            connectionEnabled = bundle.getBoolean(EXTRA_CONNECTION_ENABLED);
-            readabilityEnabled = bundle.getBoolean(EXTRA_READABILITY_ENABLED);
-            articleEnabled = bundle.getBoolean(EXTRA_ARTICLE_ENABLED);
-            commentsEnabled = bundle.getBoolean(EXTRA_COMMENTS_ENABLED);
-            notificationEnabled = bundle.getBoolean(EXTRA_NOTIFICATION_ENABLED);
-        }
-
         @Synthetic PersistableBundle toPersistableBundle() {
             PersistableBundle bundle = new PersistableBundle();
             bundle.putString(EXTRA_ID, id);
@@ -427,17 +392,6 @@ public class SyncDelegate {
             bundle.putInt(EXTRA_ARTICLE_ENABLED, articleEnabled ? 1 : 0);
             bundle.putInt(EXTRA_COMMENTS_ENABLED, commentsEnabled ? 1 : 0);
             bundle.putInt(EXTRA_NOTIFICATION_ENABLED, notificationEnabled ? 1 : 0);
-            return bundle;
-        }
-
-        @Synthetic Bundle toBundle() {
-            Bundle bundle = new Bundle();
-            bundle.putString(EXTRA_ID, id);
-            bundle.putBoolean(EXTRA_CONNECTION_ENABLED, connectionEnabled);
-            bundle.putBoolean(EXTRA_READABILITY_ENABLED, readabilityEnabled);
-            bundle.putBoolean(EXTRA_ARTICLE_ENABLED, articleEnabled);
-            bundle.putBoolean(EXTRA_COMMENTS_ENABLED, commentsEnabled);
-            bundle.putBoolean(EXTRA_NOTIFICATION_ENABLED, notificationEnabled);
             return bundle;
         }
     }

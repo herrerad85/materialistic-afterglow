@@ -123,6 +123,7 @@
             android:id="@+id/feedback_button"
             android:text="@string/send_feedback"
             style="@style/Widget.AppCompat.Button.Borderless.Colored"
+            android:textColor="?attr/colorAccent"
             android:layout_marginTop="@dimen/margin"
             android:layout_gravity="end"
             android:layout_width="wrap_content"

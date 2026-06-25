@@ -16,8 +16,18 @@
   -->
 
 <resources>
-    <attr name="colorCardBackground" format="reference" />
-    <attr name="colorCardHighlight" format="reference" />
+    <attr name="colorCardBackground" format="color|reference" />
+    <attr name="colorCardHighlight" format="color|reference" />
+    <!-- Resting rank/score column fill in story cards. Aliases colorCardHighlight on the base
+         themes (current behaviour, per-skin accent), but is a distinct role so the AMOLED Black
+         overlay can push the resting rank rail to pure black without touching colorCardHighlight,
+         which stays the selection / comment / user highlight fill. -->
+    <attr name="colorRankColumnBackground" format="color|reference" />
+    <!-- Low-emphasis card outline. Transparent / 0dp on all base themes; set to a visible
+         low-emphasis stroke only by the AMOLED Black overlay, where cards are pure black on a
+         pure-black window and need an outline to read as separate. -->
+    <attr name="cardStrokeColor" format="color|reference" />
+    <attr name="cardStrokeWidth" format="dimension|reference" />
     <attr name="backgroundDrawerHeader" format="reference" />
     <attr name="titleTextSize" format="dimension|reference" />
     <attr name="subtitleTextSize" format="dimension|reference" />

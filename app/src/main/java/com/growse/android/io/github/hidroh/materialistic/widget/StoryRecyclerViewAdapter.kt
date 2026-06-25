@@ -30,22 +30,22 @@ import androidx.collection.ArrayMap
 import androidx.collection.ArraySet
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.SortedList
 import androidx.recyclerview.widget.SortedListAdapterCallback
-import com.growse.android.io.github.hidroh.materialistic.ActivityModule
+import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder
 import com.growse.android.io.github.hidroh.materialistic.AppUtils
 import com.growse.android.io.github.hidroh.materialistic.ComposeActivity
 import com.growse.android.io.github.hidroh.materialistic.Preferences
 import com.growse.android.io.github.hidroh.materialistic.Preferences.SwipeAction
 import com.growse.android.io.github.hidroh.materialistic.R
 import com.growse.android.io.github.hidroh.materialistic.UserActivity
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic
+import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager
 import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager.Companion.isAdded
 import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager.Companion.isCleared
 import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager.Companion.isRemoved
@@ -53,13 +53,25 @@ import com.growse.android.io.github.hidroh.materialistic.data.Item
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager
 import com.growse.android.io.github.hidroh.materialistic.data.MaterialisticDatabase
 import com.growse.android.io.github.hidroh.materialistic.data.ResponseListener
-import com.growse.android.io.github.hidroh.materialistic.data.SessionManager
+import com.growse.android.io.github.hidroh.materialistic.data.ViewedItemStore
 import java.lang.ref.WeakReference
-import javax.inject.Inject
-import javax.inject.Named
 
-class StoryRecyclerViewAdapter(context: Context) :
-    ListRecyclerViewAdapter<ListRecyclerViewAdapter.ItemViewHolder?, Item?>(context) {
+class StoryRecyclerViewAdapter(
+    context: Context,
+    popupMenu: PopupMenu,
+    alertDialogBuilder: AlertDialogBuilder<*>,
+    accountActions: AccountActions,
+    favoriteManager: FavoriteManager,
+    private val mItemManager: ItemManager,
+    private val mViewedItemStore: ViewedItemStore,
+) :
+    ListRecyclerViewAdapter<ListRecyclerViewAdapter.ItemViewHolder?, Item?>(
+        context,
+        popupMenu,
+        alertDialogBuilder,
+        accountActions,
+        favoriteManager,
+    ) {
   private val VOTED = Any()
   private val mAutoViewScrollListener: RecyclerView.OnScrollListener =
       object : RecyclerView.OnScrollListener() {
@@ -88,10 +100,6 @@ class StoryRecyclerViewAdapter(context: Context) :
           return item1.getLongId() == item2.getLongId()
         }
       }
-
-  @JvmField @Inject @field:Named(ActivityModule.HN) var mItemManager: ItemManager? = null
-
-  @JvmField @Inject var mSessionManager: SessionManager? = null
 
   @Synthetic val items: SortedList<Item> = SortedList<Item>(Item::class.java, mSortedListCallback)
 
@@ -320,7 +328,7 @@ class StoryRecyclerViewAdapter(context: Context) :
       return
     }
     item.setLocalRevision(0)
-    mItemManager!!.getItem(item.getId(), itemCacheMode, ItemResponseListener(this, item))
+    mItemManager.getItem(item.getId(), itemCacheMode, ItemResponseListener(this, item))
   }
 
   override fun bindItem(holder: ItemViewHolder?, position: Int) {
@@ -359,57 +367,31 @@ class StoryRecyclerViewAdapter(context: Context) :
     return mCacheMode
   }
 
-  private fun setUpdated(items: List<Item?>) {
+  private fun setUpdated(newItems: List<Item>) {
     if (!mHighlightUpdated) {
       return
     }
-    if (items.isEmpty()) {
+    // setUpdated runs before items.clear() in setItems, so the SortedList still holds the
+    // previously-rendered list here. Diff that (old) against the freshly loaded list (new) , the
+    // pre-E1 port broke this by diffing newItems against itself, so nothing ever counted as new.
+    // An empty previous list is the first load for this section: nothing is new yet.
+    if (items.size() == 0) {
       return
     }
     mAdded.clear()
     mPromoted.clear()
-    DiffUtil.calculateDiff(
-            object : DiffUtil.Callback() {
-              override fun getOldListSize(): Int {
-                return items.size
-              }
-
-              override fun getNewListSize(): Int {
-                return items.size
-              }
-
-              override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return items.get(oldItemPosition)!!.getLongId() ==
-                    items[newItemPosition]!!.getLongId()
-              }
-
-              override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-                return areItemsTheSame(oldItemPosition, newItemPosition)
-              }
-            }
-        )
-        .dispatchUpdatesTo(
-            object : ListUpdateCallback {
-              override fun onInserted(position: Int, count: Int) {
-                mAdded.add(items[position])
-                notifyUpdated()
-              }
-
-              override fun onRemoved(position: Int, count: Int) {
-                // no-op
-              }
-
-              override fun onMoved(fromPosition: Int, toPosition: Int) {
-                if (toPosition < fromPosition) {
-                  mPromoted[items[fromPosition]!!.getId()] = fromPosition - toPosition
-                }
-              }
-
-              override fun onChanged(position: Int, count: Int, payload: Any?) {
-                // no-op
-              }
-            }
-        )
+    val previous = ArrayList<Item>(items.size())
+    for (i in 0 until items.size()) {
+      previous.add(items.get(i))
+    }
+    val result = diffNewStories(previous, newItems)
+    mAdded.addAll(result.added)
+    for ((id, ranks) in result.promoted) {
+      mPromoted[id] = ranks
+    }
+    if (result.added.isNotEmpty()) {
+      notifyUpdated()
+    }
   }
 
   @SuppressLint("NotifyDataSetChanged")
@@ -499,14 +481,15 @@ class StoryRecyclerViewAdapter(context: Context) :
 
   @Synthetic
   fun vote(story: Item, holder: RecyclerView.ViewHolder) {
-    if (
-        !mUserServices.voteUp(
-            context,
+    val result =
+        mAccountActions.vote(
             story.getId(),
             VoteCallback(this, holder.absoluteAdapterPosition, story),
         )
-    ) {
-      AppUtils.showLogin(context, mAlertDialogBuilder)
+    if (result == AccountActions.Result.NeedsLogin) {
+      AppUtils.showLogin(context, mAlertDialogBuilder, mAccountActions.session)
+    } else {
+      Toast.makeText(context, R.string.sending, Toast.LENGTH_SHORT).show()
     }
   }
 
@@ -535,7 +518,7 @@ class StoryRecyclerViewAdapter(context: Context) :
     if (item == null || !isItemAvailable(item) || item.isViewed()) {
       return
     }
-    mSessionManager!!.view(item.getId())
+    mViewedItemStore.view(item.getId())
   }
 
   private fun toggleAutoMarkAsViewed(recyclerView: RecyclerView) {

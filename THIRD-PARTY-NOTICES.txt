@@ -1,3 +1,19 @@
+Libraries used in Afterglow (links are shown in the in-app About screen):
+  - Square Retrofit, Square OkHttp, Google Gson - Apache License v2.0
+  - Hilt, Kotlin Coroutines - Apache License v2.0
+  - Material Components for Android (Material 3) - Apache License v2.0
+  - Google Tink - Apache License v2.0
+  - AndroidX Jetpack (AppCompat, Activity, Fragment, Lifecycle, Room, WorkManager, RecyclerView, Preference, Browser, SwipeRefreshLayout, CardView) - Apache License v2.0
+  - algolia/hn-search - MIT License
+  - PDF.js - Apache License v2.0
+  - Material design icons - Creative Commons Attribution 4.0 International License
+  - Fonts: Droid Sans, Droid Serif, Roboto Slab - Apache License v2.0; Libre Baskerville - OFL v1.1
+  - Ad servers list by pgl.yoyo.org
+
+The full texts of the licenses referenced above follow.
+
+----------------------------------------------------------
+
 The MIT License (MIT)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

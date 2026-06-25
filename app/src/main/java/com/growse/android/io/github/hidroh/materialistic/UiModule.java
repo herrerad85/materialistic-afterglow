@@ -19,73 +19,35 @@ package com.growse.android.io.github.hidroh.materialistic;
 import android.annotation.SuppressLint;
 import android.content.Context;
 
-import javax.inject.Singleton;
+import androidx.appcompat.app.AlertDialog;
 
 import dagger.Module;
 import dagger.Provides;
-import com.growse.android.io.github.hidroh.materialistic.appwidget.WidgetConfigActivity;
-import com.growse.android.io.github.hidroh.materialistic.widget.FavoriteRecyclerViewAdapter;
-import com.growse.android.io.github.hidroh.materialistic.widget.MultiPageItemRecyclerViewAdapter;
+import dagger.hilt.InstallIn;
+import dagger.hilt.android.qualifiers.ActivityContext;
+import dagger.hilt.android.scopes.ActivityScoped;
+import dagger.hilt.android.components.ActivityComponent;
 import com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu;
-import com.growse.android.io.github.hidroh.materialistic.widget.SinglePageItemRecyclerViewAdapter;
-import com.growse.android.io.github.hidroh.materialistic.widget.StoryRecyclerViewAdapter;
-import com.growse.android.io.github.hidroh.materialistic.widget.SubmissionRecyclerViewAdapter;
-import com.growse.android.io.github.hidroh.materialistic.widget.ThreadPreviewRecyclerViewAdapter;
 
-@Module(
-        injects = {
-                AboutActivity.class,
-                AskActivity.class,
-                BestActivity.class,
-                ComposeActivity.class,
-                FavoriteActivity.class,
-                FeedbackActivity.class,
-                ItemActivity.class,
-                JobsActivity.class,
-                ListActivity.class,
-                LoginActivity.class,
-                NewActivity.class,
-                OfflineWebActivity.class,
-                PopularActivity.class,
-                ReleaseNotesActivity.class,
-                SearchActivity.class,
-                SettingsActivity.class,
-                ShowActivity.class,
-                SubmitActivity.class,
-                ThreadPreviewActivity.class,
-                UserActivity.class,
-                WidgetConfigActivity.class,
-                FavoriteFragment.class,
-                ItemFragment.class,
-                ListFragment.class,
-                WebFragment.class,
-                FavoriteRecyclerViewAdapter.class,
-                SinglePageItemRecyclerViewAdapter.class,
-                StoryRecyclerViewAdapter.class,
-                SubmissionRecyclerViewAdapter.class,
-                MultiPageItemRecyclerViewAdapter.class,
-                ThreadPreviewRecyclerViewAdapter.class
-        },
-        library = true,
-        complete = false
-)
+@Module
+@InstallIn(ActivityComponent.class)
 class UiModule {
     @Provides
     public PopupMenu providePopupMenu() {
         return new PopupMenu.Impl();
     }
 
-    @Provides @Singleton
+    @Provides @ActivityScoped
     public CustomTabsDelegate provideCustomTabsDelegate() {
         return new CustomTabsDelegate();
     }
 
-    @Provides @Singleton
+    @Provides @ActivityScoped
     public KeyDelegate provideKeyDelegate() {
         return new KeyDelegate();
     }
 
-    @Provides @Singleton
+    @Provides @ActivityScoped
     public ActionViewResolver provideActionViewResolver() {
         return new ActionViewResolver();
     }
@@ -95,9 +57,18 @@ class UiModule {
         return new AlertDialogBuilder.Impl();
     }
 
+    // Parameterized companion binding for Kotlin @Inject sites. Kotlin cannot express a raw type, so
+    // a Kotlin AlertDialogBuilder<AlertDialog> request keys differently from the raw binding above;
+    // this binding (same Impl) satisfies it. Java sites keep using the raw binding unchanged.
+    // (E1 Gate-2 Kotlin-interop seam; Impl is AlertDialogBuilder<AlertDialog>.)
+    @Provides
+    public AlertDialogBuilder<AlertDialog> provideAlertDialogBuilderTyped() {
+        return new AlertDialogBuilder.Impl();
+    }
+
     @SuppressLint("Recycle")
-    @Provides @Singleton
-    public ResourcesProvider provideResourcesProvider(Context context) {
+    @Provides @ActivityScoped
+    public ResourcesProvider provideResourcesProvider(@ActivityContext Context context) {
         return resId -> context.getResources().obtainTypedArray(resId);
     }
 }

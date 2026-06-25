@@ -16,35 +16,53 @@
 
 package com.growse.android.io.github.hidroh.materialistic.data;
 
+import android.text.format.DateUtils;
+
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
-import com.growse.android.io.github.hidroh.materialistic.ActivityModule;
-import com.growse.android.io.github.hidroh.materialistic.DataModule;
+import androidx.annotation.StringDef;
+import com.growse.android.io.github.hidroh.materialistic.HackerNews;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
-import rx.Observable;
-import rx.Scheduler;
 
 public class AlgoliaClient implements ItemManager {
 
     public static boolean sSortByTime = true;
+    // Request-scoped static, mirroring the pre-existing sSortByTime pattern above (not a new
+    // pattern); null = Any time (no date filter). Session-scoped, not persisted.
+    public static String sDateRange = null;
     public static final String HOST = "hn.algolia.com";
     private static final String BASE_API_URL = "https://" + HOST + "/api/v1/";
     static final String MIN_CREATED_AT = "created_at_i>";
+
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef({
+            LAST_24H,
+            PAST_WEEK,
+            PAST_MONTH,
+            PAST_YEAR
+    })
+    public @interface Range {}
+    public static final String LAST_24H = "last_24h";
+    public static final String PAST_WEEK = "past_week";
+    public static final String PAST_MONTH = "past_month";
+    public static final String PAST_YEAR = "past_year";
     RestService mRestService;
-    @Inject @Named(ActivityModule.HN) ItemManager mHackerNewsClient;
-    @Inject @Named(DataModule.MAIN_THREAD) Scheduler mMainThreadScheduler;
+    @Inject @HackerNews ItemManager mHackerNewsClient;
 
     @Inject
     public AlgoliaClient(RestServiceFactory factory) {
-        mRestService = factory.rxEnabled(true).create(BASE_API_URL, RestService.class);
+        mRestService = factory.create(BASE_API_URL, RestService.class);
     }
 
     @Override
@@ -53,11 +71,20 @@ public class AlgoliaClient implements ItemManager {
         if (listener == null) {
             return;
         }
-        searchRx(filter)
-                .map(this::toItems)
-                .observeOn(mMainThreadScheduler)
-                .subscribe(listener::onResponse,
-                        t -> listener.onError(t != null ? t.getMessage() : ""));
+        // RestServiceFactory's MainThreadExecutor delivers enqueue callbacks on the main thread,
+        // replacing the old observeOn(mainThread). search(filter) is overridden by AlgoliaPopularClient.
+        search(filter).enqueue(new Callback<AlgoliaHits>() {
+            @Override
+            public void onResponse(@NonNull Call<AlgoliaHits> call,
+                                   @NonNull Response<AlgoliaHits> response) {
+                listener.onResponse(toItems(response.body()));
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<AlgoliaHits> call, @NonNull Throwable t) {
+                listener.onError(t != null ? t.getMessage() : "");
+            }
+        });
     }
 
     @Override
@@ -79,13 +106,37 @@ public class AlgoliaClient implements ItemManager {
         return mHackerNewsClient.getItem(itemId, cacheMode);
     }
 
-    protected Observable<AlgoliaHits> searchRx(String filter) {
-        // TODO add ETag header
-        return sSortByTime ? mRestService.searchByDateRx(filter) : mRestService.searchRx(filter);
+    protected Call<AlgoliaHits> search(String filter) {
+        String numericFilters = minCreatedAtFilter(sDateRange, System.currentTimeMillis());
+        return sSortByTime
+                ? mRestService.searchByDate(filter, numericFilters)
+                : mRestService.search(filter, numericFilters);
     }
 
-    protected Call<AlgoliaHits> search(String filter) {
-        return sSortByTime ? mRestService.searchByDate(filter) : mRestService.search(filter);
+    /**
+     * Pure helper (no clock dependency) so the date math is unit-testable. Returns null when no
+     * range is selected, else the Algolia numericFilters expression bounding results to items
+     * created at or after now minus the range duration.
+     */
+    static String minCreatedAtFilter(@Range String range, long nowMillis) {
+        if (range == null) {
+            return null;
+        }
+        return MIN_CREATED_AT + (nowMillis - durationMillis(range)) / 1000;
+    }
+
+    static long durationMillis(@Range String range) {
+        switch (range) {
+            case LAST_24H:
+            default:
+                return DateUtils.DAY_IN_MILLIS;
+            case PAST_WEEK:
+                return DateUtils.WEEK_IN_MILLIS;
+            case PAST_MONTH:
+                return DateUtils.WEEK_IN_MILLIS * 4;
+            case PAST_YEAR:
+                return DateUtils.YEAR_IN_MILLIS;
+        }
     }
 
     @NonNull
@@ -107,19 +158,12 @@ public class AlgoliaClient implements ItemManager {
 
     interface RestService {
         @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
-        Observable<AlgoliaHits> searchByDateRx(@Query("query") String query);
+        Call<AlgoliaHits> searchByDate(@Query("query") String query,
+                @Query("numericFilters") String numericFilters);
 
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
-        Observable<AlgoliaHits> searchRx(@Query("query") String query);
-
-        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
-        Observable<AlgoliaHits> searchByMinTimestampRx(@Query("numericFilters") String timestampSeconds);
-
-        @GET("search_by_date?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
-        Call<AlgoliaHits> searchByDate(@Query("query") String query);
-
-        @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
-        Call<AlgoliaHits> search(@Query("query") String query);
+        Call<AlgoliaHits> search(@Query("query") String query,
+                @Query("numericFilters") String numericFilters);
 
         @GET("search?hitsPerPage=100&tags=story&attributesToRetrieve=objectID&attributesToHighlight=none")
         Call<AlgoliaHits> searchByMinTimestamp(@Query("numericFilters") String timestampSeconds);

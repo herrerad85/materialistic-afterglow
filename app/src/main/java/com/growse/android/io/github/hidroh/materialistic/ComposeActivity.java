@@ -34,17 +34,20 @@ import java.lang.ref.WeakReference;
 
 import javax.inject.Inject;
 
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
+import dagger.hilt.android.AndroidEntryPoint;
 
-public class ComposeActivity extends InjectableActivity {
+@AndroidEntryPoint
+public class ComposeActivity extends ThemedActivity {
     public static final String EXTRA_PARENT_ID = ComposeActivity.class.getName() + ".EXTRA_PARENT_ID";
     public static final String EXTRA_PARENT_TEXT = ComposeActivity.class.getName() + ".EXTRA_PARENT_TEXT";
     private static final String HN_FORMAT_DOC_URL = "https://news.ycombinator.com/formatdoc";
     private static final String FORMAT_QUOTE = "> %s\n\n";
     private static final String PARAGRAPH_QUOTE = "\n\n> ";
     private static final String PARAGRAPH_BREAK_REGEX = "[\\n]{2,}";
-    @Inject UserServices mUserServices;
+    @Inject AccountActions mAccountActions;
     @Inject AlertDialogBuilder mAlertDialogBuilder;
     private EditText mEditText;
     private String mParentText;
@@ -66,6 +69,8 @@ public class ComposeActivity extends InjectableActivity {
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_HOME_AS_UP);
+        AppUtils.padTopSystemBars(findViewById(R.id.toolbar));
+        AppUtils.padBottomSystemBars(findViewById(R.id.compose_scroll), true);
         mEditText = (EditText) findViewById(R.id.edittext_body);
         if (savedInstanceState == null) {
             mEditText.setText(Preferences.getDraft(this, mParentId));
@@ -126,7 +131,7 @@ public class ComposeActivity extends InjectableActivity {
             mEditText.getEditableText().insert(0, createQuote());
         }
         if (item.getItemId() == android.R.id.home) {
-            onBackPressed();
+            onBackPressedCompat();
             return true;
         }
         if (item.getItemId() == R.id.menu_save_draft) {
@@ -151,20 +156,20 @@ public class ComposeActivity extends InjectableActivity {
     }
 
     @Override
-    public void onBackPressed() {
+    protected void onBackPressedCompat() {
         if (mEditText.length() == 0 || mSending ||
                 TextUtils.equals(Preferences.getDraft(this, mParentId), mEditText.getText().toString())) {
-            super.onBackPressed();
+            super.onBackPressedCompat();
             return;
         }
         mAlertDialogBuilder
                 .init(this)
                 .setMessage(R.string.confirm_save_draft)
                 .setNegativeButton(android.R.string.no, (dialog, which) ->
-                        ComposeActivity.super.onBackPressed())
+                        ComposeActivity.super.onBackPressedCompat())
                 .setPositiveButton(android.R.string.yes, (dialog, which) -> {
                         Preferences.saveDraft(this, mParentId, mEditText.getText().toString());
-                        ComposeActivity.super.onBackPressed();
+                        ComposeActivity.super.onBackPressedCompat();
                 })
                 .show();
     }
@@ -173,8 +178,13 @@ public class ComposeActivity extends InjectableActivity {
         String content = mEditText.getText().toString();
         Preferences.saveDraft(this, mParentId, content);
         toggleControls(true);
-        Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
-        mUserServices.reply(this, mParentId, content, new ComposeCallback(this, mParentId));
+        if (mAccountActions.reply(mParentId, content, new ComposeCallback(this, mParentId))
+                == AccountActions.Result.NeedsLogin) {
+            toggleControls(false);
+            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
+        } else {
+            Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Synthetic
@@ -190,7 +200,7 @@ public class ComposeActivity extends InjectableActivity {
             }
         } else {
             if (!isFinishing()) {
-                AppUtils.showLogin(this, mAlertDialogBuilder);
+                AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
             }
             toggleControls(false);
         }
@@ -229,7 +239,11 @@ public class ComposeActivity extends InjectableActivity {
 
         @Override
         public void onDone(boolean successful) {
-            Preferences.deleteDraft(mAppContext, mParentId);
+            // Clear the draft only on a successful send (even if the activity is gone). A failed or
+            // auth-rejected send keeps the draft so the user can re-login and resend.
+            if (successful) {
+                Preferences.deleteDraft(mAppContext, mParentId);
+            }
             if (mComposeActivity.get() != null && !mComposeActivity.get().isActivityDestroyed()) {
                 mComposeActivity.get().onSent(successful);
             }

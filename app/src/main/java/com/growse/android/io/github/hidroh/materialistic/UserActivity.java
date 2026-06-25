@@ -35,11 +35,11 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
+import dagger.hilt.android.AndroidEntryPoint;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 import com.growse.android.io.github.hidroh.materialistic.data.ResponseListener;
@@ -48,14 +48,17 @@ import com.growse.android.io.github.hidroh.materialistic.widget.CommentItemDecor
 import com.growse.android.io.github.hidroh.materialistic.widget.SnappyLinearLayoutManager;
 import com.growse.android.io.github.hidroh.materialistic.widget.SubmissionRecyclerViewAdapter;
 
-public class UserActivity extends InjectableActivity implements Scrollable {
+@AndroidEntryPoint
+public class UserActivity extends ThemedActivity implements Scrollable {
     public static final String EXTRA_USERNAME = UserActivity.class.getName() + ".EXTRA_USERNAME";
-    private static final String STATE_USER = "state:user";
     private static final String PARAM_ID = "id";
     private static final String KARMA = " (%1$s)";
     @Inject UserManager mUserManager;
-    @Inject @Named(ActivityModule.HN) ItemManager mItemManger;
+    @Inject @HackerNews ItemManager mItemManger;
     @Inject KeyDelegate mKeyDelegate;
+    @Inject com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions mAccountActions;
+    @Inject com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu mPopupMenu;
+    @Inject AlertDialogBuilder mAlertDialogBuilder;
     private KeyDelegate.RecyclerViewHelper mScrollableHelper;
     private String mUsername;
     private UserManager.User mUser;
@@ -137,9 +140,9 @@ public class UserActivity extends InjectableActivity implements Scrollable {
         mRecyclerView.addItemDecoration(new CommentItemDecoration(this));
         mScrollableHelper = new KeyDelegate.RecyclerViewHelper(mRecyclerView,
                 KeyDelegate.RecyclerViewHelper.SCROLL_ITEM);
-        if (savedInstanceState != null) {
-            mUser = savedInstanceState.getParcelable(STATE_USER);
-        }
+        // The loaded User (all submissions) is not persisted across recreate: parceling it into saved
+        // instance state blew the Binder transaction limit (TransactionTooLargeException) for prolific
+        // profiles. mUser is always null here, so load() re-fetches (network-cached) and bind() renders.
         if (mUser == null) {
             load();
         } else {
@@ -156,12 +159,6 @@ public class UserActivity extends InjectableActivity implements Scrollable {
     protected void onStart() {
         super.onStart();
         mKeyDelegate.attach(this);
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelable(STATE_USER, mUser);
     }
 
     @Override
@@ -245,7 +242,8 @@ public class UserActivity extends InjectableActivity implements Scrollable {
         int count = mUser.getItems().length;
         mTabLayout.addTab(mTabLayout.newTab()
                 .setText(getResources().getQuantityString(R.plurals.submissions_count, count, count)));
-        mRecyclerView.setAdapter(new SubmissionRecyclerViewAdapter(mItemManger, mUser.getItems()));
+        mRecyclerView.setAdapter(new SubmissionRecyclerViewAdapter(mItemManger, mAccountActions,
+                mPopupMenu, mAlertDialogBuilder, mUser.getItems()));
         mRecyclerView.setLayoutFrozen(mBottomSheetBehavior.getState() !=
                 BottomSheetBehavior.STATE_EXPANDED);
     }

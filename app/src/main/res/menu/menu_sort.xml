@@ -35,4 +35,30 @@
             </group>
         </menu>
     </item>
+    <item
+        android:id="@id/menu_date"
+        android:title="@string/search_date_title"
+        app:showAsAction="ifRoom">
+        <menu>
+            <group
+                android:id="@id/menu_date_group"
+                android:checkableBehavior="single">
+                <item
+                    android:id="@id/menu_date_any"
+                    android:title="@string/search_date_any" />
+                <item
+                    android:id="@id/menu_date_24h"
+                    android:title="@string/search_date_24h" />
+                <item
+                    android:id="@id/menu_date_week"
+                    android:title="@string/search_date_week" />
+                <item
+                    android:id="@id/menu_date_month"
+                    android:title="@string/search_date_month" />
+                <item
+                    android:id="@id/menu_date_year"
+                    android:title="@string/search_date_year" />
+            </group>
+        </menu>
+    </item>
 </menu>

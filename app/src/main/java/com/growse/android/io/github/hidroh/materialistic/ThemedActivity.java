@@ -18,11 +18,12 @@ package com.growse.android.io.github.hidroh.materialistic;
 
 import android.app.ActivityManager;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.CallSuper;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import android.text.TextUtils;
@@ -33,11 +34,22 @@ public abstract class ThemedActivity extends AppCompatActivity {
     private final Preferences.Observable mThemeObservable = new Preferences.Observable();
     private boolean mResumed = true;
     private boolean mPendingThemeChanged;
+    private boolean mDestroyed;
+    private final OnBackPressedCallback mBackCallback = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            onBackPressedCompat();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Preferences.Theme.apply(this, isDialogTheme(), isTranslucent());
+        if (!isDialogTheme() && !isTranslucent()) {
+            androidx.activity.EdgeToEdge.enable(this);
+        }
         super.onCreate(savedInstanceState);
+        getOnBackPressedDispatcher().addCallback(this, mBackCallback);
         setTaskTitle(getTitle());
         mMenuTintDelegate.onActivityCreated(this);
     }
@@ -61,7 +73,7 @@ public abstract class ThemedActivity extends AppCompatActivity {
         super.onResume();
         mResumed = true;
         if (mPendingThemeChanged) {
-            AppUtils.restart(this, false);
+            recreate();
         }
     }
 
@@ -74,7 +86,34 @@ public abstract class ThemedActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mDestroyed = true;
         mThemeObservable.unsubscribe(this);
+    }
+
+    /**
+     * Back handling for the whole activity chain, routed through {@link OnBackPressedCallback} so it
+     * fires for predictive back gestures (the deprecated {@code onBackPressed()} override no longer
+     * does). Subclasses override this and call {@code super.onBackPressedCompat()} to fall through to
+     * the default finish, exactly as they used to call {@code super.onBackPressed()}.
+     */
+    protected void onBackPressedCompat() {
+        // Default: the framework's back (fragment pop / finishAfterTransition). Disable our callback
+        // and re-dispatch so the dispatcher runs its built-in fallback. This is identical to the old
+        // super.onBackPressed() (which already routed to the dispatcher with no callbacks), keeping
+        // the b/176265 IllegalStateException workaround.
+        mBackCallback.setEnabled(false);
+        try {
+            getOnBackPressedDispatcher().onBackPressed();
+        } catch (IllegalStateException e) {
+            // TODO http://b.android.com/176265
+            supportFinishAfterTransition();
+        } finally {
+            mBackCallback.setEnabled(true);
+        }
+    }
+
+    public boolean isActivityDestroyed() {
+        return mDestroyed;
     }
 
     @Override
@@ -96,7 +135,7 @@ public abstract class ThemedActivity extends AppCompatActivity {
             AppCompatDelegate.setDefaultNightMode(Preferences.Theme.getAutoDayNightMode(this));
         }
         if (mResumed) {
-            AppUtils.restart(this, true);
+            recreate();
         } else {
             mPendingThemeChanged = true;
         }
@@ -106,7 +145,7 @@ public abstract class ThemedActivity extends AppCompatActivity {
         if (!TextUtils.isEmpty(title)) {
             setTaskDescription(new ActivityManager.TaskDescription(title.toString(),
                     BitmapFactory.decodeResource(getResources(), R.drawable.ic_app),
-                    ContextCompat.getColor(this, AppUtils.getThemedResId(this, R.attr.colorPrimary))));
+                    AppUtils.getThemedColor(this, R.attr.colorPrimary, Color.BLACK)));
         }
     }
 }

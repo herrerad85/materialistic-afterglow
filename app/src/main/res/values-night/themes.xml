@@ -21,8 +21,8 @@
         <item name="colorPrimary">@color/grey900</item>
         <item name="colorPrimaryDark">@color/blackT87</item>
         <item name="colorAccent">@color/redA100</item>
-        <item name="colorCardBackground">@color/grey900</item>
-        <item name="colorCardHighlight">@color/grey800</item>
+        <item name="colorSurfaceContainer">@color/grey900</item>
+        <item name="colorSurfaceContainerHigh">@color/grey800</item>
         <item name="android:textColorPrimary">@color/white</item>
         <item name="android:textColorSecondary">@color/whiteT50</item>
 

@@ -16,7 +16,6 @@
 
 package com.growse.android.io.github.hidroh.materialistic;
 
-import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.os.Bundle;
 import com.google.android.material.textfield.TextInputLayout;
@@ -29,12 +28,18 @@ import java.lang.ref.WeakReference;
 
 import javax.inject.Inject;
 
+import dagger.hilt.android.AndroidEntryPoint;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountAuthenticator;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountSession;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
 
+@AndroidEntryPoint
 public class LoginActivity extends AccountAuthenticatorActivity {
     public static final String EXTRA_ADD_ACCOUNT = LoginActivity.class.getName() + ".EXTRA_ADD_ACCOUNT";
     @Inject UserServices mUserServices;
-    @Inject AccountManager mAccountManager;
+    @Inject AccountSession mAccountSession;
+    @Inject ReplyNotificationScheduler mReplyNotificationScheduler;
     private View mLoginButton;
     private View mRegisterButton;
     private TextInputLayout mUsernameLayout;
@@ -50,6 +55,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
         String username = Preferences.getUsername(this);
         boolean addAccount = getIntent().getBooleanExtra(EXTRA_ADD_ACCOUNT, false);
         setContentView(R.layout.activity_login);
+        AppUtils.padBottomSystemBars(findViewById(R.id.login_scroll), true);
         mUsernameLayout = (TextInputLayout) findViewById(R.id.textinput_username);
         mPasswordLayout = (TextInputLayout) findViewById(R.id.textinput_password);
         mUsernameEditText = (EditText) findViewById(R.id.edittext_username);
@@ -121,14 +127,13 @@ public class LoginActivity extends AccountAuthenticatorActivity {
     }
 
     private void addAccount(String username, String password) {
-        Account account = new Account(username, BuildConfig.APPLICATION_ID);
-        mAccountManager.addAccountExplicitly(account, password, null);
-        mAccountManager.setPassword(account, password); // for re-login with updated password
+        mAccountSession.signIn(username, password);
+        // E5-D3: a new active session may now need reply polling.
+        mReplyNotificationScheduler.onLogin();
         Bundle bundle = new Bundle();
         bundle.putString(AccountManager.KEY_ACCOUNT_NAME, username);
-        bundle.putString(AccountManager.KEY_ACCOUNT_TYPE, BuildConfig.APPLICATION_ID);
+        bundle.putString(AccountManager.KEY_ACCOUNT_TYPE, AccountAuthenticator.ACCOUNT_TYPE);
         setAccountAuthenticatorResult(bundle);
-        Preferences.setUsername(this, username);
         finish();
     }
 

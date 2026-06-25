@@ -30,6 +30,7 @@
         android:background="?android:attr/colorBackground" />
 
     <ScrollView
+        android:id="@+id/compose_scroll"
         android:layout_marginLeft="@dimen/activity_horizontal_margin"
         android:layout_marginRight="@dimen/activity_horizontal_margin"
         android:paddingTop="@dimen/activity_vertical_margin"

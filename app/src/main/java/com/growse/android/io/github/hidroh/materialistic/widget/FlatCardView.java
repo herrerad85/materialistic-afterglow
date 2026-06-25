@@ -17,10 +17,10 @@
 package com.growse.android.io.github.hidroh.materialistic.widget;
 
 import android.content.Context;
-import androidx.cardview.widget.CardView;
+import com.google.android.material.card.MaterialCardView;
 import android.util.AttributeSet;
 
-public class FlatCardView extends CardView {
+public class FlatCardView extends MaterialCardView {
 
     public FlatCardView(Context context) {
         super(context);

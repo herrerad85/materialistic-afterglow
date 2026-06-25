@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026
+ * Copyright (c) 2026 Afterglow contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  */
@@ -18,7 +18,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import rx.schedulers.Schedulers
 
 /**
  * Robolectric characterization of the Room-backed saved-stories DAO and the readability [Cache]
@@ -37,14 +36,7 @@ class FavoriteCacheTest {
         Room.inMemoryDatabaseBuilder(context, MaterialisticDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-    cache =
-        Cache(
-            db,
-            db.savedStoriesDao,
-            db.readStoriesDao,
-            db.readableDao,
-            Schedulers.immediate(),
-        )
+    cache = Cache(db, db.savedStoriesDao, db.readStoriesDao, db.readableDao)
   }
 
   @After

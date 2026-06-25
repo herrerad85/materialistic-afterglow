@@ -34,13 +34,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-
+import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder;
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
 import com.growse.android.io.github.hidroh.materialistic.Navigable;
 import com.growse.android.io.github.hidroh.materialistic.Preferences;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.ResourcesProvider;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
@@ -57,7 +57,7 @@ public class SinglePageItemRecyclerViewAdapter
             }
         }
     };
-    @Inject ResourcesProvider mResourcesProvider;
+    private final ResourcesProvider mResourcesProvider;
     private int mLevelIndicatorWidth = 0;
     private final boolean mAutoExpand;
     private boolean mColorCoded = true;
@@ -68,9 +68,14 @@ public class SinglePageItemRecyclerViewAdapter
     private int mColorOpacity = 100;
 
     public SinglePageItemRecyclerViewAdapter(ItemManager itemManager,
+                                             AccountActions accountActions,
+                                             PopupMenu popupMenu,
+                                             AlertDialogBuilder alertDialogBuilder,
+                                             ResourcesProvider resourcesProvider,
                                              @NonNull SavedState state,
                                              boolean autoExpand) {
-        super(itemManager);
+        super(itemManager, accountActions, popupMenu, alertDialogBuilder);
+        this.mResourcesProvider = resourcesProvider;
         this.mState = state;
         mAutoExpand = autoExpand;
     }
@@ -188,6 +193,17 @@ public class SinglePageItemRecyclerViewAdapter
     @Override
     public int getItemCount() {
         return mState.size();
+    }
+
+    /**
+     * The loaded comments in display order, exactly as rendered. In single-page mode the list index
+     * is the adapter position, so a find-in-page search can map a match index straight to a scroll
+     * position. The list ends with a null footer entry ; callers must tolerate a null element (the
+     * search matcher does). Returned live, for read-only traversal only ; do not mutate.
+     */
+    @NonNull
+    public List<Item> getLoadedItems() {
+        return mState.list();
     }
 
     @Override
@@ -403,6 +419,11 @@ public class SinglePageItemRecyclerViewAdapter
         @Synthetic
         int size() {
             return list.size();
+        }
+
+        @Synthetic
+        List<Item> list() {
+            return list;
         }
 
         @Synthetic

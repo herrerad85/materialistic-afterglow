@@ -22,6 +22,10 @@ import androidx.appcompat.app.ActionBar;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.appcompat.widget.Toolbar;
 import android.view.MenuItem;
+import android.view.View;
+
+import com.growse.android.io.github.hidroh.materialistic.ai.AiPreferenceController;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationPreferenceController;
 
 public class PreferencesActivity extends ThemedActivity {
     public static final String EXTRA_TITLE = PreferencesActivity.class.getName() + ".EXTRA_TITLE";
@@ -36,6 +40,7 @@ public class PreferencesActivity extends ThemedActivity {
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |
                 ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_SHOW_TITLE);
+        AppUtils.padTopSystemBars(findViewById(R.id.toolbar));
         if (savedInstanceState == null) {
             Bundle args = new Bundle();
             args.putInt(EXTRA_PREFERENCES, getIntent().getIntExtra(EXTRA_PREFERENCES, 0));
@@ -63,11 +68,28 @@ public class PreferencesActivity extends ThemedActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             Preferences.sync(getPreferenceManager());
+            // Scoped hook (E5-D6): only attach the reply-notification controller on the screen that
+            // actually has the switch, so we never register an activity-result launcher elsewhere.
+            if (findPreference(getString(R.string.pref_reply_notifications)) != null) {
+                new ReplyNotificationPreferenceController(this).attach();
+            }
+            // Scoped hook (E7-D4/D5): only attach the AI controller on the screen that actually has
+            // the AI summaries switch, so the consent/key-entry wiring never runs elsewhere.
+            if (findPreference(getString(R.string.pref_ai_summaries_enabled)) != null) {
+                new AiPreferenceController(this).attach();
+            }
         }
 
         @Override
         public void onCreatePreferences(Bundle bundle, String s) {
             addPreferencesFromResource(getArguments().getInt(EXTRA_PREFERENCES));
+        }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            getListView().setClipToPadding(false);
+            AppUtils.padBottomSystemBars(getListView(), false);
         }
     }
 }

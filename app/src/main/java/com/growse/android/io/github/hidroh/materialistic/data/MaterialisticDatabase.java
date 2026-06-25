@@ -24,13 +24,21 @@ import androidx.annotation.VisibleForTesting;
 
 import java.util.List;
 
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyPollState;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyPollStateDao;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplySeen;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplySeenDao;
+
 @Database(
         entities = {
                 MaterialisticDatabase.SavedStory.class,
                 MaterialisticDatabase.ReadStory.class,
-                MaterialisticDatabase.Readable.class
+                MaterialisticDatabase.Readable.class,
+                ReplySeen.class,
+                ReplyPollState.class,
+                CommentSeen.class
         },
-        version = 4)
+        version = 6)
 public abstract class MaterialisticDatabase extends RoomDatabase {
 
     private static final String BASE_URI = "content://io.github.hidroh.materialistic";
@@ -47,6 +55,27 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
         }
         return sInstance;
     }
+
+    // E5 (ADR-0004): reply-detection baseline + seeded marker. Extracted as a constant so the migration
+    // test can assert its result against the entity-generated schema without androidx.room:room-testing.
+    @VisibleForTesting
+    static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(DbConstants.SQL_CREATE_REPLY_SEEN_TABLE);
+            database.execSQL(DbConstants.SQL_CREATE_REPLY_POLL_STATE_TABLE);
+        }
+    };
+
+    // G6: per-story "new comment" baseline. Extracted as a constant (like MIGRATION_4_5) so the
+    // migration test can assert its result against the entity-generated schema.
+    @VisibleForTesting
+    static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL(DbConstants.SQL_CREATE_COMMENT_SEEN_TABLE);
+        }
+    };
 
     @VisibleForTesting
     protected static Builder<MaterialisticDatabase> setupBuilder(Builder<MaterialisticDatabase> builder) {
@@ -65,7 +94,7 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
                 database.execSQL(DbConstants.SQL_INSERT_READABILITY_READABLE);
                 database.execSQL(DbConstants.SQL_DROP_READABILITY_TABLE);
             }
-        });
+        }, MIGRATION_4_5, MIGRATION_5_6);
     }
 
     public static Uri getBaseSavedUri() {
@@ -81,6 +110,12 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
     public abstract ReadStoriesDao getReadStoriesDao();
 
     public abstract ReadableDao getReadableDao();
+
+    public abstract ReplySeenDao getReplySeenDao();
+
+    public abstract ReplyPollStateDao getReplyPollStateDao();
+
+    public abstract CommentSeenDao getCommentSeenDao();
 
     public LiveData<Uri> getLiveData() {
         return mLiveData;
@@ -326,6 +361,16 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
         static final String SQL_DROP_FAVORITE_TABLE = "DROP TABLE IF EXISTS favorite";
         static final String SQL_DROP_VIEWED_TABLE = "DROP TABLE IF EXISTS viewed";
         static final String SQL_DROP_READABILITY_TABLE = "DROP TABLE IF EXISTS readability";
+        static final String SQL_CREATE_REPLY_SEEN_TABLE =
+                "CREATE TABLE IF NOT EXISTS `reply_seen` (`username` TEXT NOT NULL, "
+                        + "`parent_id` TEXT NOT NULL, `kid_id` TEXT NOT NULL, "
+                        + "PRIMARY KEY(`username`, `kid_id`))";
+        static final String SQL_CREATE_REPLY_POLL_STATE_TABLE =
+                "CREATE TABLE IF NOT EXISTS `reply_poll_state` (`username` TEXT NOT NULL, "
+                        + "`last_polled_at` INTEGER NOT NULL, PRIMARY KEY(`username`))";
+        static final String SQL_CREATE_COMMENT_SEEN_TABLE =
+                "CREATE TABLE IF NOT EXISTS `comment_seen` (`story_id` TEXT NOT NULL, "
+                        + "`max_seen_id` INTEGER NOT NULL, PRIMARY KEY(`story_id`))";
     }
 
     public interface FavoriteEntry extends BaseColumns {

@@ -20,6 +20,7 @@ import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 
 import androidx.annotation.CallSuper;
 import androidx.annotation.Nullable;
@@ -32,23 +33,23 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import android.annotation.SuppressLint;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder;
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
 import com.growse.android.io.github.hidroh.materialistic.ComposeActivity;
-import com.growse.android.io.github.hidroh.materialistic.Injectable;
 import com.growse.android.io.github.hidroh.materialistic.Navigable;
 import com.growse.android.io.github.hidroh.materialistic.Preferences;
 import com.growse.android.io.github.hidroh.materialistic.R;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
+import com.growse.android.io.github.hidroh.materialistic.data.NewCommentMarker;
 import com.growse.android.io.github.hidroh.materialistic.data.ResponseListener;
 
 public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter.ItemViewHolder>
@@ -57,33 +58,40 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     private static final int DURATION_PER_LINE_MILLIS = 20;
     LayoutInflater mLayoutInflater;
     private ItemManager mItemManager;
-    @Inject UserServices mUserServices;
-    @Inject PopupMenu mPopupMenu;
-    @Inject AlertDialogBuilder mAlertDialogBuilder;
-    private int mTertiaryTextColorResId;
-    private int mSecondaryTextColorResId;
-    private int mCardBackgroundColorResId;
-    private int mCardHighlightColorResId;
+    final AccountActions mAccountActions;
+    final PopupMenu mPopupMenu;
+    final AlertDialogBuilder mAlertDialogBuilder;
+    private int mTertiaryTextColor;
+    private int mSecondaryTextColor;
+    private int mCardBackgroundColor;
+    private int mCardHighlightColor;
     private int mContentMaxLines = Integer.MAX_VALUE;
     private String mUsername;
     private final Map<String, Integer> mLineCounted = new HashMap<>();
     private int mCacheMode = ItemManager.MODE_DEFAULT;
     private float mLineHeight = 1.0f;
+    // G6: the last-visit watermark (highest comment id seen on the previous visit). null (the
+    // default and first-visit case) marks nothing new; each comment is judged against this fixed
+    // value at bind time, so a reply loaded after the initial list is marked just like the rest.
+    private Long mNewCommentBaseline = null;
 
     public interface PositionCallback {
         void onPosition(int position);
     }
 
-    ItemRecyclerViewAdapter(ItemManager itemManager) {
+    ItemRecyclerViewAdapter(ItemManager itemManager,
+                            AccountActions accountActions,
+                            PopupMenu popupMenu,
+                            AlertDialogBuilder alertDialogBuilder) {
         mItemManager = itemManager;
+        mAccountActions = accountActions;
+        mPopupMenu = popupMenu;
+        mAlertDialogBuilder = alertDialogBuilder;
     }
 
     @Override
     public void attach(Context context, RecyclerView recyclerView) {
         super.attach(context, recyclerView);
-        if (context instanceof Injectable) {
-            ((Injectable) context).inject(this);
-        }
         mLayoutInflater = AppUtils.createLayoutInflater(context);
         TypedArray ta = context.obtainStyledAttributes(new int[]{
                 android.R.attr.textColorTertiary,
@@ -91,10 +99,12 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
                 R.attr.colorCardBackground,
                 R.attr.colorCardHighlight
         });
-        mTertiaryTextColorResId = ta.getInt(0, 0);
-        mSecondaryTextColorResId = ta.getInt(1, 0);
-        mCardBackgroundColorResId = ta.getInt(2, 0);
-        mCardHighlightColorResId = ta.getInt(3, 0);
+        // Read each colour attr as a direct @ColorInt: correct whether the attr resolves to a
+        // @color reference or a direct colour int (the latter under dynamic colour / M3 roles).
+        mTertiaryTextColor = ta.getColor(0, Color.BLACK);
+        mSecondaryTextColor = ta.getColor(1, Color.BLACK);
+        mCardBackgroundColor = ta.getColor(2, Color.TRANSPARENT);
+        mCardHighlightColor = ta.getColor(3, Color.TRANSPARENT);
         ta.recycle();
     }
 
@@ -120,6 +130,18 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
 
     public void setCacheMode(int cacheMode) {
         mCacheMode = cacheMode;
+    }
+
+    /**
+     * G6: the last-visit baseline (the highest comment id seen previously; null = first visit).
+     * Marking is decided per comment at bind time (id &gt; baseline), so the same fixed baseline
+     * marks later-loaded replies too. Triggers a rebind so currently-bound rows pick up (or drop)
+     * the accent stripe.
+     */
+    @SuppressLint("NotifyDataSetChanged")
+    public void setNewCommentBaseline(Long baseline) {
+        mNewCommentBaseline = baseline;
+        notifyDataSetChanged();
     }
 
     public void initDisplayOptions(Context context) {
@@ -151,6 +173,7 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         }
         highlightUserItem(holder, item);
         decorateDead(holder, item);
+        markNewComment(holder, item);
         holder.mContentTextView.setLineSpacing(0f, mLineHeight);
         AppUtils.setTextWithLinks(holder.mContentTextView, item.getDisplayedText());
         Integer lineCount = mLineCounted.get(item.getId());
@@ -198,12 +221,24 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         boolean highlight = !TextUtils.isEmpty(mUsername) &&
                 TextUtils.equals(mUsername, item.getBy());
         holder.mContentView.setBackgroundColor(highlight ?
-                mCardHighlightColorResId : mCardBackgroundColorResId);
+                mCardHighlightColor : mCardBackgroundColor);
     }
 
     private void decorateDead(VH holder, Item item) {
         holder.mContentTextView.setTextColor(item.isDead() ?
-                mSecondaryTextColorResId : mTertiaryTextColorResId);
+                mSecondaryTextColor : mTertiaryTextColor);
+    }
+
+    // G6: show the accent stripe iff this comment's id is past the last-visit baseline. Decided
+    // every bind so a recycled row never keeps a stale marker, and so a reply loaded after the
+    // initial list is marked the moment it binds.
+    private void markNewComment(VH holder, Item item) {
+        if (holder.mNewIndicator == null) {
+            return;
+        }
+        holder.mNewIndicator.setVisibility(
+                NewCommentMarker.INSTANCE.isNew(item.getLongId(), mNewCommentBaseline)
+                        ? View.VISIBLE : View.GONE);
     }
 
     private void toggleCollapsibleContent(final VH holder, final Item item, int lineCount) {
@@ -258,7 +293,11 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     }
 
     private void vote(final Item item) {
-        mUserServices.voteUp(context, item.getId(), new VoteCallback(this));
+        if (mAccountActions.vote(item.getId(), new VoteCallback(this)) == AccountActions.Result.NeedsLogin) {
+            AppUtils.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession());
+        } else {
+            Toast.makeText(context, R.string.sending, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Synthetic
@@ -268,7 +307,7 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         } else if (successful) {
             Toast.makeText(context, R.string.voted, Toast.LENGTH_SHORT).show();
         } else {
-            AppUtils.showLogin(context, mAlertDialogBuilder);
+            AppUtils.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession());
         }
     }
 
@@ -280,6 +319,7 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         TextView mCommentButton;
         View mMoreButton;
         View mContentView;
+        View mNewIndicator;
 
         ItemViewHolder(View itemView) {
             super(itemView);
@@ -291,6 +331,8 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
             mCommentButton.setVisibility(View.GONE);
             mMoreButton = itemView.findViewById(R.id.button_more);
             mContentView = itemView.findViewById(R.id.content);
+            // G6: present only in item_comment.xml, so null in any other holder layout.
+            mNewIndicator = itemView.findViewById(R.id.comment_new_indicator);
         }
 
         ItemViewHolder(View itemView, @SuppressWarnings("UnusedParameters") Object payload) {

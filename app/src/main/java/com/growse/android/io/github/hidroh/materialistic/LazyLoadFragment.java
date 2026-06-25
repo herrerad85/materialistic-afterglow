@@ -18,13 +18,14 @@ package com.growse.android.io.github.hidroh.materialistic;
 
 import android.content.Context;
 import android.os.Bundle;
+import dagger.hilt.android.AndroidEntryPoint;
 
 /**
  * Base fragment that controls load timing depends on WIFI and visibility
  */
+@AndroidEntryPoint
 public abstract class LazyLoadFragment extends BaseFragment {
     public static final String EXTRA_EAGER_LOAD = LazyLoadFragment.class.getName() + ".EXTRA_EAGER_LOAD";
-    public static final String EXTRA_RETAIN_INSTANCE = WebFragment.class.getName() + ".EXTRA_RETAIN_INSTANCE";
     private static final String STATE_EAGER_LOAD = "state:eagerLoad";
     private static final String STATE_LOADED = "state:loaded";
     private boolean mEagerLoad, mLoaded, mActivityCreated;
@@ -39,7 +40,9 @@ public abstract class LazyLoadFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRetainInstance(getArguments().getBoolean(EXTRA_RETAIN_INSTANCE, false));
+        // Hilt @AndroidEntryPoint fragments must never be retained (retained fragments re-attach
+        // with a different Context across recreate, which crashes Hilt). These pager fragments
+        // rely on onSaveInstanceState for state across recreate, not instance retention.
         mNewInstance = true;
         if (savedInstanceState != null) {
             mEagerLoad = savedInstanceState.getBoolean(STATE_EAGER_LOAD);

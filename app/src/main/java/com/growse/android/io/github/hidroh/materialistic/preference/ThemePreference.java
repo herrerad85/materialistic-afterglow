@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.View;
 
+import com.google.android.material.color.DynamicColors;
 import com.growse.android.io.github.hidroh.materialistic.Preferences;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
@@ -40,6 +41,7 @@ public class ThemePreference extends Preference {
     private static final String GREEN = "green";
     private static final String SOLARIZED = "solarized";
     private static final String SOLARIZED_DARK = "solarized_dark";
+    private static final String DYNAMIC = "dynamic";
     private static final ArrayMap<Integer, String> BUTTONS = new ArrayMap<>();
     private static final ArrayMap<String, ThemeSpec> VALUES = new ArrayMap<>();
     static {
@@ -50,6 +52,7 @@ public class ThemePreference extends Preference {
         BUTTONS.put(R.id.theme_green, GREEN);
         BUTTONS.put(R.id.theme_solarized, SOLARIZED);
         BUTTONS.put(R.id.theme_solarized_dark, SOLARIZED_DARK);
+        BUTTONS.put(R.id.theme_dynamic, DYNAMIC);
 
         VALUES.put(LIGHT, new DayNightSpec(R.string.theme_light));
         VALUES.put(DARK, new DarkSpec(R.string.theme_dark));
@@ -59,13 +62,30 @@ public class ThemePreference extends Preference {
         VALUES.put(SOLARIZED, new DayNightSpec(R.string.theme_solarized, R.style.Solarized));
         VALUES.put(SOLARIZED_DARK, new DarkSpec(R.string.theme_solarized_dark,
                 R.style.Solarized_Dark));
+        VALUES.put(DYNAMIC, new DynamicSpec(R.string.theme_dynamic));
     }
 
     private String mSelectedTheme;
 
     public static ThemeSpec getTheme(String value, boolean isTranslucent) {
-        ThemeSpec themeSpec = VALUES.get(VALUES.containsKey(value) ? value : LIGHT);
+        ThemeSpec themeSpec = VALUES.get(normalize(value));
         return isTranslucent ? themeSpec.getTranslucent() : themeSpec;
+    }
+
+    /**
+     * Maps a persisted theme value to a usable key. Unknown values fall back to LIGHT. A persisted
+     * "dynamic" that is no longer available (backup-restore onto a pre-API-31 device, or an OS
+     * downgrade) also falls back to LIGHT so apply() and the picker summary agree and there is no
+     * invisible selected state.
+     */
+    private static String normalize(String value) {
+        if (!VALUES.containsKey(value)) {
+            return LIGHT;
+        }
+        if (DYNAMIC.equals(value) && !DynamicColors.isDynamicColorAvailable()) {
+            return LIGHT;
+        }
+        return value;
     }
 
     @SuppressWarnings("unused")
@@ -90,6 +110,9 @@ public class ThemePreference extends Preference {
         if (TextUtils.isEmpty(mSelectedTheme)) {
             mSelectedTheme = LIGHT;
         }
+        // A persisted "dynamic" that is no longer available collapses to LIGHT, keeping the summary
+        // and shouldDisableDependents in step with the theme that apply() will actually use.
+        mSelectedTheme = normalize(mSelectedTheme);
         setSummary(VALUES.get(mSelectedTheme).summary);
     }
 
@@ -101,6 +124,12 @@ public class ThemePreference extends Preference {
             final int buttonId = BUTTONS.keyAt(i);
             final String value = BUTTONS.valueAt(i);
             View button = holder.findViewById(buttonId);
+            if (DYNAMIC.equals(value) && !DynamicColors.isDynamicColorAvailable()) {
+                // Material You is unavailable on this device: drop the swatch entirely so the
+                // picker never offers a theme that cannot apply.
+                button.setVisibility(View.GONE);
+                continue;
+            }
             button.setClickable(true);
             button.setOnClickListener(v -> {
                 mSelectedTheme = value;
@@ -123,13 +152,21 @@ public class ThemePreference extends Preference {
         final @StringRes int summary;
         public final @StyleRes int theme;
         public final @StyleRes int themeOverrides;
+        public final boolean dynamic;
         ThemeSpec translucent;
 
         @Synthetic
         ThemeSpec(@StringRes int summary, @StyleRes int theme, @StyleRes int themeOverrides) {
+            this(summary, theme, themeOverrides, false);
+        }
+
+        @Synthetic
+        ThemeSpec(@StringRes int summary, @StyleRes int theme, @StyleRes int themeOverrides,
+                boolean dynamic) {
             this.summary = summary;
             this.theme = theme;
             this.themeOverrides = themeOverrides;
+            this.dynamic = dynamic;
         }
 
         ThemeSpec getTranslucent() {
@@ -166,12 +203,28 @@ public class ThemePreference extends Preference {
             super(summary, R.style.AppTheme_DayNight, themeOverrides);
         }
 
+        DayNightSpec(@StringRes int summary, @StyleRes int themeOverrides, boolean dynamic) {
+            super(summary, R.style.AppTheme_DayNight, themeOverrides, dynamic);
+        }
+
         @Override
         ThemeSpec getTranslucent() {
             if (translucent == null) {
-                translucent = new ThemeSpec(summary, R.style.AppTheme_Translucent, themeOverrides);
+                translucent = new ThemeSpec(summary, R.style.AppTheme_Translucent, themeOverrides,
+                        dynamic);
             }
             return translucent;
+        }
+    }
+
+    public static class DynamicSpec extends DayNightSpec {
+
+        // No static overlay (themeOverrides == -1): DynamicColors must own the palette so a static
+        // overlay cannot clobber the wallpaper-derived roles. Extends DayNightSpec so day-night
+        // follow and auto-day-night-enabled (getAutoDayNightMode / shouldDisableDependents key off
+        // "is DayNightSpec") come for free.
+        DynamicSpec(@StringRes int summary) {
+            super(summary, -1, true);
         }
     }
 }

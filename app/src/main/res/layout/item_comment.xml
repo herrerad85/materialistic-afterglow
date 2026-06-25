@@ -15,7 +15,7 @@
   ~ limitations under the License.
   -->
 
-<androidx.cardview.widget.CardView
+<com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -27,6 +27,16 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
+        <!-- G6: subtle "new comment" accent stripe, shown only for comments that arrived since the
+             user's last visit to this thread. Quiet by design : a thin left-edge rule, not a badge. -->
+        <View
+            android:id="@+id/comment_new_indicator"
+            android:visibility="gone"
+            tools:visibility="visible"
+            android:background="?attr/colorAccent"
+            android:layout_width="3dp"
+            android:layout_height="match_parent" />
 
         <View
             android:id="@id/level"
@@ -128,4 +138,4 @@
 
     </LinearLayout>
 
-</androidx.cardview.widget.CardView>
+</com.google.android.material.card.MaterialCardView>

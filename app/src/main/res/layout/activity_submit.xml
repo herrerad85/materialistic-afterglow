@@ -29,6 +29,7 @@
         android:background="?android:attr/colorBackground" />
 
     <LinearLayout
+        android:id="@+id/submit_content"
         android:orientation="vertical"
         android:background="?attr/colorCardBackground"
         android:elevation="@dimen/cardview_elevation"

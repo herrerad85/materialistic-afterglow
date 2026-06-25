@@ -18,9 +18,9 @@ package com.growse.android.io.github.hidroh.materialistic.widget;
 
 import android.content.Context;
 import android.content.res.TypedArray;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.appcompat.widget.AppCompatTextView;
 import android.util.AttributeSet;
@@ -63,8 +63,8 @@ public class TintableTextView extends AppCompatTextView {
     }
 
     private int getTextColor(Context context, AttributeSet attrs) {
-        int defaultTextColor = ContextCompat.getColor(getContext(),
-                AppUtils.getThemedResId(getContext(), android.R.attr.textColorTertiary));
+        int defaultTextColor = AppUtils.getThemedColor(getContext(),
+                android.R.attr.textColorTertiary, Color.BLACK);
         TypedArray ta = context.obtainStyledAttributes(attrs,
                 new int[]{android.R.attr.textAppearance, android.R.attr.textColor});
         int ap = ta.getResourceId(0, 0);

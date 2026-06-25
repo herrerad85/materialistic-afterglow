@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026
+ * Copyright (c) 2026 Afterglow contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  */
@@ -18,8 +18,9 @@ import org.junit.Test
  * - urlEquals delegates to the app's own AndroidUtils.TextUtils (pure Java), not
  *   android.text.TextUtils, so it is likewise Android-free.
  *
- * (isHackerNewsUrl and getCredentials hit android.text.TextUtils / AccountManager and are
- * characterized under Robolectric in AuthCharacterizationTest.)
+ * (isHackerNewsUrl hits android.text.TextUtils; the auth/credentials gate now lives in
+ * AccountSession and is characterized under Robolectric in AuthCharacterizationTest /
+ * AccountSessionTest.)
  */
 class AppUtilsTest {
 

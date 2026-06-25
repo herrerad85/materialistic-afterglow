@@ -51,8 +51,9 @@ import android.widget.Toast;
 import java.lang.ref.WeakReference;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
+import dagger.hilt.android.AndroidEntryPoint;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager;
@@ -60,14 +61,15 @@ import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 import com.growse.android.io.github.hidroh.materialistic.data.MaterialisticDatabase;
 import com.growse.android.io.github.hidroh.materialistic.data.ResponseListener;
-import com.growse.android.io.github.hidroh.materialistic.data.SessionManager;
+import com.growse.android.io.github.hidroh.materialistic.data.ViewedItemStore;
 import com.growse.android.io.github.hidroh.materialistic.data.WebItem;
 import com.growse.android.io.github.hidroh.materialistic.widget.ItemPagerAdapter;
 import com.growse.android.io.github.hidroh.materialistic.widget.NavFloatingActionButton;
 import com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu;
 import com.growse.android.io.github.hidroh.materialistic.widget.ViewPager;
 
-public class ItemActivity extends InjectableActivity implements ItemFragment.ItemChangedListener {
+@AndroidEntryPoint
+public class ItemActivity extends ThemedActivity implements ItemFragment.ItemChangedListener {
 
     public static final String EXTRA_ITEM = ItemActivity.class.getName() + ".EXTRA_ITEM";
     public static final String EXTRA_CACHE_MODE = ItemActivity.class.getName() + ".EXTRA_CACHE_MODE";
@@ -80,13 +82,16 @@ public class ItemActivity extends InjectableActivity implements ItemFragment.Ite
     @Synthetic String mItemId = null;
     @Synthetic ImageView mBookmark;
     private boolean mExternalBrowser;
+    // In-memory guard so the one-time nav nudge is enqueued at most once per Activity instance
+    // (the persisted flag is only written once the Snackbar is actually shown).
+    private boolean mNavNudgeHandled;
     private Preferences.StoryViewMode mStoryViewMode;
-    @Inject @Named(ActivityModule.HN) ItemManager mItemManager;
+    @Inject @HackerNews ItemManager mItemManager;
     @Inject FavoriteManager mFavoriteManager;
     @Inject AlertDialogBuilder mAlertDialogBuilder;
     @Inject PopupMenu mPopupMenu;
-    @Inject UserServices mUserServices;
-    @Inject SessionManager mSessionManager;
+    @Inject AccountActions mAccountActions;
+    @Inject ViewedItemStore mViewedItemStore;
     @Inject CustomTabsDelegate mCustomTabsDelegate;
     @Inject KeyDelegate mKeyDelegate;
     private TabLayout mTabLayout;
@@ -154,6 +159,9 @@ public class ItemActivity extends InjectableActivity implements ItemFragment.Ite
         mAppBar = findViewById(R.id.appbar);
         mTabLayout = findViewById(R.id.tab_layout);
         mViewPager = findViewById(R.id.view_pager);
+        AppUtils.padBottomSystemBars(findViewById(R.id.view_pager), false);
+        AppUtils.marginBottomSystemBars(findViewById(R.id.reply_button));
+        AppUtils.marginBottomSystemBars(findViewById(R.id.navigation_button));
         AppUtils.toggleFab(mNavButton, false);
         AppUtils.toggleFab(mReplyButton, false);
         final Intent intent = getIntent();
@@ -251,9 +259,9 @@ public class ItemActivity extends InjectableActivity implements ItemFragment.Ite
     }
 
     @Override
-    public void onBackPressed() {
+    protected void onBackPressedCompat() {
         if (!mFullscreen) {
-            super.onBackPressed();
+            super.onBackPressedCompat();
         } else {
             LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(
                     WebFragment.ACTION_FULLSCREEN).putExtra(WebFragment.EXTRA_FULLSCREEN, false));
@@ -355,7 +363,7 @@ public class ItemActivity extends InjectableActivity implements ItemFragment.Ite
         }
         mCustomTabsDelegate.mayLaunchUrl(Uri.parse(story.getUrl()), null, null);
         bindFavorite();
-        mSessionManager.view(story.getId());
+        mViewedItemStore.view(story.getId());
         mVoteButton.setVisibility(View.VISIBLE);
         mVoteButton.setOnClickListener(v -> vote(story));
         final TextView titleTextView = findViewById(android.R.id.text2);
@@ -396,15 +404,21 @@ public class ItemActivity extends InjectableActivity implements ItemFragment.Ite
                         .setItem(story)
                         .setShowArticle(hasText || !mExternalBrowser)
                         .setCacheMode(getIntent().getIntExtra(EXTRA_CACHE_MODE, ItemManager.MODE_DEFAULT))
-                        .setRetainInstance(true)
                         .setDefaultViewMode(mStoryViewMode));
         mAdapter.bind(mViewPager, mTabLayout, mNavButton, mReplyButton);
         mTabLayout.addOnTabSelectedListener(new TabLayout.ViewPagerOnTabSelectedListener(mViewPager) {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                super.onTabSelected(tab);
+                maybeShowNavNudge();
+            }
+
             @Override
             public void onTabReselected(TabLayout.Tab tab) {
                 mAppBar.setExpanded(true, true);
             }
         });
+        maybeShowNavNudge();
         if (story.isStoryType() && mExternalBrowser && !hasText) {
             TextView buttonArticle = (TextView) findViewById(R.id.button_article);
             buttonArticle.setVisibility(View.VISIBLE);
@@ -436,7 +450,11 @@ public class ItemActivity extends InjectableActivity implements ItemFragment.Ite
     }
 
     private void vote(final WebItem story) {
-        mUserServices.voteUp(ItemActivity.this, story.getId(), new VoteCallback(this));
+        if (mAccountActions.vote(story.getId(), new VoteCallback(this)) == AccountActions.Result.NeedsLogin) {
+            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
+        } else {
+            Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Synthetic
@@ -448,7 +466,7 @@ public class ItemActivity extends InjectableActivity implements ItemFragment.Ite
             DrawableCompat.setTint(drawable, ContextCompat.getColor(this, R.color.greenA700));
             Toast.makeText(this, R.string.voted, Toast.LENGTH_SHORT).show();
         } else {
-            AppUtils.showLogin(this, mAlertDialogBuilder);
+            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
         }
     }
 
@@ -461,6 +479,33 @@ public class ItemActivity extends InjectableActivity implements ItemFragment.Ite
 
     private boolean navigationVisible() {
         return mViewPager.getCurrentItem() == 0 && Preferences.navigationEnabled(this);
+    }
+
+    @Synthetic
+    void maybeShowNavNudge() {
+        // One-time, informational hint pointing users to the comment-navigation pad and its Settings
+        // toggle. Skip if the comments tab is not in front, if navigation is already on, or if the
+        // nudge was shown before ; it must never repeat across launches and must not block reading.
+        if (mViewPager == null || mViewPager.getCurrentItem() != 0) {
+            return;
+        }
+        if (mNavNudgeHandled || Preferences.navigationEnabled(this)
+                || Preferences.isCommentNavNudgeShown(this)) {
+            return;
+        }
+        mNavNudgeHandled = true; // never enqueue a second nudge within this Activity instance
+        Snackbar.make(mCoordinatorLayout, R.string.comment_nav_nudge, Snackbar.LENGTH_LONG)
+                .setAction(R.string.comment_nav_nudge_action, v ->
+                        startActivity(new Intent(ItemActivity.this, SettingsActivity.class)))
+                .addCallback(new Snackbar.Callback() {
+                    @Override
+                    public void onShown(Snackbar sb) {
+                        // Persist only once the nudge is actually on screen, so it is never silently
+                        // consumed behind another Snackbar; thereafter it never repeats across launches.
+                        Preferences.setCommentNavNudgeShown(ItemActivity.this);
+                    }
+                })
+                .show();
     }
 
     static class ItemResponseListener implements ResponseListener<Item> {

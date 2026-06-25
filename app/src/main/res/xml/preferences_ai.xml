@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (c) 2026 Afterglow contributors
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License").
+  -->
+
+<androidx.preference.PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <androidx.preference.SwitchPreferenceCompat
+        app:iconSpaceReserved="false"
+        android:key="@string/pref_ai_summaries_enabled"
+        android:title="@string/pref_ai_summaries_title"
+        android:summary="@string/pref_ai_summaries_summary"
+        android:defaultValue="false" />
+
+    <androidx.preference.ListPreference
+        app:iconSpaceReserved="false"
+        android:key="@string/pref_ai_provider"
+        android:title="@string/pref_ai_provider_title"
+        android:entries="@array/ai_provider_entries"
+        android:entryValues="@array/ai_provider_values"
+        android:defaultValue="@string/pref_ai_provider_value_gemini" />
+
+    <androidx.preference.EditTextPreference
+        app:iconSpaceReserved="false"
+        android:key="@string/pref_ai_api_key"
+        android:title="@string/pref_ai_api_key_title" />
+
+</androidx.preference.PreferenceScreen>

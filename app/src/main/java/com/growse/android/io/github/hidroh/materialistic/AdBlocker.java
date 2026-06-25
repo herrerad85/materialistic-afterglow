@@ -31,18 +31,24 @@ import java.util.Set;
 import okhttp3.HttpUrl;
 import okio.BufferedSource;
 import okio.Okio;
-import rx.Observable;
-import rx.Scheduler;
 
 public class AdBlocker {
     private static final String AD_HOSTS_FILE = "pgl.yoyo.org.txt";
     private static final Set<String> AD_HOSTS = new HashSet<>();
 
-    public static void init(Context context, Scheduler scheduler) {
-        Observable.fromCallable(() -> loadFromAssets(context))
-                .onErrorReturn(throwable -> null)
-                .subscribeOn(scheduler)
-                .subscribe();
+    // One-shot background load of the ad-host list at app start. A bare thread replaces the old
+    // rx fire-and-forget (Observable.fromCallable + subscribeOn(io) + onErrorReturn(null)): same
+    // semantics, no scheduler dependency, no executor to keep alive. A bare thread is enough for a
+    // single startup load; switch to a shared executor only if more startup background work appears.
+    public static void init(Context context) {
+        new Thread(() -> {
+            try {
+                loadFromAssets(context);
+            } catch (IOException ignored) {
+                // Asset missing/unreadable: leave the host set empty, never fatal at startup
+                // (matches the old onErrorReturn(null) swallow).
+            }
+        }, "adblock-init").start();
     }
 
     public static boolean isAd(String url) {
@@ -55,7 +61,7 @@ public class AdBlocker {
     }
 
     @WorkerThread
-    private static Void loadFromAssets(Context context) throws IOException {
+    private static void loadFromAssets(Context context) throws IOException {
         InputStream stream = context.getAssets().open(AD_HOSTS_FILE);
         BufferedSource buffer = Okio.buffer(Okio.source(stream));
         String line;
@@ -64,7 +70,6 @@ public class AdBlocker {
         }
         buffer.close();
         stream.close();
-        return null;
     }
 
     /**

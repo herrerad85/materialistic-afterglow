@@ -30,6 +30,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.growse.android.io.github.hidroh.materialistic.FavoriteActivity
+import com.growse.android.io.github.hidroh.materialistic.IoDispatcher
 import com.growse.android.io.github.hidroh.materialistic.R
 import com.growse.android.io.github.hidroh.materialistic.ktx.closeQuietly
 import com.growse.android.io.github.hidroh.materialistic.ktx.getUri
@@ -38,13 +39,15 @@ import com.growse.android.io.github.hidroh.materialistic.ktx.toSendIntentChooser
 import java.io.File
 import java.io.IOException
 import javax.inject.Inject
-import javax.inject.Named
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okio.buffer
 import okio.sink
-import rx.Observable
-import rx.Scheduler
-import rx.android.schedulers.AndroidSchedulers
 
 /** Data repository for {@link Favorite} */
 @Singleton
@@ -52,7 +55,7 @@ class FavoriteManager
 @Inject
 constructor(
     private val cache: LocalCache,
-    @Named("io") private val ioScheduler: Scheduler,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
     private val dao: MaterialisticDatabase.SavedStoriesDao,
 ) : LocalItemManager<Favorite> {
 
@@ -85,6 +88,10 @@ constructor(
   private val syncScheduler = SyncScheduler()
   private var cursor: Cursor? = null
   private var loader: FavoriteRoomLoader? = null
+  // Runs the fire-and-forget DB work off the main thread (was subscribeOn(ioScheduler)); LiveData
+  // and
+  // observer notifications are delivered back on Dispatchers.Main (was observeOn(mainThread())).
+  private val scope = CoroutineScope(SupervisorJob() + ioDispatcher)
 
   override fun getSize() = cursor?.count ?: 0
 
@@ -116,23 +123,27 @@ constructor(
   fun export(context: Context, query: String?) {
     val appContext = context.applicationContext
     notifyExportStart(appContext)
-    Observable.defer { Observable.just(query) }
-        .map { query(it) }
-        .filter { it != null && it.moveToFirst() }
-        .map {
+    scope.launch {
+      val uri: Uri? =
           try {
-            toFile(appContext, Cursor(it))
-          } catch (e: IOException) {
+            val cursor = query(query)
+            if (cursor.moveToFirst()) {
+              try {
+                toFile(appContext, Cursor(cursor))
+              } catch (e: IOException) {
+                null
+              } finally {
+                cursor.close()
+              }
+            } else {
+              cursor.close()
+              null
+            }
+          } catch (e: Throwable) {
             null
-          } finally {
-            it.close()
           }
-        }
-        .onErrorReturn { null }
-        .defaultIfEmpty(null)
-        .subscribeOn(ioScheduler)
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe { notifyExportDone(appContext, it) }
+      withContext(Dispatchers.Main) { notifyExportDone(appContext, uri) }
+    }
   }
 
   /**
@@ -142,13 +153,11 @@ constructor(
    * @param story story to be added as favorite
    */
   fun add(context: Context, story: WebItem) {
-    Observable.defer { Observable.just(story) }
-        .doOnNext { insert(it) }
-        .map { it.id }
-        .map { buildAdded().appendPath(story.id).build() }
-        .subscribeOn(ioScheduler)
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe { MaterialisticDatabase.getInstance(context).setLiveValue(it) }
+    scope.launch {
+      insert(story)
+      val uri = buildAdded().appendPath(story.id).build()
+      withContext(Dispatchers.Main) { MaterialisticDatabase.getInstance(context).setLiveValue(uri) }
+    }
     syncScheduler.scheduleSync(context, story.id)
   }
 
@@ -159,13 +168,12 @@ constructor(
    * @param query query to filter stories to be cleared
    */
   fun clear(context: Context, query: String?) {
-    Observable.defer { Observable.just(query) }
-        .map { deleteMultiple(it) }
-        .subscribeOn(ioScheduler)
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe {
-          MaterialisticDatabase.getInstance(context).setLiveValue(buildCleared().build())
-        }
+    scope.launch {
+      deleteMultiple(query)
+      withContext(Dispatchers.Main) {
+        MaterialisticDatabase.getInstance(context).setLiveValue(buildCleared().build())
+      }
+    }
   }
 
   /**
@@ -176,12 +184,11 @@ constructor(
    */
   fun remove(context: Context, itemId: String?) {
     if (itemId == null) return
-    Observable.defer { Observable.just(itemId) }
-        .doOnNext { delete(it) }
-        .map { buildRemoved().appendPath(it).build() }
-        .subscribeOn(ioScheduler)
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe { MaterialisticDatabase.getInstance(context).setLiveValue(it) }
+    scope.launch {
+      delete(itemId)
+      val uri = buildRemoved().appendPath(itemId).build()
+      withContext(Dispatchers.Main) { MaterialisticDatabase.getInstance(context).setLiveValue(uri) }
+    }
   }
 
   /**
@@ -192,23 +199,24 @@ constructor(
    */
   fun remove(context: Context, itemIds: Collection<String>?) {
     if (itemIds.orEmpty().isEmpty()) return
-    Observable.defer { Observable.from(itemIds) }
-        .subscribeOn(ioScheduler)
-        .doOnNext { delete(it) }
-        .map { buildRemoved().appendPath(it).build() }
-        .observeOn(AndroidSchedulers.mainThread())
-        .subscribe { MaterialisticDatabase.getInstance(context).setLiveValue(it) }
+    scope.launch {
+      itemIds.orEmpty().forEach { itemId ->
+        delete(itemId)
+        val uri = buildRemoved().appendPath(itemId).build()
+        withContext(Dispatchers.Main) {
+          MaterialisticDatabase.getInstance(context).setLiveValue(uri)
+        }
+      }
+    }
   }
 
   @WorkerThread
-  fun check(itemId: String?) =
-      Observable.just(
-          if (itemId.isNullOrEmpty()) {
-            false
-          } else {
-            cache.isFavorite(itemId)
-          }
-      )!!
+  fun check(itemId: String?): Boolean =
+      if (itemId.isNullOrEmpty()) {
+        false
+      } else {
+        cache.isFavorite(itemId)
+      }
 
   @WorkerThread
   private fun toFile(context: Context, cursor: Cursor): Uri? {
@@ -360,14 +368,13 @@ constructor(
   ) {
     @AnyThread
     fun load() {
-      Observable.defer { Observable.just(filter) }
-          .map { query(it) }
-          .subscribeOn(ioScheduler)
-          .observeOn(AndroidSchedulers.mainThread())
-          .subscribe {
-            cursor = if (it == null) null else Cursor(it)
-            observer.onChanged()
-          }
+      scope.launch {
+        val result = query(filter)
+        withContext(Dispatchers.Main) {
+          cursor = Cursor(result)
+          observer.onChanged()
+        }
+      }
     }
   }
 }

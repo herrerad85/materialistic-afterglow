@@ -16,16 +16,13 @@
 
 package com.growse.android.io.github.hidroh.materialistic;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Bundle;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.preference.PreferenceManager;
@@ -37,11 +34,17 @@ import android.widget.TextView;
 
 import javax.inject.Inject;
 
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountSession;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
+import dagger.hilt.android.AndroidEntryPoint;
 
-public abstract class DrawerActivity extends InjectableActivity {
+@AndroidEntryPoint
+public abstract class DrawerActivity extends ThemedActivity {
 
     @Inject AlertDialogBuilder mAlertDialogBuilder;
+    @Inject AccountSession mAccountSession;
+    @Inject ReplyNotificationScheduler mReplyNotificationScheduler;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
     @Synthetic View mDrawer;
@@ -62,6 +65,7 @@ public abstract class DrawerActivity extends InjectableActivity {
         super.onCreate(savedInstanceState);
         super.setContentView(R.layout.activity_drawer);
         mDrawer = findViewById(R.id.drawer);
+        AppUtils.padVerticalSystemBars(mDrawer, false);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerAccount = (TextView) findViewById(R.id.drawer_account);
         mDrawerLogout = findViewById(R.id.drawer_logout);
@@ -109,13 +113,13 @@ public abstract class DrawerActivity extends InjectableActivity {
     }
 
     @Override
-    public void onBackPressed() {
+    protected void onBackPressedCompat() {
         if (mDrawerLayout.isDrawerOpen(mDrawer)) {
             closeDrawers();
         } else if (isTaskRoot() && Preferences.isLaunchScreenLast(this)) {
             moveTaskToBack(true);
         } else {
-            super.onBackPressed();
+            super.onBackPressedCompat();
         }
     }
 
@@ -143,17 +147,15 @@ public abstract class DrawerActivity extends InjectableActivity {
         TextView moreToggle = (TextView) findViewById(R.id.drawer_more);
         moreToggle.setOnClickListener(v -> {
             if (moreContainer.getVisibility() == View.VISIBLE) {
-                moreToggle.setTextColor(ContextCompat.getColor(DrawerActivity.this,
-                        AppUtils.getThemedResId(DrawerActivity.this,
-                                android.R.attr.textColorTertiary)));
+                moreToggle.setTextColor(AppUtils.getThemedColor(DrawerActivity.this,
+                        android.R.attr.textColorTertiary, Color.BLACK));
                 moreToggle.setCompoundDrawablesWithIntrinsicBounds(
                         R.drawable.ic_dummy_transparent_24dp, 0,
                         R.drawable.ic_expand_more_white_24dp, 0);
                 moreContainer.setVisibility(View.GONE);
             } else {
-                moreToggle.setTextColor(ContextCompat.getColor(DrawerActivity.this,
-                        AppUtils.getThemedResId(DrawerActivity.this,
-                                android.R.attr.textColorSecondary)));
+                moreToggle.setTextColor(AppUtils.getThemedColor(DrawerActivity.this,
+                        android.R.attr.textColorSecondary, Color.BLACK));
                 moreToggle.setCompoundDrawablesWithIntrinsicBounds(
                         R.drawable.ic_dummy_transparent_24dp, 0,
                         R.drawable.ic_expand_less_white_24dp, 0);
@@ -172,21 +174,19 @@ public abstract class DrawerActivity extends InjectableActivity {
         findViewById(R.id.drawer_submit).setOnClickListener(v -> navigate(SubmitActivity.class));
         findViewById(R.id.drawer_user).setOnClickListener(v -> {
             Bundle extras = new Bundle();
-            extras.putString(UserActivity.EXTRA_USERNAME, Preferences.getUsername(this));
+            extras.putString(UserActivity.EXTRA_USERNAME, mAccountSession.getActiveUsername());
             navigate(UserActivity.class, extras);
         });
         findViewById(R.id.drawer_feedback).setOnClickListener(v -> navigate(FeedbackActivity.class));
 
     }
 
-    @SuppressLint("MissingPermission")
     private void showLogin() {
-        Account[] accounts = AccountManager.get(this)
-                .getAccountsByType(BuildConfig.APPLICATION_ID);
-        if (accounts.length == 0) { // no accounts, ask to login or re-login
+        if (mAccountSession.savedAccounts().isEmpty()) {
             startActivity(new Intent(this, LoginActivity.class));
-        } else { // has accounts, show account chooser regardless of login status
-            AppUtils.showAccountChooser(this, mAlertDialogBuilder, accounts);
+        } else {
+            AppUtils.showAccountChooser(this, mAlertDialogBuilder, mAccountSession,
+                    mReplyNotificationScheduler);
         }
     }
 
@@ -194,8 +194,11 @@ public abstract class DrawerActivity extends InjectableActivity {
         mAlertDialogBuilder.init(this)
                 .setMessage(R.string.logout_confirm)
                 .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(android.R.string.ok, (dialog, which) ->
-                        Preferences.setUsername(this, null))
+                .setPositiveButton(android.R.string.ok, (dialog, which) -> {
+                        mAccountSession.logout();
+                        // E5-D3: no active session, so stop reply polling.
+                        mReplyNotificationScheduler.onLogout();
+                })
                 .show();
     }
 
@@ -210,8 +213,8 @@ public abstract class DrawerActivity extends InjectableActivity {
     }
 
     private void setUsername() {
-        String username = Preferences.getUsername(this);
-        if (!TextUtils.isEmpty(username)) {
+        String username = mAccountSession.getActiveUsername();
+        if (username != null) {
             mDrawerAccount.setText(username);
             mDrawerLogout.setVisibility(View.VISIBLE);
             mDrawerUser.setVisibility(View.VISIBLE);
