@@ -17,6 +17,7 @@
 package com.growse.android.io.github.hidroh.materialistic.data;
 
 import android.text.format.DateUtils;
+import android.util.Log;
 
 import java.io.IOException;
 import java.lang.annotation.Retention;
@@ -44,6 +45,7 @@ public class AlgoliaClient implements ItemManager {
     public static final String HOST = "hn.algolia.com";
     private static final String BASE_API_URL = "https://" + HOST + "/api/v1/";
     static final String MIN_CREATED_AT = "created_at_i>";
+    private static final String TAG = "AlgoliaClient";
 
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
@@ -94,10 +96,23 @@ public class AlgoliaClient implements ItemManager {
 
     @Override
     public Item[] getStories(String filter, @CacheMode int cacheMode) {
+        // Returning null here (not an empty array) is the ItemManager contract for "load failed":
+        // StoryListViewModel maps null -> Error and an empty array -> Empty. The search backend is an
+        // external dependency that can fail, so a network error or a non-2xx response must surface as a
+        // distinct error state rather than masquerading as "no matches". AlgoliaPopularClient inherits
+        // this, so Search and the Popular time ranges are both covered.
         try {
-            return toItems(search(filter).execute().body());
+            Response<AlgoliaHits> response = search(filter).execute();
+            if (!response.isSuccessful()) {
+                // Breadcrumb: host + status code only. The query and any credentials are never logged.
+                Log.w(TAG, "Search request failed: " + HOST + " HTTP " + response.code());
+                return null;
+            }
+            return toItems(response.body());
         } catch (IOException e) {
-            return new Item[0];
+            // Breadcrumb: host + failure class only. The query and any credentials are never logged.
+            Log.w(TAG, "Search request failed: " + HOST + " " + e.getClass().getSimpleName());
+            return null;
         }
     }
 
