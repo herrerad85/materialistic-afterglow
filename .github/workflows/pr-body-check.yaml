@@ -1,0 +1,36 @@
+---
+name: PR body check
+# Lightweight, offline check that pull requests targeting development keep the PR template outline
+# (required headings, the two "Before Submitting" boxes checked, exactly one AI assistance box, and
+# the AI fields filled in when AI was used). It reads the PR body from the event payload only; no
+# secrets and no external service calls.
+"on":
+  pull_request:
+    branches:
+      - development
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-body-check:
+    name: Check PR body
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base branch
+        # Check out the base commit so the trusted base-branch copy of the checker runs, not the
+        # checker as it may have been altered in the PR head.
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+      - name: Check PR body
+        run: python3 .github/scripts/pr-body-check.py
