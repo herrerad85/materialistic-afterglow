@@ -1,0 +1,28 @@
+---
+name: Algolia search API health check
+# Opt-in / scheduled only: this is NOT part of the per-push or per-PR build. It runs on manual
+# dispatch and on a low-frequency weekly schedule, as an early warning if the hosted Hacker News
+# search API contract that search and the date-range filter depend on changes.
+"on":
+  workflow_dispatch:
+  schedule:
+    # Weekly (Mondays, 06:17 UTC). GitHub scheduled and manual runs require this workflow file on the
+    # default branch. While it lives only on development, run the script directly from a branch
+    # checkout; once it reaches the default branch at a release gate, manual runs can use the
+    # branch/ref selector.
+    - cron: "17 6 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}
+
+jobs:
+  health-check:
+    name: Check Hacker News search contract
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      - name: Run health check
+        run: .github/scripts/algolia-health-check.sh
