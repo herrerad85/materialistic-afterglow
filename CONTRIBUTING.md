@@ -30,6 +30,12 @@ The full third-party license text (`docs/licenses.html`) and the privacy policy 
 
 AI tools are allowed when contributing. If you use them, disclose it in your pull request: whether AI was used, which tool or model, and how extensively. Disclosure gives reviewers context; it is not a ban. You remain responsible for the change and should review and understand it before submitting. Do not add AI or agent attribution trailers to commit messages.
 
+**Versioning**
+
+`versionName` is the user-facing version string. `versionCode` is the internal integer Android and the stores use to order builds; it must only ever increase. The mapping from a `versionName` of `major.minor.patch` to `versionCode` is `major * 10000 + minor * 100 + patch`, for example `0.1.0` is `100`, `0.2.0` is `200`, `1.0.0` is `10000`, and `2.0.0` is `20000`.
+
+Current public builds are pre-store and pre-1.0; the version starts at `0.1.0` (`versionCode` `100`). The first Play Store or F-Droid release does not have to be `1.0.0`: the owner may intentionally choose a higher store-facing version such as `2.0.0` or `3.0.0` when the app is judged ready. Until then, do not describe the app as `1.0` or stable.
+
 **Development to main promotion checklist**
 
 `development` is the active integration branch; `main` is the stable / release branch. Promoting `development` to `main` is an owner-run step and is intentionally not automated. Promotion by itself does not declare a version. Before any promotion, confirm every item below.

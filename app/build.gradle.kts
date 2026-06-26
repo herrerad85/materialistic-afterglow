@@ -21,8 +21,9 @@ android {
     applicationId = "com.herrerad85.afterglow"
     minSdk = 23
     targetSdk = 36
-    versionCode = 4003
-    versionName = "v4.0.3"
+    // Pre-store versioning (see CONTRIBUTING.md). versionCode = major*10000 + minor*100 + patch.
+    versionCode = 100
+    versionName = "0.1.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("int", "LATEST_RELEASE", "77")
     buildConfigField("String", "GITHUB_TOKEN", "\"\"")
