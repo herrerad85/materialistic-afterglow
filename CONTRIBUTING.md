@@ -29,3 +29,26 @@ The full third-party license text (`docs/licenses.html`) and the privacy policy 
 **AI assistance**
 
 AI tools are allowed when contributing. If you use them, disclose it in your pull request: whether AI was used, which tool or model, and how extensively. Disclosure gives reviewers context; it is not a ban. You remain responsible for the change and should review and understand it before submitting. Do not add AI or agent attribution trailers to commit messages.
+
+**Development to main promotion checklist**
+
+`development` is the active integration branch; `main` is the stable / release branch. Promoting `development` to `main` is an owner-run step and is intentionally not automated. Promotion by itself does not declare a version. Before any promotion, confirm every item below.
+
+Build and tests, from a clean clone with no local state:
+
+- A fresh `git clone` of the repository builds: `./gradlew assembleDebug`.
+- Unit tests pass: `./gradlew testDebugUnitTest`.
+- Lint passes: `./gradlew lintDebug`.
+
+Content and assets are current:
+
+- README and store/listing content are reviewed and current: features, the setup and JDK requirement, the dependency list, and the screenshots.
+- The screenshots (in `assets/` and in `fastlane/metadata/android/en-US/images/phoneScreenshots/`) reflect the current Material 3 UI.
+- The third-party license notices are up to date: run `./gradlew generateLicenseNotices --no-configuration-cache` and confirm it produces no diff.
+- The in-app license and privacy "View full text" links point to the hosted pages, and those pages load. Re-verify that `https://herrerad85.github.io/materialistic-afterglow/licenses.html` and `https://herrerad85.github.io/materialistic-afterglow/privacy.html` return HTTP 200 before promoting.
+
+Versioning and safety:
+
+- No premature "1.0" or "stable" claim is made as part of the promotion. The app is described as actively developed and pre-stable until the owner decides otherwise.
+- No release tag is created as part of the promotion.
+- The promotion to `main` is a normal fast-forward or curated update only, never a force push or a history rewrite.
