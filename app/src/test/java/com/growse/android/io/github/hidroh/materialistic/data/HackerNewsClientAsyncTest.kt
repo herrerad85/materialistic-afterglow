@@ -145,6 +145,63 @@ class HackerNewsClientAsyncTest {
   }
 
   @Test
+  fun getItemCacheOnlyDoesNotFallBackToNetworkOnCacheMiss() {
+    // Strict offline read (#22): only-if-cached miss -> 504, and the client must NOT retry a normal
+    // fetch. Distinct from MODE_CACHE, which does fall back (see the test above).
+    responder = { req ->
+      if ((req.header("Cache-Control") ?: "").contains("only-if-cached")) json(req, 504, "")
+      else json(req, 200, load("hn_item_story.json"))
+    }
+
+    val item = capture<Item> { client.getItem("8863", ItemManager.MODE_CACHE_ONLY, it) }
+
+    assertNull("strict cache-only must not fall back to network on a miss", item)
+    assertEquals(1, requests.size) // exactly one request, no fallback
+    assertTrue(requests[0].header("Cache-Control")!!.contains("only-if-cached"))
+  }
+
+  @Test
+  fun getStoriesCacheOnlyUsesOnlyIfCachedEndpointNotNetwork() {
+    // Strict offline read (#22): the story list must hit an only-if-cached endpoint, never a
+    // no-cache
+    // network endpoint.
+    responder = { json(it, 200, "[1,2,3]") }
+
+    val stories =
+        capture<Array<Item>> {
+          client.getStories(ItemManager.TOP_FETCH_MODE, ItemManager.MODE_CACHE_ONLY, it)
+        }
+
+    assertEquals(listOf("1", "2", "3"), stories!!.map { it.id })
+    assertEquals(1, requests.size)
+    assertTrue(requests[0].url.encodedPath.endsWith("topstories.json"))
+    val cacheControl = requests[0].header("Cache-Control") ?: ""
+    assertTrue(
+        "expected only-if-cached, was '$cacheControl'",
+        cacheControl.contains("only-if-cached"),
+    )
+    assertTrue("must not be a no-cache network read", !cacheControl.contains("no-cache"))
+  }
+
+  @Test
+  fun getStoriesCacheOnlyDoesNotFallBackToNetworkOnCacheMiss() {
+    // An only-if-cached story-list miss is a 504 (null body -> no stories); the client makes
+    // exactly
+    // one request and never falls back to a network story endpoint.
+    responder = { json(it, 504, "") }
+
+    val stories =
+        capture<Array<Item>> {
+          client.getStories(ItemManager.BEST_FETCH_MODE, ItemManager.MODE_CACHE_ONLY, it)
+        }
+
+    assertNull(stories)
+    assertEquals(1, requests.size)
+    assertTrue(requests[0].url.encodedPath.endsWith("beststories.json"))
+    assertTrue(requests[0].header("Cache-Control")!!.contains("only-if-cached"))
+  }
+
+  @Test
   fun getUserForceNetworkUsesNoCacheEndpointAndCachedDoesNot() {
     responder = { json(it, 200, """{"id":"norvig","karma":100,"submitted":[8863,9999]}""") }
 

@@ -161,7 +161,7 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
                 }
                 mCacheMode = ItemManager.MODE_NETWORK;
                 if (mAdapter != null) {
-                    mAdapter.setCacheMode(mCacheMode);
+                    mAdapter.setCacheMode(AppUtils.effectiveCacheMode(getActivity(), mCacheMode));
                 }
                 // A refresh re-reads the thread, so re-read the display baseline for the new visit.
                 resetNewCommentBaseline();
@@ -303,7 +303,10 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
     }
 
     private void loadKidData() {
-        mItemManager.getItem(mItemId, mCacheMode, new ItemResponseListener(this));
+        // Explicit offline mode (or no connectivity) prefers cached item/comment data; a requested
+        // MODE_NETWORK (swipe-refresh) is honored only when online and offline mode is off.
+        mItemManager.getItem(mItemId, AppUtils.effectiveCacheMode(getActivity(), mCacheMode),
+                new ItemResponseListener(this));
     }
 
     void onItemLoaded(@Nullable Item item) {
@@ -341,7 +344,7 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
             mAdapter = new MultiPageItemRecyclerViewAdapter(mItemManager, mAccountActions, mPopupMenu,
                     mAlertDialogBuilder, mItem.getKidItems());
         }
-        mAdapter.setCacheMode(mCacheMode);
+        mAdapter.setCacheMode(AppUtils.effectiveCacheMode(getActivity(), mCacheMode));
         mAdapter.initDisplayOptions(getActivity());
         mAdapter.attach(getActivity(), mRecyclerView);
         mRecyclerView.setAdapter(mAdapter);

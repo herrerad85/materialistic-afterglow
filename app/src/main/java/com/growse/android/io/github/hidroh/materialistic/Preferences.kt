@@ -367,6 +367,22 @@ object Preferences {
     setInt(context, R.string.pref_latest_release, BuildConfig.LATEST_RELEASE)
   }
 
+  /**
+   * Explicit, user-controlled offline mode (#22). Distinct from the save-for-offline population
+   * preference [Offline.isEnabled]: this only controls reading/network behavior and never starts a
+   * download. The single effective "read cache only" decision lives in
+   * AppUtils.shouldReadCacheOnly, which combines this flag with live connectivity.
+   */
+  @JvmStatic
+  fun isOfflineMode(context: Context): Boolean {
+    return get(context, R.string.pref_offline_mode, false)
+  }
+
+  @JvmStatic
+  fun setOfflineMode(context: Context, enabled: Boolean) {
+    set(context, R.string.pref_offline_mode, enabled)
+  }
+
   @JvmStatic
   fun multiWindowEnabled(context: Context): Boolean {
     return !TextUtils.equals(

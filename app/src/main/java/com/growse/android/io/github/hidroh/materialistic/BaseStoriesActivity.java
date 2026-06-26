@@ -19,10 +19,13 @@ package com.growse.android.io.github.hidroh.materialistic;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.view.Menu;
+import android.view.MenuItem;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import android.text.format.DateUtils;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.HackerNewsClient;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
@@ -44,7 +47,7 @@ public abstract class BaseStoriesActivity extends BaseListActivity
             if (getSupportActionBar() == null) {
                 return;
             }
-            if (AppUtils.hasConnection(BaseStoriesActivity.this)) {
+            if (!AppUtils.shouldReadCacheOnly(BaseStoriesActivity.this)) {
                 getSupportActionBar().setSubtitle(getString(R.string.last_updated,
                         DateUtils.getRelativeTimeSpanString(mLastUpdated,
                                 System.currentTimeMillis(),
@@ -85,6 +88,42 @@ public abstract class BaseStoriesActivity extends BaseListActivity
         if (mLastUpdated != null) {
             outState.putLong(STATE_LAST_UPDATED, mLastUpdated);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu_offline, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        MenuItem offlineMode = menu.findItem(R.id.menu_offline_mode);
+        if (offlineMode != null) {
+            offlineMode.setChecked(Preferences.isOfflineMode(this));
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_offline_mode) {
+            boolean enabled = !Preferences.isOfflineMode(this);
+            // Reading/network behavior only: this never starts a download (the save-for-offline
+            // population pipeline is a separate, unchanged preference).
+            Preferences.setOfflineMode(this, enabled);
+            supportInvalidateOptionsMenu();
+            // Refresh the offline / last-updated subtitle to reflect the new state immediately.
+            mHandler.removeCallbacks(mLastUpdateTask);
+            mHandler.post(mLastUpdateTask);
+            Snackbar.make(findViewById(R.id.content_frame),
+                    enabled ? R.string.offline_mode_on : R.string.offline_mode_off,
+                    Snackbar.LENGTH_SHORT).show();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

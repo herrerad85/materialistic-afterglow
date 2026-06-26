@@ -118,6 +118,10 @@ public class HackerNewsClient implements ItemManager, UserManager {
             case MODE_NETWORK:
                 call = mRestService.networkItem(itemId);
                 break;
+            case MODE_CACHE_ONLY:
+                // Strict offline read: only-if-cached, no network fallback (a miss yields a 504 -> null).
+                call = mRestService.cachedItem(itemId);
+                break;
         }
         try {
             return call.execute().body();
@@ -164,6 +168,10 @@ public class HackerNewsClient implements ItemManager, UserManager {
         switch (cacheMode) {
             case MODE_NETWORK:
                 return mRestService.networkItem(itemId).execute().body();
+            case MODE_CACHE_ONLY:
+                // Strict offline read: only-if-cached with NO fallback. An only-if-cached miss is a
+                // 504, whose body is null, so a cache miss returns null rather than hitting the network.
+                return mRestService.cachedItem(itemId).execute().body();
             case MODE_CACHE:
                 // Mirror the old cachedItemRx.onErrorResumeNext(itemRx): an only-if-cached miss returns a
                 // 504 (or throws), so fall back to the normal item fetch.
@@ -185,6 +193,12 @@ public class HackerNewsClient implements ItemManager, UserManager {
     @NonNull
     private Call<int[]> getStoriesCall(@FetchMode String filter, @CacheMode int cacheMode) {
         Call<int[]> call;
+        if (cacheMode == MODE_CACHE_ONLY) {
+            // Strict offline read: only-if-cached story list with NO network fallback (a miss is a 504
+            // -> empty list). Reuses the existing story endpoints' path via a single only-if-cached
+            // call, so no network story-list endpoint is hit.
+            return mRestService.cacheStories(cacheSection(filter));
+        }
         if (filter == null) {
             // for legacy 'new stories' widgets
             return cacheMode == MODE_NETWORK ?
@@ -217,6 +231,29 @@ public class HackerNewsClient implements ItemManager, UserManager {
                 break;
         }
         return call;
+    }
+
+    // Maps a fetch mode to the path segment of its story endpoint ("{section}stories.json"), used by
+    // the strict only-if-cached story-list read. Note JOBS_FETCH_MODE ("jobs") maps to "job".
+    @NonNull
+    private static String cacheSection(@FetchMode String filter) {
+        if (filter == null) {
+            return "new"; // legacy 'new stories' widgets
+        }
+        switch (filter) {
+            case NEW_FETCH_MODE:
+                return "new";
+            case SHOW_FETCH_MODE:
+                return "show";
+            case ASK_FETCH_MODE:
+                return "ask";
+            case JOBS_FETCH_MODE:
+                return "job";
+            case BEST_FETCH_MODE:
+                return "best";
+            default:
+                return "top";
+        }
     }
 
     private HackerNewsItem[] toItems(int[] ids) {
@@ -292,6 +329,12 @@ public class HackerNewsClient implements ItemManager, UserManager {
         @Headers(RestServiceFactory.CACHE_CONTROL_FORCE_CACHE)
         @GET("item/{itemId}.json")
         Call<HackerNewsItem> cachedItem(@Path("itemId") String itemId);
+
+        // Strict offline story list (#22): only-if-cached, no network fallback. The section is the
+        // path prefix from cacheSection() (e.g. "top" -> "topstories.json").
+        @Headers(RestServiceFactory.CACHE_CONTROL_FORCE_CACHE)
+        @GET("{section}stories.json")
+        Call<int[]> cacheStories(@Path("section") String section);
 
         @GET("user/{userId}.json")
         Call<UserItem> user(@Path("userId") String userId);

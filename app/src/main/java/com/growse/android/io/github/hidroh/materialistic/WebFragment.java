@@ -339,7 +339,9 @@ public class WebFragment extends LazyLoadFragment
             mContent = ((Item) mItem).getText();
             loadContent();
         } else {
-            mItemManager.getItem(mItem.getId(), ItemManager.MODE_DEFAULT, new ItemResponseListener(this));
+            mItemManager.getItem(mItem.getId(),
+                    AppUtils.effectiveCacheMode(getActivity(), ItemManager.MODE_DEFAULT),
+                    new ItemResponseListener(this));
         }
     }
 

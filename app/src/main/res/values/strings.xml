@@ -294,6 +294,10 @@
     <string name="logout">Logout</string>
     <string name="offline">Offline</string>
     <string name="offline_notice">You\'re currently offline</string>
+    <string name="offline_mode">Offline mode</string>
+    <string name="offline_mode_on">Offline mode on. Reading from saved copies.</string>
+    <string name="offline_mode_off">Offline mode off.</string>
+    <string name="offline_mode_turn_off">Turn off</string>
     <string name="download_in_progress">Download in progress</string>
     <string name="love_it">I love it!</string>
     <string name="display_options">Display options</string>

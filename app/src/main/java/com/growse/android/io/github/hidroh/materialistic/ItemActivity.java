@@ -187,11 +187,22 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
             bindData(mItem);
         } else if (!TextUtils.isEmpty(mItemId)) {
             mItemManager.getItem(mItemId,
-                    getIntent().getIntExtra(EXTRA_CACHE_MODE, ItemManager.MODE_DEFAULT),
+                    AppUtils.effectiveCacheMode(this,
+                            getIntent().getIntExtra(EXTRA_CACHE_MODE, ItemManager.MODE_DEFAULT)),
                     new ItemResponseListener(this));
         }
-        if (!AppUtils.hasConnection(this)) {
-            Snackbar.make(mCoordinatorLayout, R.string.offline_notice, Snackbar.LENGTH_LONG).show();
+        if (AppUtils.shouldReadCacheOnly(this)) {
+            Snackbar snackbar = Snackbar.make(mCoordinatorLayout, R.string.offline_notice,
+                    Snackbar.LENGTH_LONG);
+            // Off-ramp: only explicit offline mode is user-clearable here (a real no-connection state
+            // is not something "Turn off" can fix). Clearing the pref then reloads to reflect it.
+            if (Preferences.isOfflineMode(this)) {
+                snackbar.setAction(R.string.offline_mode_turn_off, v -> {
+                    Preferences.setOfflineMode(this, false);
+                    recreate();
+                });
+            }
+            snackbar.show();
         }
     }
 

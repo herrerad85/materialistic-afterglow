@@ -15,7 +15,9 @@
  */
 package com.growse.android.io.github.hidroh.materialistic
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
+import androidx.test.core.app.ApplicationProvider
 import com.growse.android.io.github.hidroh.materialistic.data.Item
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager
 import com.growse.android.io.github.hidroh.materialistic.data.ResponseListener
@@ -32,6 +34,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 
 /**
  * Deterministic unit tests for the E1 Gate-2 canonical [StoryListViewModel] (the reference others
@@ -41,14 +45,21 @@ import org.junit.Test
  * the `init`-triggered load.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
 class StoryListViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
+  private lateinit var context: Context
 
   @Before
   fun setUp() {
     // viewModelScope dispatches on Dispatchers.Main; route it to the controllable test scheduler.
     Dispatchers.setMain(testDispatcher)
+    // The VM now reads offline state (AppUtils.effectiveCacheMode) before fetching, so it needs a
+    // real Context; the default state (offline off, connected) leaves the requested cacheMode
+    // as-is.
+    context = ApplicationProvider.getApplicationContext()
+    Preferences.reset(context)
   }
 
   @After
@@ -90,6 +101,7 @@ class StoryListViewModelTest {
         algolia = mockk(relaxed = true),
         popular = mockk(relaxed = true),
         io = testDispatcher,
+        context = context,
         savedStateHandle = SavedStateHandle(),
     )
   }

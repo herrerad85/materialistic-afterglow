@@ -130,6 +130,11 @@ public class NetworkModule {
         @Override
         public Response intercept(Chain chain) throws IOException {
             Request request = chain.request();
+            // Connectivity-only: a genuine no-connection state serves cached responses. Explicit
+            // offline mode is intentionally NOT consulted here so callers that request the network
+            // (MODE_NETWORK, the no-cache user/reply endpoints) are never silently forced to cache by
+            // the shared HTTP layer. Offline-mode cache preference is applied at the read call sites
+            // via AppUtils.effectiveCacheMode instead.
             boolean forceCache = CACHE_ENABLED_HOSTS.containsKey(request.url().host()) &&
                     !AppUtils.hasConnection(mContext);
             return chain.proceed(forceCache ?

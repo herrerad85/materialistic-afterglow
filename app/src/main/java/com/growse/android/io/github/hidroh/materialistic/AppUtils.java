@@ -82,6 +82,7 @@ import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.PublicApi;
 import com.growse.android.io.github.hidroh.materialistic.data.HackerNewsClient;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
+import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 import com.growse.android.io.github.hidroh.materialistic.data.WebItem;
 import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
 import com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu;
@@ -123,7 +124,7 @@ public class AppUtils {
 
     public static void openWebUrlExternal(Context context, @Nullable WebItem item,
                                           String url, @Nullable CustomTabsSession session) {
-        if (!hasConnection(context)) {
+        if (shouldReadCacheOnly(context)) {
             context.startActivity(new Intent(context, OfflineWebActivity.class)
                     .putExtra(OfflineWebActivity.EXTRA_URL, url));
             return;
@@ -343,6 +344,30 @@ public class AppUtils {
         NetworkInfo activeNetworkInfo = ((ConnectivityManager) context.getSystemService(
                 Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+    }
+
+    /**
+     * Single source of truth (#22) for whether reading should stay on cached content and avoid the
+     * network: either the user turned on explicit offline mode, or the device has no connectivity.
+     * Read-path screens and the cacheable web view consult this one helper so the effective offline
+     * decision is consistent. Reading-only: it never triggers a download. Note the shared HTTP
+     * interceptor deliberately does NOT use this; see {@link #effectiveCacheMode}.
+     */
+    public static boolean shouldReadCacheOnly(Context context) {
+        return Preferences.isOfflineMode(context) || !hasConnection(context);
+    }
+
+    /**
+     * Maps a reader/list/item read's requested {@link ItemManager.CacheMode} to the mode that should
+     * actually be used given the current offline state (#22). When {@link #shouldReadCacheOnly} holds,
+     * the read becomes strict cache-only ({@link ItemManager#MODE_CACHE_ONLY}: only-if-cached, no
+     * network fallback); otherwise the requested mode is honored unchanged. This keeps the cache-only
+     * choice explicit at the call site rather than overriding the shared HTTP layer, so callers that
+     * genuinely need the network are not silently converted, and it never starts a download.
+     */
+    @ItemManager.CacheMode
+    public static int effectiveCacheMode(Context context, @ItemManager.CacheMode int requestedMode) {
+        return shouldReadCacheOnly(context) ? ItemManager.MODE_CACHE_ONLY : requestedMode;
     }
 
     /** Pads view's top by the status-bar/cutout inset (Android 15+ edge-to-edge). For toolbars on

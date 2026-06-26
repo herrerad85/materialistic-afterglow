@@ -49,12 +49,17 @@ public interface ItemManager {
     @IntDef({
             MODE_DEFAULT,
             MODE_CACHE,
-            MODE_NETWORK
+            MODE_NETWORK,
+            MODE_CACHE_ONLY
     })
     @interface CacheMode {}
     int MODE_DEFAULT = 0;
     int MODE_CACHE =1;
     int MODE_NETWORK = 2;
+    // Strict cache-only (#22 explicit offline mode): only-if-cached with NO network fallback. Distinct
+    // from MODE_CACHE, which prefers cache but falls back to a normal fetch on a miss (the
+    // saved/favorites/downloaded-item path relies on that graceful fallback).
+    int MODE_CACHE_ONLY = 3;
 
     /**
      * Gets array of top stories

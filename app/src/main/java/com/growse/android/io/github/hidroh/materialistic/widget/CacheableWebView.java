@@ -98,8 +98,8 @@ public class CacheableWebView extends WebView {
     }
 
     private void setCacheModeInternal() {
-        getSettings().setCacheMode(AppUtils.hasConnection(getContext()) ?
-                WebSettings.LOAD_CACHE_ELSE_NETWORK : WebSettings.LOAD_CACHE_ONLY);
+        getSettings().setCacheMode(AppUtils.shouldReadCacheOnly(getContext()) ?
+                WebSettings.LOAD_CACHE_ONLY : WebSettings.LOAD_CACHE_ELSE_NETWORK);
     }
 
     @SuppressLint("SetJavaScriptEnabled")

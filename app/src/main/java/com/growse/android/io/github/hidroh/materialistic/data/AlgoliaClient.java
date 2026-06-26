@@ -73,6 +73,13 @@ public class AlgoliaClient implements ItemManager {
         if (listener == null) {
             return;
         }
+        if (cacheMode == MODE_CACHE_ONLY) {
+            // Strict offline read (#22): the search backend has no usable only-if-cached path here, so
+            // return an empty result WITHOUT a network call rather than letting explicit offline mode
+            // trigger an Algolia request. Covers Search and (via AlgoliaPopularClient) the Popular tab.
+            listener.onResponse(new Item[0]);
+            return;
+        }
         // RestServiceFactory's MainThreadExecutor delivers enqueue callbacks on the main thread,
         // replacing the old observeOn(mainThread). search(filter) is overridden by AlgoliaPopularClient.
         search(filter).enqueue(new Callback<AlgoliaHits>() {
@@ -96,6 +103,11 @@ public class AlgoliaClient implements ItemManager {
 
     @Override
     public Item[] getStories(String filter, @CacheMode int cacheMode) {
+        if (cacheMode == MODE_CACHE_ONLY) {
+            // Strict offline read (#22): no network call. Return an empty list (Empty state) rather
+            // than triggering an Algolia request; the search backend has no usable offline cache here.
+            return new Item[0];
+        }
         // Returning null here (not an empty array) is the ItemManager contract for "load failed":
         // StoryListViewModel maps null -> Error and an empty array -> Empty. The search backend is an
         // external dependency that can fail, so a network error or a non-2xx response must surface as a
