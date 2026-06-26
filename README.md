@@ -3,6 +3,15 @@ Afterglow is a Material Design [Hacker News] client for Android. It is a modern,
 
 > Afterglow is under active development and has not yet reached a stable 1.0 release.
 
+### Screenshots
+
+<p align="center">
+  <img src="assets/screenshot-1.png" alt="Story list" width="23%">
+  <img src="assets/screenshot-2.png" alt="Threaded comments" width="23%">
+  <img src="assets/screenshot-3.png" alt="Article reader" width="23%">
+  <img src="assets/screenshot-4.png" alt="Themes and display settings" width="23%">
+</p>
+
 ### Features
 - Browse top, new, best, ask, show, and jobs stories
 - Working Hacker News account actions: log in, vote, comment, reply, and submit
