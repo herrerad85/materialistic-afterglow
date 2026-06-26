@@ -65,4 +65,23 @@ class AppUtilsTest {
     assertFalse(AppUtils.urlEquals(null, "https://example.com"))
     assertFalse(AppUtils.urlEquals("https://example.com", null))
   }
+
+  // #25: copy/state selection for an empty cache-only read. Explicit Offline mode, a real
+  // no-connection state, and an online fetch failure are three distinct situations that must map to
+  // distinct messages. This is the pure, Android-free core of that decision.
+
+  @Test
+  fun offlineEmptyReason_explicitOfflineModeWinsRegardlessOfConnectivity() {
+    assertEquals(AppUtils.OfflineEmptyReason.OFFLINE_MODE, AppUtils.offlineEmptyReason(true, true))
+    assertEquals(AppUtils.OfflineEmptyReason.OFFLINE_MODE, AppUtils.offlineEmptyReason(true, false))
+  }
+
+  @Test
+  fun offlineEmptyReason_noConnectivityIsDistinctFromOnlineError() {
+    assertEquals(
+        AppUtils.OfflineEmptyReason.NO_CONNECTION,
+        AppUtils.offlineEmptyReason(false, false),
+    )
+    assertEquals(AppUtils.OfflineEmptyReason.ONLINE_ERROR, AppUtils.offlineEmptyReason(false, true))
+  }
 }

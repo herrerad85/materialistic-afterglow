@@ -122,6 +122,10 @@
     <item type="id" name="empty" />
     <item type="id" name="empty_selection" />
     <item type="id" name="empty_search" />
+    <item type="id" name="empty_error_text" />
+    <item type="id" name="empty_search_text" />
+    <item type="id" name="empty_item_text" />
+    <item type="id" name="download_text" />
     <item type="id" name="content" />
     <item type="id" name="comment_find_bar" />
 

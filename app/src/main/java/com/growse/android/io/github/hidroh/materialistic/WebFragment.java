@@ -42,6 +42,7 @@ import android.webkit.JavascriptInterface;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
@@ -287,11 +288,76 @@ public class WebFragment extends LazyLoadFragment
         } else {
             // Reader (Readability) mode is unavailable because the hosted Mercury parser is dead;
             // always fall back to the WebView article.
-            loadUrl();
+            // #25: with no URL there is nothing to show, and in cache-only reading (explicit offline
+            // mode or no connectivity) an article with no saved web archive cannot load without the
+            // network. Show a clear not-available state instead of a blank/cache-only WebView error
+            // (this starts no network fetch). The empty-URL guard also keeps getArchiveFile, which
+            // hashes the URL, from a null dereference.
+            String url = mItem != null ? mItem.getUrl() : null;
+            if (TextUtils.isEmpty(url)
+                    || (AppUtils.shouldReadCacheOnly(getActivity())
+                            && !CacheableWebView.getArchiveFile(getActivity(), url).exists())) {
+                showArticleUnavailable();
+            } else {
+                loadUrl();
+            }
+        }
+    }
+
+    /**
+     * #25: show the article empty/error state (the R.id.empty stub that also serves the external-app
+     * case) with a message that fits the situation, and hide the download action which does not apply.
+     * The off-ramp to turn off explicit offline mode is the item screen's offline notice; this surface
+     * only explains why the article is blank.
+     */
+    private void showArticleUnavailable() {
+        mEmpty = true;
+        // This is the not-available state, not the external-app fallback; keep the two mutually
+        // exclusive so the refresh control knows which one is showing.
+        mExternalRequired = false;
+        mWebView.setVisibility(View.GONE);
+        mFragmentView.findViewById(R.id.empty).setVisibility(View.VISIBLE);
+        TextView text = mFragmentView.findViewById(R.id.download_text);
+        if (text != null) {
+            text.setText(AppUtils.shouldReadCacheOnly(getActivity())
+                    ? R.string.offline_empty_article : R.string.connection_error);
+        }
+        View download = mFragmentView.findViewById(R.id.download_button);
+        if (download != null) {
+            download.setVisibility(View.GONE);
+        }
+        setProgress(100);
+    }
+
+    /**
+     * #25: leaving the not-available-article state to load real content. Hide the shared empty/download
+     * view and clear the empty/external flags before the load; the web view shows itself via
+     * onPageStarted. The download view's default action/text are restored so the external-app fallback
+     * is never left with this surface's offline message or hidden button.
+     */
+    private void restoreContentView() {
+        mEmpty = false;
+        mExternalRequired = false;
+        View empty = mFragmentView.findViewById(R.id.empty);
+        if (empty != null) {
+            empty.setVisibility(View.GONE);
+        }
+        restoreDownloadView();
+    }
+
+    private void restoreDownloadView() {
+        TextView text = mFragmentView.findViewById(R.id.download_text);
+        if (text != null) {
+            text.setText(R.string.file_not_supported);
+        }
+        View download = mFragmentView.findViewById(R.id.download_button);
+        if (download != null) {
+            download.setVisibility(View.VISIBLE);
         }
     }
 
     private void loadUrl() {
+        restoreContentView();
         setWebSettings(true);
         reloadUrl(mItem.getUrl());
     }
@@ -330,6 +396,7 @@ public class WebFragment extends LazyLoadFragment
 
     @Synthetic
     void loadContent() {
+        restoreContentView();
         setWebSettings(false);
         mWebView.reloadHtml(AppUtils.wrapHtml(getActivity(), mContent));
     }
@@ -369,7 +436,12 @@ public class WebFragment extends LazyLoadFragment
             mControls.showNext();
         });
         mButtonRefresh.setOnClickListener(v -> {
-            if (mWebView.getProgress() < 100) {
+            // #25: after the not-available-article state (not the external-app fallback), refresh is a
+            // retry: re-run load() so the archive precheck runs again. load() still avoids the network
+            // while cache-only; once connectivity is back and Offline mode is off it loads normally.
+            if (mEmpty && !mExternalRequired) {
+                load();
+            } else if (mWebView.getProgress() < 100) {
                 mWebView.stopLoading();
             } else {
                 mWebView.reload();
@@ -453,8 +525,12 @@ public class WebFragment extends LazyLoadFragment
             return;
         }
         mExternalRequired = true;
+        mEmpty = false;
         mWebView.setVisibility(GONE);
         getActivity().findViewById(R.id.empty).setVisibility(VISIBLE);
+        // #25: the not-available-article state reuses this same view and hides the button / rewrites the
+        // text, so restore the download action and default text before wiring the external-app click.
+        restoreDownloadView();
         getActivity().findViewById(R.id.download_button).setOnClickListener(v -> startActivity(intent));
     }
 
@@ -568,6 +644,13 @@ public class WebFragment extends LazyLoadFragment
         bindContent();
     }
 
+    @Synthetic
+    void onItemUnavailable() {
+        // #25: the self-post text could not be read (an offline cache miss or a fetch error). Show the
+        // same not-available state as a missing article archive instead of a blank page.
+        showArticleUnavailable();
+    }
+
     private void downloadFileAndRenderPdf() {
         mFileDownloader.downloadFile(mItem.getUrl(), PDF_MIME_TYPE, new FileDownloader.FileDownloaderCallback() {
             @Override
@@ -592,14 +675,25 @@ public class WebFragment extends LazyLoadFragment
 
         @Override
         public void onResponse(@Nullable Item response) {
-            if (mFragment.get() != null && mFragment.get().isAttached() && response != null) {
-                mFragment.get().onItemLoaded(response);
+            WebFragment fragment = mFragment.get();
+            if (fragment == null || !fragment.isAttached()) {
+                return;
+            }
+            if (response != null) {
+                fragment.onItemLoaded(response);
+            } else {
+                // #25: a null response is a cache miss (offline) or a fetch failure; show the
+                // not-available state instead of leaving a blank page.
+                fragment.onItemUnavailable();
             }
         }
 
         @Override
         public void onError(String errorMessage) {
-            // do nothing
+            WebFragment fragment = mFragment.get();
+            if (fragment != null && fragment.isAttached()) {
+                fragment.onItemUnavailable();
+            }
         }
     }
 

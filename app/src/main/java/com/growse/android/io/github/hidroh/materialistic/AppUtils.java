@@ -370,6 +370,28 @@ public class AppUtils {
         return shouldReadCacheOnly(context) ? ItemManager.MODE_CACHE_ONLY : requestedMode;
     }
 
+    /**
+     * Why a cache-only-capable surface came back empty (#25). Explicit offline mode and a real
+     * no-connection state are different user situations: only the former is cleared by the "turn off
+     * offline mode" off-ramp, so surfaces show distinct copy/actions for them. When the device is
+     * online, an empty result is an ordinary fetch error instead of an offline state. Each surface
+     * (list / comments / article) maps this to its own message so the user sees something specific
+     * rather than one generic connection error.
+     */
+    public enum OfflineEmptyReason { OFFLINE_MODE, NO_CONNECTION, ONLINE_ERROR }
+
+    /** Pure mapping (no Android dependency) so the copy-selection logic is unit-testable. */
+    static OfflineEmptyReason offlineEmptyReason(boolean offlineModeOn, boolean hasConnection) {
+        if (offlineModeOn) {
+            return OfflineEmptyReason.OFFLINE_MODE;
+        }
+        return hasConnection ? OfflineEmptyReason.ONLINE_ERROR : OfflineEmptyReason.NO_CONNECTION;
+    }
+
+    public static OfflineEmptyReason offlineEmptyReason(Context context) {
+        return offlineEmptyReason(Preferences.isOfflineMode(context), hasConnection(context));
+    }
+
     /** Pads view's top by the status-bar/cutout inset (Android 15+ edge-to-edge). For toolbars on
      *  non-CoordinatorLayout screens (CoordinatorLayout screens use fitsSystemWindows instead). */
     public static void padTopSystemBars(View view) {

@@ -26,6 +26,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.WebView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.growse.android.io.github.hidroh.materialistic.widget.AdBlockWebViewClient;
 import com.growse.android.io.github.hidroh.materialistic.widget.CacheableWebView;
@@ -77,6 +78,23 @@ public class OfflineWebActivity extends ThemedActivity {
             }
         });
         AppUtils.toggleWebViewZoom(webView.getSettings(), true);
+        // #25: this offline reader only ever opens while cache-only. If the saved web archive is gone
+        // (e.g. cleared via the offline storage controls in #24), there is nothing to read, so show a
+        // clear not-available-offline state instead of a blank cache-only WebView error.
+        if (!CacheableWebView.getArchiveFile(this, url).exists()) {
+            webView.setVisibility(View.GONE);
+            progressBar.setVisibility(View.GONE);
+            findViewById(R.id.empty).setVisibility(View.VISIBLE);
+            TextView text = findViewById(R.id.download_text);
+            if (text != null) {
+                text.setText(R.string.offline_empty_article);
+            }
+            View download = findViewById(R.id.download_button);
+            if (download != null) {
+                download.setVisibility(View.GONE);
+            }
+            return;
+        }
         webView.loadUrl(url);
     }
 

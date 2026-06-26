@@ -22,6 +22,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -270,6 +271,21 @@ class ListFragment : BaseListFragment() {
   }
 
   /**
+   * #25: copy for an empty list. When reading is cache-only (explicit Offline mode or no
+   * connectivity) the empty result is an offline state, not a fetch failure, so it gets an
+   * offline-specific message that distinguishes the two; an online empty/error keeps [default].
+   */
+  private fun listEmptyMessage(default: Int): Int {
+    if (!AppUtils.shouldReadCacheOnly(requireContext())) {
+      return default
+    }
+    return when (AppUtils.offlineEmptyReason(requireContext())) {
+      AppUtils.OfflineEmptyReason.OFFLINE_MODE -> R.string.offline_empty_stories_offline
+      else -> R.string.offline_empty_stories_no_connection
+    }
+  }
+
+  /**
    * Maps the sealed [StoryListUiState] to the exact view changes the old `onItemsLoaded(Item[])`
    * performed. [StoryListUiState.Error] preserves the nuance: error view if the list is empty, else
    * just a `connection_error` toast (the existing items stay on screen).
@@ -286,6 +302,11 @@ class ListFragment : BaseListFragment() {
           // TODO make refreshing indicator visible in error view
           mEmptyView.visibility = View.GONE
           mRecyclerView.visibility = View.INVISIBLE
+          // #25: a cache-only read (explicit Offline mode or no connectivity) that found nothing
+          // shows an offline-specific message instead of the generic connection error.
+          mErrorView
+              .findViewById<TextView>(R.id.empty_error_text)
+              .setText(listEmptyMessage(R.string.connection_error))
           mErrorView.visibility = View.VISIBLE
         } else {
           Toast.makeText(activity, getString(R.string.connection_error), Toast.LENGTH_SHORT).show()
@@ -293,6 +314,9 @@ class ListFragment : BaseListFragment() {
       }
       StoryListUiState.Empty -> {
         getAdapter().setItems(emptyList())
+        mEmptyView
+            .findViewById<TextView>(R.id.empty_search_text)
+            .setText(listEmptyMessage(R.string.no_stories_search))
         mEmptyView.visibility = View.VISIBLE
         mRecyclerView.visibility = View.INVISIBLE
         mErrorView.visibility = View.GONE

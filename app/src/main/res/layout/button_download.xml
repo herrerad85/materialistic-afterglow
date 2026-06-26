@@ -23,6 +23,7 @@
     android:layout_height="wrap_content">
 
     <com.growse.android.io.github.hidroh.materialistic.widget.TintableTextView
+        android:id="@id/download_text"
         android:text="@string/file_not_supported"
         app:iconTop="@drawable/ic_save_white_48dp"
         android:padding="@dimen/activity_vertical_margin"

@@ -26,6 +26,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
@@ -320,11 +321,31 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
             resetNewCommentBaseline();
             notifyItemLoaded(item);
             bindKidData();
+        } else if (mItem == null) {
+            // #25: the thread could not be read and nothing is loaded yet (an offline cache miss or a
+            // fetch error). Explain it instead of leaving a blank pane. A failed refresh of an
+            // already-loaded thread keeps its content (mItem != null), as before.
+            showCommentsUnavailable();
         }
+    }
+
+    private void showCommentsUnavailable() {
+        TextView text = mEmptyView.findViewById(R.id.empty_item_text);
+        if (text != null) {
+            text.setText(AppUtils.shouldReadCacheOnly(getActivity())
+                    ? R.string.offline_empty_comments : R.string.connection_error);
+        }
+        mEmptyView.setVisibility(View.VISIBLE);
     }
 
     private void bindKidData() {
         if (mItem == null || mItem.getKidCount() == 0) {
+            // A genuinely empty (but loaded) thread: keep the "no comments" copy, overriding any
+            // not-available message a prior failed load may have set on the shared empty view (#25).
+            TextView text = mEmptyView.findViewById(R.id.empty_item_text);
+            if (text != null) {
+                text.setText(R.string.no_comments);
+            }
             mEmptyView.setVisibility(View.VISIBLE);
             return;
         }

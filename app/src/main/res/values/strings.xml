@@ -301,6 +301,10 @@
     <string name="offline_status_cached">Saved offline</string>
     <string name="offline_status_partial">Partially available offline</string>
     <string name="cd_offline_metadata">%1$s, %2$s</string>
+    <string name="offline_empty_stories_offline">Offline mode is on. Nothing here is saved for offline reading.</string>
+    <string name="offline_empty_stories_no_connection">You\'re offline. Nothing here is saved for offline reading.</string>
+    <string name="offline_empty_comments">Comments aren\'t available offline.</string>
+    <string name="offline_empty_article">This article isn\'t available offline.</string>
     <string name="title_activity_offline_storage">Offline storage</string>
     <string name="pref_offline_storage_title">Offline storage</string>
     <string name="pref_offline_storage_summary">View usage and clear cached articles, reader text, and network cache</string>

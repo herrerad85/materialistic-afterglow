@@ -25,6 +25,7 @@
     android:layout_height="match_parent">
     <com.growse.android.io.github.hidroh.materialistic.widget.TintableTextView
         app:iconTop="@drawable/ic_local_library_white_48dp"
+        android:id="@id/empty_search_text"
         android:layout_centerInParent="true"
         android:text="@string/no_stories_search"
         android:breakStrategy="balanced"
