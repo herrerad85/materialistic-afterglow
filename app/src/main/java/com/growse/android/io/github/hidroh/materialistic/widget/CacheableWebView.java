@@ -139,6 +139,17 @@ public class CacheableWebView extends WebView {
                 CACHE_EXTENSION);
     }
 
+    /**
+     * Every web-archive file this app has written, identified solely by the {@code webarchive-*.mht}
+     * naming (#24). Stats and the clear action share this so they agree on exactly which cache-dir
+     * files count as article archives and never touch the co-located OkHttp cache or other files.
+     */
+    public static File[] listArchiveFiles(Context context) {
+        File[] files = context.getApplicationContext().getCacheDir().listFiles(
+                (dir, name) -> name.startsWith(CACHE_PREFIX) && name.endsWith(CACHE_EXTENSION));
+        return files != null ? files : new File[0];
+    }
+
     public static class ArchiveClient extends WebChromeClient {
         int lastProgress = 0;
         String cacheFileName = null;

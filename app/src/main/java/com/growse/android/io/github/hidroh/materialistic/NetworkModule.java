@@ -59,7 +59,14 @@ public class NetworkModule {
     }
 
     @Provides @Singleton
-    public Call.Factory provideCallFactory(@ApplicationContext Context context) {
+    public Cache provideHttpCache(@ApplicationContext Context context) {
+        // Single shared OkHttp disk cache (also exposed so the offline storage screen can report its
+        // size and evict it; #24). Same path/size as before, now provided rather than inlined.
+        return new Cache(context.getApplicationContext().getCacheDir(), CACHE_SIZE);
+    }
+
+    @Provides @Singleton
+    public Call.Factory provideCallFactory(@ApplicationContext Context context, Cache cache) {
         return new OkHttpClient.Builder()
                 .socketFactory(new SocketFactory() {
                     private SocketFactory mDefaultFactory = SocketFactory.getDefault();
@@ -99,7 +106,7 @@ public class NetworkModule {
                         return socket;
                     }
                 })
-                .cache(new Cache(context.getApplicationContext().getCacheDir(), CACHE_SIZE))
+                .cache(cache)
                 .addNetworkInterceptor(new CacheOverrideNetworkInterceptor())
                 .addInterceptor(new ConnectionAwareInterceptor(context))
                 .addInterceptor(new LoggingInterceptor())

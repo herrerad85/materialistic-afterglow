@@ -21,6 +21,12 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <androidx.preference.Preference
+        app:iconSpaceReserved="false"
+        android:key="@string/pref_offline_storage"
+        android:title="@string/pref_offline_storage_title"
+        android:summary="@string/pref_offline_storage_summary" />
+
     <androidx.preference.SwitchPreferenceCompat
         app:iconSpaceReserved="false"
         android:key="@string/pref_saved_item_sync"

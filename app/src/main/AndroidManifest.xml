@@ -162,6 +162,9 @@
             android:label="@string/action_settings" >
         </activity>
         <activity
+            android:name=".OfflineStorageActivity"
+            android:label="@string/title_activity_offline_storage" />
+        <activity
             android:name=".OfflineWebActivity" />
         <activity
             android:name=".ReleaseNotesActivity"

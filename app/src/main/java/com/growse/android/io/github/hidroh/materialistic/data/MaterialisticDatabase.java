@@ -327,6 +327,9 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
         @Query("SELECT * FROM saved WHERE itemid = :itemId")
         @Nullable
         SavedStory selectByItemId(String itemId);
+
+        @Query("SELECT COUNT(*) FROM saved")
+        int count();
     }
 
     @Dao
@@ -345,6 +348,14 @@ public abstract class MaterialisticDatabase extends RoomDatabase {
 
         @Query("SELECT * FROM readable WHERE itemid = :itemId LIMIT 1")
         Readable selectByItemId(String itemId);
+
+        // Reader-text byte estimate and a cache-only clear (#24): deletes only the readable rows, never
+        // saved stories, read markers, or any other table.
+        @Query("SELECT COALESCE(SUM(LENGTH(content)), 0) FROM readable")
+        long totalContentBytes();
+
+        @Query("DELETE FROM readable")
+        int deleteAll();
     }
 
     static class DbConstants {

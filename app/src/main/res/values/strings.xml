@@ -301,6 +301,31 @@
     <string name="offline_status_cached">Saved offline</string>
     <string name="offline_status_partial">Partially available offline</string>
     <string name="cd_offline_metadata">%1$s, %2$s</string>
+    <string name="title_activity_offline_storage">Offline storage</string>
+    <string name="pref_offline_storage_title">Offline storage</string>
+    <string name="pref_offline_storage_summary">View usage and clear cached articles, reader text, and network cache</string>
+    <string name="offline_storage_cache_header">Cache (regenerable)</string>
+    <string name="offline_storage_saved_header">Saved stories (your data)</string>
+    <string name="offline_storage_archives_label">Article archives</string>
+    <string name="offline_storage_reader_label">Reader text</string>
+    <string name="offline_storage_http_label">Network response cache</string>
+    <string name="offline_storage_total_label">Total cache</string>
+    <plurals name="offline_storage_archives_value">
+        <item quantity="one">%1$d file, %2$s</item>
+        <item quantity="other">%1$d files, %2$s</item>
+    </plurals>
+    <plurals name="offline_storage_saved_count">
+        <item quantity="one">%1$d saved story</item>
+        <item quantity="other">%1$d saved stories</item>
+    </plurals>
+    <string name="offline_storage_saved_note">Saved stories are your own data and are managed in Favorites. They are not removed by the cache controls below.</string>
+    <string name="offline_storage_clear_archives">Clear article archives</string>
+    <string name="offline_storage_clear_reader">Clear reader text</string>
+    <string name="offline_storage_clear_http">Clear network cache</string>
+    <string name="offline_storage_clear_archives_confirm">Clear cached article pages? They re-download when you open them again. Saved stories are not affected.</string>
+    <string name="offline_storage_clear_reader_confirm">Clear cached reader text? It is re-extracted when needed. Saved stories are not affected.</string>
+    <string name="offline_storage_clear_http_confirm">Clear the network response cache? Content is re-fetched when you are online. Saved stories are not affected.</string>
+    <string name="offline_storage_freed">Freed %1$s</string>
     <string name="download_in_progress">Download in progress</string>
     <string name="love_it">I love it!</string>
     <string name="display_options">Display options</string>

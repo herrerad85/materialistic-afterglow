@@ -40,6 +40,7 @@
     <string translatable="false" name="pref_lazy_load_help">pref_lazy_load_help</string>
     <string translatable="false" name="pref_launch_screen">pref_launch_screen</string>
     <string translatable="false" name="pref_offline_mode">pref_offline_mode</string>
+    <string translatable="false" name="pref_offline_storage">pref_offline_storage</string>
     <string translatable="false" name="pref_saved_item_sync">pref_saved_item_sync</string>
     <string translatable="false" name="pref_offline_data">pref_offline_data</string>
     <string translatable="false" name="pref_offline_comments">pref_offline_comments</string>

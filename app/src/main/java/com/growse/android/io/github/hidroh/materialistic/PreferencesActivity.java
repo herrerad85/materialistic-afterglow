@@ -78,6 +78,17 @@ public class PreferencesActivity extends ThemedActivity {
             if (findPreference(getString(R.string.pref_ai_summaries_enabled)) != null) {
                 new AiPreferenceController(this).attach();
             }
+            // Scoped hook (#24): the Offline storage entry only exists on the offline screen; open the
+            // storage/clear screen when it is tapped.
+            androidx.preference.Preference offlineStorage =
+                    findPreference(getString(R.string.pref_offline_storage));
+            if (offlineStorage != null) {
+                offlineStorage.setOnPreferenceClickListener(preference -> {
+                    startActivity(new android.content.Intent(getActivity(),
+                            OfflineStorageActivity.class));
+                    return true;
+                });
+            }
         }
 
         @Override
