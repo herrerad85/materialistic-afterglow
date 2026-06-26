@@ -505,6 +505,16 @@ class StoryRecyclerViewAdapter(
     }
   }
 
+  @Synthetic
+  fun onVoteError(throwable: Throwable?) {
+    Toast.makeText(
+            context,
+            AppUtils.accountErrorMessageRes(throwable, R.string.vote_failed),
+            Toast.LENGTH_SHORT,
+        )
+        .show()
+  }
+
   fun setCacheMode(cacheMode: Int) {
     mCacheMode = cacheMode
   }
@@ -575,7 +585,7 @@ class StoryRecyclerViewAdapter(
 
     override fun onError(throwable: Throwable?) {
       if (mAdapter.get() != null && mAdapter.get()!!.isAttached) {
-        mAdapter.get()!!.onVoted(mPosition, null)
+        mAdapter.get()!!.onVoteError(throwable)
       }
     }
   }

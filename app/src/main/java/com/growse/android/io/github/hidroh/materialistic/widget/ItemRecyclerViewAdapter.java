@@ -311,6 +311,12 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         }
     }
 
+    @Synthetic
+    void onVoteError(Throwable throwable) {
+        Toast.makeText(context, AppUtils.accountErrorMessageRes(throwable, R.string.vote_failed),
+                Toast.LENGTH_SHORT).show();
+    }
+
     static class ItemViewHolder extends RecyclerView.ViewHolder {
         boolean mIsFooter;
         TextView mPostedTextView;
@@ -390,7 +396,7 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         @Override
         public void onError(Throwable throwable) {
             if (mAdapter.get() != null && mAdapter.get().isAttached()) {
-                mAdapter.get().onVoted(null);
+                mAdapter.get().onVoteError(throwable);
             }
         }
     }

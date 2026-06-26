@@ -470,6 +470,12 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         }
     }
 
+    @Synthetic
+    void onVoteError(Throwable throwable) {
+        Toast.makeText(this, AppUtils.accountErrorMessageRes(throwable, R.string.vote_failed),
+                Toast.LENGTH_SHORT).show();
+    }
+
     private void onPreferenceChanged(int key, boolean contextChanged) {
         if (!Preferences.navigationEnabled(this)) {
             NavFloatingActionButton.resetPosition(this);
@@ -547,7 +553,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         @Override
         public void onError(Throwable throwable) {
             if (mItemActivity.get() != null && !mItemActivity.get().isActivityDestroyed()) {
-                mItemActivity.get().onVoted(null);
+                mItemActivity.get().onVoteError(throwable);
             }
         }
     }

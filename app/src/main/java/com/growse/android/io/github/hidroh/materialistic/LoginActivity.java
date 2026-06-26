@@ -153,9 +153,23 @@ public class LoginActivity extends AccountAuthenticatorActivity {
 
         @Override
         public void onError(Throwable throwable) {
-            if (mLoginActivity.get() != null && !mLoginActivity.get().isActivityDestroyed()) {
-                mLoginActivity.get().onLoggedIn(false, throwable != null ? throwable.getMessage() : null);
+            LoginActivity activity = mLoginActivity.get();
+            if (activity != null && !activity.isActivityDestroyed()) {
+                activity.onLoggedIn(false, errorMessage(activity, throwable));
             }
+        }
+
+        // Prefer a resource-backed message (e.g. the unexpected-response error raised when the login
+        // markup changed) so the user sees a clear, distinct error; otherwise fall back to the parsed
+        // Hacker News error text carried as the throwable message.
+        private static String errorMessage(LoginActivity activity, Throwable throwable) {
+            if (throwable instanceof UserServices.Exception) {
+                UserServices.Exception e = (UserServices.Exception) throwable;
+                if (e.messageRes != 0) {
+                    return activity.getString(e.messageRes);
+                }
+            }
+            return throwable != null ? throwable.getMessage() : null;
         }
     }
 }

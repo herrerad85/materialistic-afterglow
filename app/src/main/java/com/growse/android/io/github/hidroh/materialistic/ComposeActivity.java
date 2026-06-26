@@ -206,6 +206,13 @@ public class ComposeActivity extends ThemedActivity {
         }
     }
 
+    @Synthetic
+    void onSentError(Throwable throwable) {
+        Toast.makeText(this, AppUtils.accountErrorMessageRes(throwable, R.string.comment_failed),
+                Toast.LENGTH_SHORT).show();
+        toggleControls(false);
+    }
+
     private String createQuote() {
         if (mQuoteText == null) {
             mQuoteText = String.format(FORMAT_QUOTE, AppUtils.fromHtml(mParentText)
@@ -252,7 +259,7 @@ public class ComposeActivity extends ThemedActivity {
         @Override
         public void onError(Throwable throwable) {
             if (mComposeActivity.get() != null && !mComposeActivity.get().isActivityDestroyed()) {
-                mComposeActivity.get().onSent(null);
+                mComposeActivity.get().onSentError(throwable);
             }
         }
     }

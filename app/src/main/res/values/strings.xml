@@ -269,6 +269,8 @@
     <string name="title_activity_submit">Submit to HN</string>
     <string name="url_text_required">URL or text is required</string>
     <string name="submit_failed">Failed to submit. Please try again.</string>
+    <string name="account_action_auth_failed">Your Hacker News sign-in was not accepted. Please sign in again.</string>
+    <string name="account_action_unexpected_response">Hacker News returned an unexpected response, so this action could not be completed. The site may have changed; please try again later.</string>
     <string name="submit_successful">Successfully submitted</string>
     <string name="confirm_no_submit">Exit without submitting?</string>
     <string name="submit_note">Enter text to submit a question for discussion, or URL to submit a link. You can also share links directly from other apps</string>

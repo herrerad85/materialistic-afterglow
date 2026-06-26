@@ -6,6 +6,7 @@
 package com.growse.android.io.github.hidroh.materialistic.accounts
 
 import android.os.Looper
+import com.growse.android.io.github.hidroh.materialistic.R
 import io.mockk.every
 import io.mockk.mockk
 import java.util.concurrent.Executor
@@ -97,16 +98,28 @@ class UserServicesClientTest {
   }
 
   @Test
-  fun voteUp_movedTemporarilyIsSuccess_otherwiseFalse() {
+  fun voteUp_movedTemporarily_reportsSuccess() {
     val ok = CapturingCallback()
     client { response(it, 302) }.voteUp(creds, "1", ok)
     drain()
     assertEquals(true, ok.done)
+    assertNull(ok.error)
+  }
 
-    val no = CapturingCallback()
-    client { response(it, 200) }.voteUp(creds, "1", no)
+  @Test
+  fun voteUp_nonRedirect_reportsUnexpectedResponse() {
+    // A non-302 vote outcome is an unexpected flow result, not a silent failure.
+    val cb = CapturingCallback()
+    client { response(it, 200) }.voteUp(creds, "1", cb)
     drain()
-    assertEquals(false, no.done)
+
+    assertNull(cb.done)
+    val err = cb.error
+    assertTrue(err is UserServices.Exception)
+    assertEquals(
+        R.string.account_action_unexpected_response,
+        (err as UserServices.Exception).messageRes,
+    )
   }
 
   @Test
@@ -116,6 +129,22 @@ class UserServicesClientTest {
     drain()
     assertEquals(true, cb.done)
     assertNull(cb.error)
+  }
+
+  @Test
+  fun reply_nonRedirect_reportsUnexpectedResponse() {
+    // A non-302 reply outcome is an unexpected flow result, not a silent failure.
+    val cb = CapturingCallback()
+    client { response(it, 200) }.reply(creds, "1", "hi", cb)
+    drain()
+
+    assertNull(cb.done)
+    val err = cb.error
+    assertTrue(err is UserServices.Exception)
+    assertEquals(
+        R.string.account_action_unexpected_response,
+        (err as UserServices.Exception).messageRes,
+    )
   }
 
   @Test
@@ -164,6 +193,138 @@ class UserServicesClientTest {
     assertNotNull(
         "an item redirect should carry the item Uri as data",
         (err as UserServices.Exception).data,
+    )
+  }
+
+  @Test
+  fun submit_authRedirect_reportsAuthFailed() {
+    // A 302 from the submit form is HN redirecting to /login: credentials were not accepted.
+    val cb = CapturingCallback()
+    client { response(it, 302) }.submit(creds, "Title", "x", false, cb)
+    drain()
+
+    assertNull(cb.done)
+    val err = cb.error
+    assertTrue(err is UserServices.Exception)
+    assertEquals(
+        R.string.account_action_auth_failed,
+        (err as UserServices.Exception).messageRes,
+    )
+  }
+
+  @Test
+  fun submit_missingFnid_reportsUnexpectedResponse() {
+    // The submit form is missing the hidden fnid token: HN markup changed (parse failure).
+    val cb = CapturingCallback()
+    client { req ->
+          when (req.url.encodedPath) {
+            "/submit" ->
+                response(
+                    req,
+                    200,
+                    body = "<input name=\"other\" value=\"x\">",
+                    setCookie = "user=abc",
+                )
+            else -> response(req, 200)
+          }
+        }
+        .submit(creds, "Title", "https://example.com", true, cb)
+    drain()
+
+    assertNull(cb.done)
+    val err = cb.error
+    assertTrue(err is UserServices.Exception)
+    assertEquals(
+        R.string.account_action_unexpected_response,
+        (err as UserServices.Exception).messageRes,
+    )
+  }
+
+  @Test
+  fun submit_unexpectedStatusOnPost_reportsUnexpectedResponse() {
+    // The submit POST did not redirect as the scraped flow expects: HN flow changed.
+    val cb = CapturingCallback()
+    client { req ->
+          when (req.url.encodedPath) {
+            "/submit" ->
+                response(
+                    req,
+                    200,
+                    body = "<input name=\"fnid\" value=\"abc123\">",
+                    setCookie = "user=abc",
+                )
+            "/r" -> response(req, 200)
+            else -> response(req, 200)
+          }
+        }
+        .submit(creds, "Title", "https://example.com", true, cb)
+    drain()
+
+    assertNull(cb.done)
+    assertEquals(
+        R.string.account_action_unexpected_response,
+        (cb.error as UserServices.Exception).messageRes,
+    )
+  }
+
+  @Test
+  fun submit_redirectWithoutLocation_reportsUnexpectedResponse() {
+    // The submit POST redirected (302) but carried no Location to follow: the flow changed.
+    val cb = CapturingCallback()
+    client { req ->
+          when (req.url.encodedPath) {
+            "/submit" ->
+                response(
+                    req,
+                    200,
+                    body = "<input name=\"fnid\" value=\"abc123\">",
+                    setCookie = "user=abc",
+                )
+            "/r" -> response(req, 302)
+            else -> response(req, 200)
+          }
+        }
+        .submit(creds, "Title", "https://example.com", true, cb)
+    drain()
+
+    assertNull(cb.done)
+    val err = cb.error
+    assertTrue(err is UserServices.Exception)
+    assertEquals(
+        R.string.account_action_unexpected_response,
+        (err as UserServices.Exception).messageRes,
+    )
+  }
+
+  @Test
+  fun login_unparseableBody_reportsUnexpectedResponse() {
+    // A 200 whose body lacks the expected login error markup: the login page markup changed.
+    val cb = CapturingCallback()
+    client { response(it, 200, body = "<div>unexpected</div>") }.login("pg", "pw", false, cb)
+    drain()
+
+    assertNull(cb.done)
+    val err = cb.error
+    assertTrue(err is UserServices.Exception)
+    assertEquals(
+        R.string.account_action_unexpected_response,
+        (err as UserServices.Exception).messageRes,
+    )
+  }
+
+  @Test
+  fun login_unexpectedStatus_reportsUnexpectedResponse() {
+    // Neither a 302 success nor a 200 rejected-login page: an unexpected status is a flow failure.
+    val cb = CapturingCallback()
+    client { response(it, 500) }.login("pg", "pw", false, cb)
+    drain()
+
+    assertNull(cb.done)
+    val err = cb.error
+    assertTrue(err is UserServices.Exception)
+    assertEquals(
+        R.string.account_action_unexpected_response,
+        (err as UserServices.Exception).messageRes,
     )
   }
 }

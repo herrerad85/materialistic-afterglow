@@ -20,6 +20,7 @@ import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.Log;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -36,6 +37,12 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class UserServicesClient implements UserServices {
+    private static final String TAG = "UserServicesClient";
+    // Breadcrumb failure kinds. AUTH = credentials rejected; PARSE = expected markup (e.g. the hidden
+    // form token) was not found; FLOW = the request did not redirect as the scraped flow expects.
+    private static final String KIND_AUTH = "auth";
+    private static final String KIND_PARSE = "parse";
+    private static final String KIND_FLOW = "flow";
     private static final String BASE_WEB_URL = "https://news.ycombinator.com";
     private static final String LOGIN_PATH = "login";
     private static final String VOTE_PATH = "vote";
@@ -99,27 +106,65 @@ public class UserServicesClient implements UserServices {
         });
     }
 
+    // Breadcrumb for a failed account action. Logs the action, the failure kind, and a short,
+    // non-sensitive detail (status code, redirect path, or which field was missing) so an HN markup or
+    // flow change is diagnosable. Never logs usernames, passwords, cookies, form tokens, or content.
+    private static void breadcrumb(String action, String kind, String detail) {
+        Log.w(TAG, action + " failed: " + kind + (detail != null ? " (" + detail + ")" : ""));
+    }
+
     @Override
     public void login(String username, String password, boolean createAccount, Callback callback) {
         dispatch(() -> {
             Response response = exec(postLogin(username, password, createAccount));
-            if (response.code() == HttpURLConnection.HTTP_OK) {
-                throw new UserServices.Exception(parseLoginError(response));
+            int code = response.code();
+            if (code == HttpURLConnection.HTTP_MOVED_TEMP) {
+                return true;
             }
-            return response.code() == HttpURLConnection.HTTP_MOVED_TEMP;
+            if (code == HttpURLConnection.HTTP_OK) {
+                // 200 means HN re-rendered the login page instead of redirecting: the sign-in was not
+                // accepted. The page normally carries the reason in its body.
+                String error = parseLoginError(response);
+                if (error == null) {
+                    // The error text was not where we expect it: the login page markup changed.
+                    breadcrumb("login", KIND_PARSE, "login error body not found");
+                    throw new UserServices.Exception(R.string.account_action_unexpected_response);
+                }
+                breadcrumb("login", KIND_AUTH, "status=200");
+                throw new UserServices.Exception(error);
+            }
+            // Any other status is unexpected: HN normally returns 302 on success or 200 on a rejected
+            // login. Treat it as a flow failure rather than a silent unsuccessful result.
+            breadcrumb("login", KIND_FLOW, "status=" + code);
+            throw new UserServices.Exception(R.string.account_action_unexpected_response);
         }, callback);
     }
 
     @Override
     public void voteUp(Credentials credentials, String itemId, Callback callback) {
-        dispatch(() -> exec(postVote(credentials.getUsername(), credentials.getPassword(), itemId))
-                .code() == HttpURLConnection.HTTP_MOVED_TEMP, callback);
+        dispatch(() -> {
+            int code = exec(postVote(credentials.getUsername(), credentials.getPassword(), itemId)).code();
+            // A successful vote redirects (302). Anything else means HN did not accept the action as the
+            // scraped flow expects; surface it as a flow failure instead of a silent unsuccessful no-op.
+            if (code != HttpURLConnection.HTTP_MOVED_TEMP) {
+                breadcrumb("vote", KIND_FLOW, "status=" + code);
+                throw new UserServices.Exception(R.string.account_action_unexpected_response);
+            }
+            return true;
+        }, callback);
     }
 
     @Override
     public void reply(Credentials credentials, String parentId, String text, Callback callback) {
-        dispatch(() -> exec(postReply(parentId, text, credentials.getUsername(), credentials.getPassword()))
-                .code() == HttpURLConnection.HTTP_MOVED_TEMP, callback);
+        dispatch(() -> {
+            int code = exec(postReply(parentId, text, credentials.getUsername(), credentials.getPassword())).code();
+            // A successful reply redirects (302). Anything else is an unexpected flow outcome.
+            if (code != HttpURLConnection.HTTP_MOVED_TEMP) {
+                breadcrumb("reply", KIND_FLOW, "status=" + code);
+                throw new UserServices.Exception(R.string.account_action_unexpected_response);
+            }
+            return true;
+        }, callback);
     }
 
     @Override
@@ -137,7 +182,8 @@ public class UserServicesClient implements UserServices {
             // fetch submit page with given credentials; a 302 here is the /login redirect = failed auth
             Response formResponse = exec(postSubmitForm(credentials.getUsername(), credentials.getPassword()));
             if (formResponse.code() == HttpURLConnection.HTTP_MOVED_TEMP) {
-                throw new IOException();
+                breadcrumb("submit", KIND_AUTH, "status=" + formResponse.code());
+                throw new UserServices.Exception(R.string.account_action_auth_failed);
             }
             String cookie = formResponse.header(HEADER_SET_COOKIE);
             String fnid;
@@ -147,13 +193,23 @@ public class UserServicesClient implements UserServices {
                 formResponse.close();
             }
             if (TextUtils.isEmpty(fnid)) {
-                throw new IOException();
+                // The submit form no longer carries the hidden fnid token: HN markup changed.
+                breadcrumb("submit", KIND_PARSE, "missing fnid in submit form");
+                throw new UserServices.Exception(R.string.account_action_unexpected_response);
             }
             Response submitResponse = exec(postSubmit(title, content, isUrl, cookie, fnid));
             if (submitResponse.code() != HttpURLConnection.HTTP_MOVED_TEMP) {
-                throw new IOException();
+                // The submit POST did not redirect as the scraped flow expects: HN flow changed.
+                breadcrumb("submit", KIND_FLOW, "status=" + submitResponse.code());
+                throw new UserServices.Exception(R.string.account_action_unexpected_response);
             }
-            Uri uri = Uri.parse(submitResponse.header(HEADER_LOCATION));
+            String location = submitResponse.header(HEADER_LOCATION);
+            if (TextUtils.isEmpty(location)) {
+                // A 302 with no Location to follow: the redirect target is missing, so the flow changed.
+                breadcrumb("submit", KIND_FLOW, "redirect without location");
+                throw new UserServices.Exception(R.string.account_action_unexpected_response);
+            }
+            Uri uri = Uri.parse(location);
             if (TextUtils.equals(uri.getPath(), DEFAULT_SUBMIT_REDIRECT)) {
                 return true;
             }
@@ -253,7 +309,10 @@ public class UserServicesClient implements UserServices {
                 }
                 return exception;
             default:
-                return new IOException();
+                // An unexpected redirect target after submit: HN flow/markup changed. Log the path
+                // only (no query parameters) so the change is diagnosable without leaking content.
+                breadcrumb("submit", KIND_FLOW, "redirect=" + uri.getPath());
+                return new UserServices.Exception(R.string.account_action_unexpected_response);
         }
     }
 

@@ -322,6 +322,12 @@ public class FavoriteRecyclerViewAdapter extends ListRecyclerViewAdapter
         }
     }
 
+    @Synthetic
+    void onVoteError(Throwable throwable) {
+        Toast.makeText(context, AppUtils.accountErrorMessageRes(throwable, R.string.vote_failed),
+                Toast.LENGTH_SHORT).show();
+    }
+
     static class VoteCallback extends UserServices.Callback {
         private final WeakReference<FavoriteRecyclerViewAdapter> mAdapter;
 
@@ -340,7 +346,7 @@ public class FavoriteRecyclerViewAdapter extends ListRecyclerViewAdapter
         @Override
         public void onError(Throwable throwable) {
             if (mAdapter.get() != null && mAdapter.get().isAttached()) {
-                mAdapter.get().onVoted(null);
+                mAdapter.get().onVoteError(throwable);
             }
         }
     }

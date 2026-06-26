@@ -66,6 +66,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.DimenRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import androidx.annotation.StyleRes;
 import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.browser.customtabs.CustomTabsSession;
@@ -77,6 +78,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountSession;
 import com.growse.android.io.github.hidroh.materialistic.accounts.SavedAccount;
+import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.PublicApi;
 import com.growse.android.io.github.hidroh.materialistic.data.HackerNewsClient;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
@@ -89,6 +91,22 @@ import dagger.hilt.android.EntryPointAccessors;
 @SuppressWarnings("WeakerAccess")
 @PublicApi
 public class AppUtils {
+    /**
+     * Resolves the user-facing message for a failed account action: a {@link UserServices.Exception}
+     * carrying a string resource (e.g. an auth or unexpected-response failure) shows that distinct
+     * message; any other throwable falls back to the action's generic message.
+     */
+    @StringRes
+    public static int accountErrorMessageRes(Throwable throwable, @StringRes int fallback) {
+        if (throwable instanceof UserServices.Exception) {
+            int messageRes = ((UserServices.Exception) throwable).messageRes;
+            if (messageRes != 0) {
+                return messageRes;
+            }
+        }
+        return fallback;
+    }
+
     private static final String ABBR_YEAR = "y";
     private static final String ABBR_WEEK = "w";
     private static final String ABBR_DAY = "d";
