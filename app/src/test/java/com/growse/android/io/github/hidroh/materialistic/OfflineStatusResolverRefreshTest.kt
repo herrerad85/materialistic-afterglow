@@ -114,4 +114,48 @@ class OfflineStatusResolverRefreshTest {
     resolver.invalidateAll()
     assertEquals(null, resolver.cached("1"))
   }
+
+  // #26: a re-resolve also downgrades when a clear control (#24) removes the reading surface, so an
+  // item is no longer reported cached after its reader text or archive has been cleared.
+
+  @Test
+  fun cachedDowngradesToPartialWhenReaderTextCleared() {
+    // Fully cached: saved record (item data) plus reader text (the reading surface), no archive.
+    markSaved("1")
+    db.readableDao.insert(MaterialisticDatabase.Readable("1", "<p>reader</p>"))
+    resolver.resolve("1", url) { /* ignore */ }
+    assertEquals(OfflineStatus.CACHED, resolver.cached("1"))
+
+    // Clearing reader text (what OfflineStorageManager.clearReaderText does) drops the only
+    // surface.
+    db.readableDao.deleteAll()
+    resolver.resolve("1", url) { /* ignore */ }
+    assertEquals(OfflineStatus.PARTIALLY_CACHED, resolver.cached("1"))
+  }
+
+  @Test
+  fun cachedDowngradesToPartialWhenArticleArchiveCleared() {
+    // Fully cached: saved record plus the article archive (the reading surface), no reader text.
+    markSaved("1")
+    CacheableWebView.getArchiveFile(context, url).writeText("archived")
+    resolver.resolve("1", url) { /* ignore */ }
+    assertEquals(OfflineStatus.CACHED, resolver.cached("1"))
+
+    // Clearing archives (what OfflineStorageManager.clearArticleArchives does) drops the surface.
+    CacheableWebView.getArchiveFile(context, url).delete()
+    resolver.resolve("1", url) { /* ignore */ }
+    assertEquals(OfflineStatus.PARTIALLY_CACHED, resolver.cached("1"))
+  }
+
+  @Test
+  fun invalidateDropsOnlyTargetItem() {
+    resolver.resolve("1", url) { /* ignore */ }
+    resolver.resolve("2", url) { /* ignore */ }
+    assertEquals(OfflineStatus.NOT_CACHED, resolver.cached("1"))
+    assertEquals(OfflineStatus.NOT_CACHED, resolver.cached("2"))
+
+    resolver.invalidate("1")
+    assertEquals(null, resolver.cached("1"))
+    assertEquals(OfflineStatus.NOT_CACHED, resolver.cached("2"))
+  }
 }

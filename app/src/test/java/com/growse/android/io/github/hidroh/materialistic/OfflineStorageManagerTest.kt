@@ -78,6 +78,21 @@ class OfflineStorageManagerTest {
     )
   }
 
+  /** Commits one cacheable response into the real OkHttp cache so its size is non-zero. */
+  private fun populateHttpCache() {
+    val server = MockWebServer()
+    server.enqueue(MockResponse().setBody("cached body").addHeader("Cache-Control", "max-age=600"))
+    server.start()
+    try {
+      val client = OkHttpClient.Builder().cache(httpCache).build()
+      client.newCall(Request.Builder().url(server.url("/x")).build()).execute().use {
+        it.body.string() // read fully so the entry commits to the cache
+      }
+    } finally {
+      server.shutdown()
+    }
+  }
+
   @Test
   fun computeStats_countsArchivesReaderTextAndSaved() {
     writeArchive(url1, "0123456789") // 10 bytes
@@ -155,5 +170,45 @@ class OfflineStorageManagerTest {
     } finally {
       server.shutdown()
     }
+  }
+
+  // Isolation matrix (#26): each clear frees only its own regenerable category, never the saved
+  // stories. clearHttpCache is covered above; these two prove the archive and reader-text clears
+  // leave the other caches and the saved stories intact.
+
+  @Test
+  fun clearArticleArchives_leavesReaderTextHttpCacheAndSavedStoriesIntact() {
+    writeArchive(url1, "0123456789")
+    db.readableDao.insert(MaterialisticDatabase.Readable("1", "abcdef"))
+    saveStory("1")
+    populateHttpCache()
+    val httpBefore = httpCache.size()
+    assertTrue("expected a populated cache before clearing", httpBefore > 0L)
+
+    manager.clearArticleArchives()
+
+    assertEquals(0, CacheableWebView.listArchiveFiles(context).size)
+    // Reader text, the OkHttp cache, and saved stories are all untouched.
+    assertEquals(6L, db.readableDao.totalContentBytes())
+    assertEquals(httpBefore, httpCache.size())
+    assertEquals(1, db.savedStoriesDao.count())
+  }
+
+  @Test
+  fun clearReaderText_leavesArchivesHttpCacheAndSavedStoriesIntact() {
+    writeArchive(url1, "0123456789")
+    db.readableDao.insert(MaterialisticDatabase.Readable("1", "abcdef"))
+    saveStory("1")
+    populateHttpCache()
+    val httpBefore = httpCache.size()
+    assertTrue("expected a populated cache before clearing", httpBefore > 0L)
+
+    manager.clearReaderText()
+
+    assertEquals(0L, db.readableDao.totalContentBytes())
+    // Article archives, the OkHttp cache, and saved stories are all untouched.
+    assertTrue(CacheableWebView.getArchiveFile(context, url1).exists())
+    assertEquals(httpBefore, httpCache.size())
+    assertEquals(1, db.savedStoriesDao.count())
   }
 }
