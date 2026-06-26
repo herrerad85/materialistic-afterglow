@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "materialistic-nouveau"
+rootProject.name = "afterglow"
 include(":app")
