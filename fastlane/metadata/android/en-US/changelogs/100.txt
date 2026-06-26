@@ -1,0 +1,1 @@
+Initial Afterglow release: a modern Hacker News client with Material Design, login, voting, comments, search, offline reading, reply notifications, refreshed screenshots and icon, and updated dependencies.
