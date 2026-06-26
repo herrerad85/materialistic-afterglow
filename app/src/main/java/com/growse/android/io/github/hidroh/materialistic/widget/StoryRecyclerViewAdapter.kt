@@ -38,6 +38,7 @@ import androidx.recyclerview.widget.SortedListAdapterCallback
 import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder
 import com.growse.android.io.github.hidroh.materialistic.AppUtils
 import com.growse.android.io.github.hidroh.materialistic.ComposeActivity
+import com.growse.android.io.github.hidroh.materialistic.OfflineStatusResolver
 import com.growse.android.io.github.hidroh.materialistic.Preferences
 import com.growse.android.io.github.hidroh.materialistic.Preferences.SwipeAction
 import com.growse.android.io.github.hidroh.materialistic.R
@@ -64,6 +65,7 @@ class StoryRecyclerViewAdapter(
     favoriteManager: FavoriteManager,
     private val mItemManager: ItemManager,
     private val mViewedItemStore: ViewedItemStore,
+    private val mOfflineStatusResolver: OfflineStatusResolver,
 ) :
     ListRecyclerViewAdapter<ListRecyclerViewAdapter.ItemViewHolder?, Item?>(
         context,
@@ -123,6 +125,7 @@ class StoryRecyclerViewAdapter(
     }
     if (isCleared(uri)) {
       mFavoriteRevision++ // invalidate all favorite statuses
+      mOfflineStatusResolver.invalidateAll() // saved data drives offline status; force a re-resolve
       notifyDataSetChanged()
       return@Observer
     }
@@ -140,9 +143,11 @@ class StoryRecyclerViewAdapter(
     if (isAdded(uri)) {
       item.setFavorite(true)
       item.setLocalRevision(mFavoriteRevision)
+      mOfflineStatusResolver.invalidate(item.getId())
     } else if (isRemoved(uri)) {
       item.setFavorite(false)
       item.setLocalRevision(mFavoriteRevision)
+      mOfflineStatusResolver.invalidate(item.getId())
     } else {
       item.setIsViewed(true)
     }
@@ -349,6 +354,17 @@ class StoryRecyclerViewAdapter(
       story.setFavorite(false)
     }
     holder.setFavorite(story.isFavorite())
+    // Per-item offline status (#23): show any cached value instantly for a jank-free bind, then
+    // revalidate off the main thread on every bind so it self-refreshes after save/archive/reader
+    // changes. The resolver re-binds the row only when the status actually changes (no notify
+    // loop).
+    holder.setOfflineStatus(mOfflineStatusResolver.cached(story.getId()))
+    mOfflineStatusResolver.resolve(story.getId(), story.getUrl()) {
+      val pos = items.indexOf(story)
+      if (pos in 0..<itemCount) {
+        notifyItemChanged(pos)
+      }
+    }
     holder.bindMoreOptions({ anchor: View? -> showMoreOptions(anchor, story, holder) }, true)
   }
 
@@ -471,6 +487,9 @@ class StoryRecyclerViewAdapter(
     } else {
       mFavoriteManager.remove(context, story.getId())
     }
+    // Saved/sync state feeds the offline status; drop the cached value so it recomputes on next
+    // bind.
+    mOfflineStatusResolver.invalidate(story.getId())
   }
 
   @Synthetic

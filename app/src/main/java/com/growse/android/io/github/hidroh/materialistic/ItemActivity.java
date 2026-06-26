@@ -94,6 +94,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     @Inject ViewedItemStore mViewedItemStore;
     @Inject CustomTabsDelegate mCustomTabsDelegate;
     @Inject KeyDelegate mKeyDelegate;
+    @Inject OfflineStatusResolver mOfflineStatusResolver;
     private TabLayout mTabLayout;
     @Synthetic AppBarLayout mAppBar;
     @Synthetic CoordinatorLayout mCoordinatorLayout;
@@ -113,6 +114,8 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         if (FavoriteManager.Companion.isCleared(uri)) {
             mItem.setFavorite(false);
             bindFavorite();
+            mOfflineStatusResolver.invalidateAll();
+            refreshOfflineStatus(mItem);
             return;
         }
         if (!TextUtils.equals(mItemId, uri.getLastPathSegment())) {
@@ -121,6 +124,8 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         if (FavoriteManager.Companion.isAdded(uri) || FavoriteManager.Companion.isRemoved(uri)) {
             mItem.setFavorite(FavoriteManager.Companion.isAdded(uri));
             bindFavorite();
+            mOfflineStatusResolver.invalidate(mItemId);
+            refreshOfflineStatus(mItem);
         }
     };
     private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
@@ -368,6 +373,45 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     }
 
     @SuppressWarnings("ConstantConditions")
+    private void refreshOfflineStatus(@Nullable final WebItem story) {
+        if (story == null) {
+            return;
+        }
+        final ImageView view = findViewById(R.id.offline_status);
+        if (view == null) {
+            return;
+        }
+        final String boundId = story.getId();
+        // Instant display from any cached value, then revalidate off the main thread so the indicator
+        // self-refreshes after a save/unsave or archive/reader change.
+        bindOfflineStatus(view, mOfflineStatusResolver.cached(boundId));
+        mOfflineStatusResolver.resolve(boundId, story.getUrl(), status -> {
+            // Guard: ignore a late result for a destroyed activity or a since-changed current item.
+            if (isDestroyed() || isFinishing()) {
+                return;
+            }
+            String currentId = mItem != null ? mItem.getId() : mItemId;
+            if (!TextUtils.equals(currentId, boundId)) {
+                return;
+            }
+            bindOfflineStatus(view, status);
+        });
+    }
+
+    private void bindOfflineStatus(ImageView view, OfflineStatus status) {
+        if (status == OfflineStatus.CACHED) {
+            view.setImageResource(R.drawable.ic_offline_available_18dp);
+            view.setContentDescription(getString(R.string.offline_status_cached));
+            view.setVisibility(View.VISIBLE);
+        } else if (status == OfflineStatus.PARTIALLY_CACHED) {
+            view.setImageResource(R.drawable.ic_offline_partial_18dp);
+            view.setContentDescription(getString(R.string.offline_status_partial));
+            view.setVisibility(View.VISIBLE);
+        } else {
+            view.setVisibility(View.GONE);
+        }
+    }
+
     private void bindData(@Nullable final WebItem story) {
         if (story == null) {
             return;
@@ -409,6 +453,8 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
                         R.drawable.ic_poll_white_18dp, 0, 0, 0);
                 break;
         }
+        // Per-item offline status (#23): subtle header indicator, computed off the main thread.
+        refreshOfflineStatus(story);
         boolean hasText = story instanceof Item && !TextUtils.isEmpty(((Item) story).getText());
         mAdapter = new ItemPagerAdapter(this, getSupportFragmentManager(),
                 new ItemPagerAdapter.Builder()

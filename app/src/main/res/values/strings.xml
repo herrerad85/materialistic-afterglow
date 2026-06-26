@@ -298,6 +298,9 @@
     <string name="offline_mode_on">Offline mode on. Reading from saved copies.</string>
     <string name="offline_mode_off">Offline mode off.</string>
     <string name="offline_mode_turn_off">Turn off</string>
+    <string name="offline_status_cached">Saved offline</string>
+    <string name="offline_status_partial">Partially available offline</string>
+    <string name="cd_offline_metadata">%1$s, %2$s</string>
     <string name="download_in_progress">Download in progress</string>
     <string name="love_it">I love it!</string>
     <string name="display_options">Display options</string>

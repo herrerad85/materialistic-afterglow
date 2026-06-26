@@ -86,6 +86,7 @@ class ListFragment : BaseListFragment() {
   @Inject lateinit var mAccountActions: AccountActions
   @Inject lateinit var mFavoriteManager: FavoriteManager
   @Inject lateinit var mViewedItemStore: ViewedItemStore
+  @Inject lateinit var mOfflineStatusResolver: OfflineStatusResolver
   private val mStoryListViewModel: StoryListViewModel by viewModels()
   private lateinit var mErrorView: View
   private lateinit var mEmptyView: View
@@ -252,6 +253,7 @@ class ListFragment : BaseListFragment() {
                 mFavoriteManager,
                 mHnItemManager,
                 mViewedItemStore,
+                mOfflineStatusResolver,
             )
             .also { mAdapter = it }
   }

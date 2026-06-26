@@ -124,11 +124,19 @@ public class CacheableWebView extends WebView {
     }
 
     private String generateCacheFilename(String url) {
-        return getContext().getApplicationContext().getCacheDir().getAbsolutePath() +
+        return getArchiveFile(getContext(), url).getAbsolutePath();
+    }
+
+    /**
+     * The web-archive file this view would read/write for {@code url}. Single source of truth for the
+     * archive filename so the offline-status check (#23) can test for its existence the same way.
+     */
+    public static File getArchiveFile(Context context, String url) {
+        return new File(context.getApplicationContext().getCacheDir().getAbsolutePath() +
                 File.separator +
                 CACHE_PREFIX +
                 url.hashCode() +
-                CACHE_EXTENSION;
+                CACHE_EXTENSION);
     }
 
     public static class ArchiveClient extends WebChromeClient {

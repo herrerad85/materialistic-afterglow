@@ -278,6 +278,11 @@ public abstract class ListRecyclerViewAdapter
             mCardView.flatten();
         }
 
+        public void setOfflineStatus(
+                com.growse.android.io.github.hidroh.materialistic.OfflineStatus status) {
+            mStoryView.setOfflineStatus(status);
+        }
+
         public void animateVote(int score) {
             mStoryView.animateVote(score);
         }

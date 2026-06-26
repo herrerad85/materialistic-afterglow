@@ -43,6 +43,7 @@ import android.widget.ViewSwitcher;
 import java.util.Locale;
 
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
+import com.growse.android.io.github.hidroh.materialistic.OfflineStatus;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
@@ -202,6 +203,8 @@ public class StoryView extends RelativeLayout implements Checkable {
         }
         mTitleTextView.setText(getContext().getString(R.string.loading_text));
         mPostedTextView.setText(R.string.loading_text);
+        mPostedTextView.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+        mPostedTextView.setContentDescription(null);
         mSourceTextView.setText(R.string.loading_text);
         mSourceTextView.setCompoundDrawables(null, null, null, null);
         mCommentButton.setVisibility(View.INVISIBLE);
@@ -230,6 +233,32 @@ public class StoryView extends RelativeLayout implements Checkable {
             return; // local item must be favorite, do not decorate
         }
         mBookmarked.setVisibility(isFavorite ? View.VISIBLE : View.INVISIBLE);
+    }
+
+    /**
+     * Subtle per-item offline indicator (#23): a small drawable on the metadata line for cached or
+     * partially-cached items, with an accessible description so it is announced and not conveyed by
+     * colour alone. Not-cached items show nothing (the absence is the signal), keeping the list quiet.
+     */
+    public void setOfflineStatus(@Nullable OfflineStatus status) {
+        if (mIsLocal) {
+            return; // the saved list is offline by definition; do not decorate
+        }
+        if (status == null || status == OfflineStatus.NOT_CACHED) {
+            mPostedTextView.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
+            mPostedTextView.setContentDescription(null);
+            return;
+        }
+        boolean cached = status == OfflineStatus.CACHED;
+        Drawable icon = DrawableCompat.wrap(ContextCompat.getDrawable(getContext(),
+                cached ? R.drawable.ic_offline_available_18dp : R.drawable.ic_offline_partial_18dp)
+                .mutate());
+        DrawableCompat.setTint(icon, mSecondaryTextColorResId);
+        mPostedTextView.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null);
+        mPostedTextView.setContentDescription(getContext().getString(R.string.cd_offline_metadata,
+                mPostedTextView.getText(),
+                getContext().getString(cached ? R.string.offline_status_cached
+                        : R.string.offline_status_partial)));
     }
 
     public void setOnCommentClickListener(View.OnClickListener listener) {
