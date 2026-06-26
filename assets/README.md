@@ -4,16 +4,17 @@
 
 - `screenshot-1.png` to `screenshot-4.png`: app screenshots captured from a current debug build using the fixed Light theme (the orange palette). Used by the project README and mirrored to the store listing phone screenshots under `fastlane/metadata/android/en-US/images/phoneScreenshots/`.
 - `afterglow-icon.png`: the master Afterglow icon artwork (1254x1254), provided by the maintainer. It is the source for the derived icon assets: the 512x512 store icon at `fastlane/metadata/android/en-US/images/icon.png`, and the Android launcher icons in `app/src/main/res` (the adaptive icon, its solid background and `ic_launcher_foreground` mark, and the legacy density `ic_launcher` / `ic_launcher_round` mipmaps). The launcher icon uses a flat orange field with the white "ag" mark extracted from the master so it stays legible under square and round launcher masks; the store icon keeps the full rendered artwork.
+- `afterglow-feature-graphic.png`: the Play Store feature graphic (1024x500), Afterglow-branded, the white "ag" mark from `afterglow-icon.png` and the "Afterglow" wordmark on a warm orange gradient. The same image is mirrored to `fastlane/metadata/android/en-US/images/featureGraphic.png` for store uploads. It replaces the old `materialistic-feature-graphic.png`.
 
-## Icon surfaces not yet refreshed
+## Secondary branding surfaces
 
-This first branding pass refreshed only the primary launcher, store, and repo icon. The surfaces below still use earlier or generic artwork and are intentionally left for a separate branding pass, because they need purpose-specific artwork or screenshots rather than a resize of the master:
+A second branding pass dispositioned the remaining surfaces:
 
-- the notification small (status bar) icon, which needs a simple monochrome/alpha mark
-- shortcut icons
-- the widget preview image
-- the navigation drawer header
-- the store feature graphic (`materialistic-feature-graphic.png`)
+- Notification small (status bar) icon (`app/src/main/res/drawable-*/ic_notification.png`): refreshed to the Afterglow "ag" mark as a white monochrome/alpha silhouette on transparent, the correct status-bar treatment (the system tints it). It replaces the earlier generic monochrome mark.
+- Feature graphic: refreshed, see `afterglow-feature-graphic.png` above.
+- Shortcut icons (`sc_trending`, `sc_new_releases`, `sc_bookmark`, `sc_add`): intentionally unchanged. These are action-specific glyphs (top, new, bookmark, submit). Replacing them with the app logo would make the four launcher shortcuts indistinguishable and reduce usability, so the glyphs are kept.
+- Widget preview image (`app/src/main/res/drawable-*/appwidget_preview.png`): intentionally unchanged. It depicts the widget's own UI with the orange accent and carries no Materialistic wordmark or logo; only the sample story text is dated, which is cosmetic rather than branding.
+- Navigation drawer header background (`bg_drawer_light` / `bg_drawer_dark`): intentionally unchanged. It is an abstract warm-toned geometric background with no logo or wordmark; the header shows account controls and the app name comes from resources (already "Afterglow"), and the warm palette is compatible with the brand.
 
 ## Historical / pre-revival
 
@@ -22,6 +23,5 @@ These files predate the current design and are kept for reference only. They are
 - `materialistic-drawable.sketch`
 - `playstore-screenshots.sketch`
 - `shortcuts.sketch`
-- `materialistic-feature-graphic.png`
 
-To refresh the icon, edit or replace `afterglow-icon.png` and regenerate the derived store and launcher assets from it. To refresh screenshots, capture from a current build. Avoid editing the legacy files above.
+To refresh the icon, edit or replace `afterglow-icon.png` and regenerate the derived store, launcher, notification, and feature-graphic assets from it. To refresh screenshots, capture from a current build. Avoid editing the legacy files above.
