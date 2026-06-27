@@ -101,6 +101,16 @@ public abstract class DrawerActivity extends ThemedActivity {
         mDrawerToggle.syncState();
     }
 
+    /**
+     * Turns the drawer off for a screen that should be a leaf returning to Top Stories rather than a
+     * navigation hub (Settings). The home button becomes an up arrow the activity handles, and the
+     * drawer can no longer be opened, so there is no nested settings/menu layer to get stuck in.
+     */
+    protected void disableDrawer() {
+        mDrawerToggle.setDrawerIndicatorEnabled(false);
+        mDrawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+    }
+
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);

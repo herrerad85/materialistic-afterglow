@@ -78,6 +78,13 @@ public class SettingsActivity extends DrawerActivity {
     }
 
     @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
+        // Settings is a leaf: the top-left control returns to Top Stories instead of opening a drawer.
+        disableDrawer();
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_settings, menu);
         return super.onCreateOptionsMenu(menu);
@@ -85,6 +92,13 @@ public class SettingsActivity extends DrawerActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            // Leaf behavior: leave Settings and show Top Stories rather than opening a drawer.
+            startActivity(new Intent(this, ListActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP));
+            finish();
+            return true;
+        }
         if (item.getItemId() == R.id.menu_clear_recent) {
             mAlertDialogBuilder
                     .init(this)
