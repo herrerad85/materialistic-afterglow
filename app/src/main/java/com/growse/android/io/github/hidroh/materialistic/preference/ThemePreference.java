@@ -45,10 +45,8 @@ public class ThemePreference extends Preference {
     private static final ArrayMap<Integer, String> BUTTONS = new ArrayMap<>();
     private static final ArrayMap<String, ThemeSpec> VALUES = new ArrayMap<>();
     static {
-        BUTTONS.put(R.id.theme_light, LIGHT);
         BUTTONS.put(R.id.theme_dark, DARK);
         BUTTONS.put(R.id.theme_black, BLACK);
-        BUTTONS.put(R.id.theme_sepia, SEPIA);
         BUTTONS.put(R.id.theme_green, GREEN);
         BUTTONS.put(R.id.theme_solarized, SOLARIZED);
         BUTTONS.put(R.id.theme_solarized_dark, SOLARIZED_DARK);
