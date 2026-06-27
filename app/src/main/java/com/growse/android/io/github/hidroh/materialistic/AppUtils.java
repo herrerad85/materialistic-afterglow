@@ -20,12 +20,8 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.PendingIntent;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.Point;
@@ -33,7 +29,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Parcelable;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.view.ContextThemeWrapper;
@@ -44,14 +39,10 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.color.MaterialColors;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.AttrRes;
 import androidx.annotation.ColorInt;
@@ -60,14 +51,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.annotation.StyleRes;
-import androidx.browser.customtabs.CustomTabsIntent;
 import androidx.browser.customtabs.CustomTabsSession;
 import androidx.core.util.Pair;
-import androidx.core.view.GravityCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.PublicApi;
-import com.growse.android.io.github.hidroh.materialistic.data.HackerNewsClient;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 import com.growse.android.io.github.hidroh.materialistic.data.WebItem;
@@ -97,50 +85,17 @@ public class AppUtils {
     private static final String ABBR_DAY = "d";
     private static final String ABBR_HOUR = "h";
     private static final String ABBR_MINUTE = "m";
-    private static final String PLAY_STORE_URL = "market://details?id=" + BuildConfig.APPLICATION_ID;
     private static final String FORMAT_HTML_COLOR = "%06X";
     public static final int HOT_THRESHOLD_HIGH = 300;
     public static final int HOT_THRESHOLD_NORMAL = 100;
     static final int HOT_THRESHOLD_LOW = 10;
     public static final int HOT_FACTOR = 3;
-    private static final String HOST_ITEM = "item";
-    private static final String HOST_USER = "user";
 
+    // Temporary compatibility wrappers over OutboundIntents (outbound intent helpers extracted from
+    // AppUtils) and ItemUris (in-app deep-link URIs); call sites keep calling these.
     public static void openWebUrlExternal(Context context, @Nullable WebItem item,
                                           String url, @Nullable CustomTabsSession session) {
-        if (shouldReadCacheOnly(context)) {
-            context.startActivity(new Intent(context, OfflineWebActivity.class)
-                    .putExtra(OfflineWebActivity.EXTRA_URL, url));
-            return;
-        }
-        Intent intent = createViewIntent(context, item, url, session);
-        if (!HackerNewsClient.BASE_WEB_URL.contains(Uri.parse(url).getHost())) {
-            if (intent.resolveActivity(context.getPackageManager()) != null) {
-                context.startActivity(intent);
-            }
-            return;
-        }
-        List<ResolveInfo> activities = context.getPackageManager()
-                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
-        ArrayList<Intent> intents = new ArrayList<>();
-        for (ResolveInfo info : activities) {
-            if (info.activityInfo.packageName.equalsIgnoreCase(context.getPackageName())) {
-                continue;
-            }
-            intents.add(createViewIntent(context, item, url, session)
-                    .setPackage(info.activityInfo.packageName));
-        }
-        if (intents.isEmpty()) {
-            return;
-        }
-        if (intents.size() == 1) {
-            context.startActivity(intents.remove(0));
-        } else {
-            context.startActivity(Intent.createChooser(intents.remove(0),
-                    context.getString(R.string.chooser_title))
-                    .putExtra(Intent.EXTRA_INITIAL_INTENTS,
-                            intents.toArray(new Parcelable[intents.size()])));
-        }
+        OutboundIntents.openWebUrlExternal(context, item, url, session);
     }
 
     // Temporary compatibility wrappers over HtmlText (generic HTML/text rendering extracted from
@@ -158,13 +113,7 @@ public class AppUtils {
     }
 
     public static Intent makeSendIntentChooser(Context context, Uri data) {
-        // use ACTION_SEND_MULTIPLE instead of ACTION_SEND to filter out
-        // share receivers that accept only EXTRA_TEXT but not EXTRA_STREAM
-        return Intent.createChooser(new Intent(Intent.ACTION_SEND_MULTIPLE)
-                        .setType("text/plain")
-                        .putParcelableArrayListExtra(Intent.EXTRA_STREAM,
-                                new ArrayList<Uri>(){{add(data);}}),
-                context.getString(R.string.share_file));
+        return OutboundIntents.makeSendIntentChooser(context, data);
     }
 
     public static void openExternal(@NonNull final Context context,
@@ -172,44 +121,14 @@ public class AppUtils {
                              @NonNull View anchor,
                              @NonNull final WebItem item,
                              final CustomTabsSession session) {
-        if (TextUtils.isEmpty(item.getUrl()) ||
-                item.getUrl().startsWith(HackerNewsClient.BASE_WEB_URL)) {
-            openWebUrlExternal(context,
-                    item, String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()),
-                    session);
-            return;
-        }
-        popupMenu.create(context, anchor, GravityCompat.END)
-                .inflate(R.menu.menu_share)
-                .setOnMenuItemClickListener(menuItem -> {
-                    openWebUrlExternal(context, item, menuItem.getItemId() == R.id.menu_article ?
-                            item.getUrl() :
-                            String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()), session);
-                    return true;
-                })
-                .show();
+        OutboundIntents.openExternal(context, popupMenu, anchor, item, session);
     }
 
     public static void share(@NonNull final Context context,
                              @NonNull PopupMenu popupMenu,
                              @NonNull View anchor,
                              @NonNull final WebItem item) {
-        if (TextUtils.isEmpty(item.getUrl()) ||
-                item.getUrl().startsWith(HackerNewsClient.BASE_WEB_URL)) {
-            share(context, item.getDisplayedTitle(),
-                    String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()));
-            return;
-        }
-        popupMenu.create(context, anchor, GravityCompat.END)
-                .inflate(R.menu.menu_share)
-                .setOnMenuItemClickListener(menuItem -> {
-                    share(context, item.getDisplayedTitle(),
-                            menuItem.getItemId() == R.id.menu_article ?
-                                    item.getUrl() :
-                                    String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()));
-                    return true;
-                })
-                .show();
+        OutboundIntents.share(context, popupMenu, anchor, item);
     }
 
     public static int getThemedResId(Context context, @AttrRes int attr) {
@@ -238,8 +157,7 @@ public class AppUtils {
     }
 
     public static boolean isHackerNewsUrl(WebItem item) {
-        return !TextUtils.isEmpty(item.getUrl()) &&
-                item.getUrl().equals(String.format(HackerNewsClient.WEB_ITEM_PATH, item.getId()));
+        return ItemUris.isHackerNewsUrl(item);
     }
 
     public static int getDimensionInDp(Context context, @DimenRes int dimenResId) {
@@ -319,18 +237,8 @@ public class AppUtils {
     // the injected accounts/AccountFlow seam; the scheduler is now an explicit dependency rather than
     // self-sourced via EntryPointAccessors.
 
-    @SuppressWarnings("deprecation")
     public static void openPlayStore(Context context) {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_URL));
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                Intent.FLAG_ACTIVITY_MULTIPLE_TASK |
-                Intent.FLAG_ACTIVITY_NEW_TASK |
-                Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
-        try {
-            context.startActivity(intent);
-        } catch (ActivityNotFoundException e) {
-            Toast.makeText(context, R.string.no_playstore, Toast.LENGTH_SHORT).show();
-        }
+        OutboundIntents.openPlayStore(context);
     }
 
     public static void toggleFab(FloatingActionButton fab, boolean visible) {
@@ -410,40 +318,19 @@ public class AppUtils {
     }
 
     public static void share(Context context, String subject, String text) {
-        Intent intent = new Intent(Intent.ACTION_SEND)
-                .setType("text/plain")
-                .putExtra(Intent.EXTRA_SUBJECT, subject)
-                .putExtra(Intent.EXTRA_TEXT, !TextUtils.isEmpty(subject) ?
-                        TextUtils.join(" - ", new String[]{subject, text}) : text);
-        if (intent.resolveActivity(context.getPackageManager()) != null) {
-            context.startActivity(intent);
-        }
+        OutboundIntents.share(context, subject, text);
     }
+
     public static Uri createItemUri(@NonNull String itemId) {
-        return new Uri.Builder()
-                .scheme(BuildConfig.APPLICATION_ID)
-                .authority(HOST_ITEM)
-                .path(itemId)
-                .build();
+        return ItemUris.createItemUri(itemId);
     }
 
     public static Uri createUserUri(@NonNull String userId) {
-        return new Uri.Builder()
-                .scheme(BuildConfig.APPLICATION_ID)
-                .authority(HOST_USER)
-                .path(userId)
-                .build();
+        return ItemUris.createUserUri(userId);
     }
 
     public static String getDataUriId(@NonNull Intent intent, String altParamId) {
-        if (intent.getData() == null) {
-            return null;
-        }
-        if (TextUtils.equals(intent.getData().getScheme(), BuildConfig.APPLICATION_ID)) {
-            return intent.getData().getLastPathSegment();
-        } else { // web URI
-            return intent.getData().getQueryParameter(altParamId);
-        }
+        return ItemUris.getDataUriId(intent, altParamId);
     }
 
     public static String wrapHtml(Context context, String html) {
@@ -467,39 +354,8 @@ public class AppUtils {
     }
 
 
-    @NonNull
-    private static Intent createViewIntent(Context context, @Nullable WebItem item,
-                                           String url, @Nullable CustomTabsSession session) {
-        if (Preferences.customTabsEnabled(context)) {
-            CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(session)
-                    .setToolbarColor(getThemedColor(context, R.attr.colorPrimary, Color.BLACK))
-                    .setShowTitle(true)
-                    .enableUrlBarHiding()
-                    .addDefaultShareMenuItem();
-            if (item != null) {
-                builder.addMenuItem(context.getString(R.string.comments),
-                        PendingIntent.getActivity(context, 0,
-                                new Intent(context, ItemActivity.class)
-                                        .putExtra(ItemActivity.EXTRA_ITEM, item)
-                                        .putExtra(ItemActivity.EXTRA_OPEN_COMMENTS, true),
-                                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ?
-                                        PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE :
-                                        PendingIntent.FLAG_ONE_SHOT));
-            }
-            return builder.build().intent.setData(Uri.parse(url));
-        } else {
-            return new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-        }
-    }
-
-    @SuppressLint("InlinedApi")
     public static Intent multiWindowIntent(Activity activity, Intent intent) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && activity.isInMultiWindowMode()) {
-            intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCH_ADJACENT |
-                    Intent.FLAG_ACTIVITY_NEW_TASK |
-                    Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-        }
-        return intent;
+        return OutboundIntents.multiWindowIntent(activity, intent);
     }
 
     public static void setTextAppearance(TextView textView, @StyleRes int textAppearance) {
