@@ -217,13 +217,9 @@ public class SyncDelegate {
         if (mSyncProgress.getProgress() >= mSyncProgress.getMax()) { // TODO may never done
             finish(); // TODO finish once only
         } else if (mJob.notificationEnabled) {
-            showProgress();
+            mNotifier.showProgress(mJob.id, mSyncProgress.title, getItemActivity(mJob.id),
+                    mSyncProgress.getMax(), mSyncProgress.getProgress());
         }
-    }
-
-    private void showProgress() {
-        mNotifier.showProgress(mJob.id, mSyncProgress.title, getItemActivity(mJob.id),
-                mSyncProgress.getMax(), mSyncProgress.getProgress());
     }
 
     private void finish() {
