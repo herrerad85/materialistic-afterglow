@@ -33,6 +33,7 @@ import com.growse.android.io.github.hidroh.materialistic.LazyLoadFragment;
 import com.growse.android.io.github.hidroh.materialistic.Preferences;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.Scrollable;
+import com.growse.android.io.github.hidroh.materialistic.StoryViewModeResolver;
 import com.growse.android.io.github.hidroh.materialistic.WebFragment;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
@@ -53,8 +54,7 @@ public class ItemPagerAdapter extends FragmentStatePagerAdapter {
         mItem = builder.item;
         mShowArticle = builder.showArticle;
         mCacheMode = builder.cacheMode;
-        mDefaultItem = Math.min(getCount()-1,
-                builder.defaultViewMode == Preferences.StoryViewMode.Comment ? 0 : 1);
+        mDefaultItem = StoryViewModeResolver.initialTabPosition(builder.defaultViewMode, getCount());
     }
 
     @Override

@@ -144,11 +144,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mExternalBrowser = Preferences.externalBrowserEnabled(this);
-        if (getIntent().getBooleanExtra(EXTRA_OPEN_COMMENTS, false)) {
-            mStoryViewMode = Preferences.StoryViewMode.Comment;
-        } else {
-            mStoryViewMode = Preferences.getDefaultStoryView(this);
-        }
+        mStoryViewMode = StoryViewModeResolver.resolveStoryViewMode(
+                getIntent().getBooleanExtra(EXTRA_OPEN_COMMENTS, false),
+                Preferences.getDefaultStoryView(this));
         setContentView(R.layout.activity_item);
         setSupportActionBar(findViewById(R.id.toolbar));
         //noinspection ConstantConditions
