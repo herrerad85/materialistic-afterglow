@@ -77,6 +77,9 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
     @Inject AlertDialogBuilder mAlertDialogBuilder;
     @Inject ResourcesProvider mResourcesProvider;
     @Inject SecretStore mSecretStore;
+    @Inject
+    com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler
+            mReplyNotificationScheduler;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private SinglePageItemRecyclerViewAdapter.SavedState mAdapterItems;
     private ItemRecyclerViewAdapter mAdapter;
@@ -360,10 +363,11 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
                         new ArrayList<>(Arrays.asList(mItem.getKidItems())));
             }
             mAdapter = new SinglePageItemRecyclerViewAdapter(mItemManager, mAccountActions, mPopupMenu,
-                    mAlertDialogBuilder, mResourcesProvider, mAdapterItems, autoExpand);
+                    mAlertDialogBuilder, mReplyNotificationScheduler, mResourcesProvider, mAdapterItems,
+                    autoExpand);
         } else {
             mAdapter = new MultiPageItemRecyclerViewAdapter(mItemManager, mAccountActions, mPopupMenu,
-                    mAlertDialogBuilder, mItem.getKidItems());
+                    mAlertDialogBuilder, mReplyNotificationScheduler, mItem.getKidItems());
         }
         mAdapter.setCacheMode(AppUtils.effectiveCacheMode(getActivity(), mCacheMode));
         mAdapter.initDisplayOptions(getActivity());

@@ -35,6 +35,7 @@ import java.lang.ref.WeakReference;
 import javax.inject.Inject;
 
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountFlow;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -49,6 +50,7 @@ public class ComposeActivity extends ThemedActivity {
     private static final String PARAGRAPH_BREAK_REGEX = "[\\n]{2,}";
     @Inject AccountActions mAccountActions;
     @Inject AlertDialogBuilder mAlertDialogBuilder;
+    @Inject AccountFlow mAccountFlow;
     private EditText mEditText;
     private String mParentText;
     private String mQuoteText;
@@ -181,7 +183,7 @@ public class ComposeActivity extends ThemedActivity {
         if (mAccountActions.reply(mParentId, content, new ComposeCallback(this, mParentId))
                 == AccountActions.Result.NeedsLogin) {
             toggleControls(false);
-            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
+            mAccountFlow.showLogin(this, mAccountActions.getSession());
         } else {
             Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
         }
@@ -200,7 +202,7 @@ public class ComposeActivity extends ThemedActivity {
             }
         } else {
             if (!isFinishing()) {
-                AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
+                mAccountFlow.showLogin(this, mAccountActions.getSession());
             }
             toggleControls(false);
         }

@@ -36,6 +36,7 @@ import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager
 import com.growse.android.io.github.hidroh.materialistic.data.MaterialisticDatabase
 import com.growse.android.io.github.hidroh.materialistic.data.ViewedItemStore
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler
 import com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu
 import com.growse.android.io.github.hidroh.materialistic.widget.StoryRecyclerViewAdapter
 import dagger.hilt.android.AndroidEntryPoint
@@ -89,6 +90,7 @@ class ListFragment : BaseListFragment() {
   @Inject lateinit var mViewedItemStore: ViewedItemStore
   @Inject lateinit var mOfflineStatusResolver: OfflineStatusResolver
   @Inject lateinit var mOfflineReadPolicy: OfflineReadPolicy
+  @Inject lateinit var mReplyNotificationScheduler: ReplyNotificationScheduler
   private val mStoryListViewModel: StoryListViewModel by viewModels()
   private lateinit var mErrorView: View
   private lateinit var mEmptyView: View
@@ -257,6 +259,7 @@ class ListFragment : BaseListFragment() {
                 mHnItemManager,
                 mViewedItemStore,
                 mOfflineStatusResolver,
+                mReplyNotificationScheduler,
             )
             .also { mAdapter = it }
   }

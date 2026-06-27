@@ -38,6 +38,7 @@ import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions
 import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager;
 import com.growse.android.io.github.hidroh.materialistic.data.LocalItemManager;
 import com.growse.android.io.github.hidroh.materialistic.data.SyncScheduler;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
 import com.growse.android.io.github.hidroh.materialistic.widget.FavoriteRecyclerViewAdapter;
 import com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -58,6 +59,7 @@ public class FavoriteFragment extends BaseListFragment
     @Inject PopupMenu mPopupMenu;
     @Inject AccountActions mAccountActions;
     @Inject SyncScheduler mSyncScheduler;
+    @Inject ReplyNotificationScheduler mReplyNotificationScheduler;
     private View mEmptySearchView;
     private View mEmptyView;
 
@@ -172,7 +174,7 @@ public class FavoriteFragment extends BaseListFragment
             // FragmentContextWrapper, but FavoriteRecyclerViewAdapter (ListRecyclerViewAdapter) casts
             // its context to the host MultiPaneListener Activity. requireActivity() is that Activity.
             mAdapter = new FavoriteRecyclerViewAdapter(requireActivity(), mPopupMenu, mAlertDialogBuilder,
-                    mAccountActions, mFavoriteManager, mSyncScheduler, this);
+                    mAccountActions, mFavoriteManager, mSyncScheduler, mReplyNotificationScheduler, this);
         }
         return mAdapter;
     }

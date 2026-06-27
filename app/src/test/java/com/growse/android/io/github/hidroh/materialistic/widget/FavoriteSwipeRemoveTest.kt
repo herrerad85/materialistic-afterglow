@@ -27,6 +27,7 @@ import com.growse.android.io.github.hidroh.materialistic.data.Favorite
 import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager
 import com.growse.android.io.github.hidroh.materialistic.data.SyncScheduler
 import com.growse.android.io.github.hidroh.materialistic.data.WebItem
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -97,6 +98,7 @@ class FavoriteSwipeRemoveTest {
             mockk<AccountActions>(relaxed = true),
             favoriteManager,
             mockk<SyncScheduler>(relaxed = true),
+            mockk<ReplyNotificationScheduler>(relaxed = true),
             mockk<FavoriteRecyclerViewAdapter.ActionModeDelegate>(relaxed = true),
         )
     adapter.registerAdapterDataObserver(

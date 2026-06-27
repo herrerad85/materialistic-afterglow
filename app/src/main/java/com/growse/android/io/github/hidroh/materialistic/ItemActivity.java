@@ -54,6 +54,7 @@ import javax.inject.Inject;
 
 import dagger.hilt.android.AndroidEntryPoint;
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountFlow;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager;
@@ -91,6 +92,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     @Inject AlertDialogBuilder mAlertDialogBuilder;
     @Inject PopupMenu mPopupMenu;
     @Inject AccountActions mAccountActions;
+    @Inject AccountFlow mAccountFlow;
     @Inject ViewedItemStore mViewedItemStore;
     @Inject CustomTabsDelegate mCustomTabsDelegate;
     @Inject KeyDelegate mKeyDelegate;
@@ -508,7 +510,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
 
     private void vote(final WebItem story) {
         if (mAccountActions.vote(story.getId(), new VoteCallback(this)) == AccountActions.Result.NeedsLogin) {
-            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
+            mAccountFlow.showLogin(this, mAccountActions.getSession());
         } else {
             Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
         }
@@ -523,7 +525,7 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
             DrawableCompat.setTint(drawable, ContextCompat.getColor(this, R.color.greenA700));
             Toast.makeText(this, R.string.voted, Toast.LENGTH_SHORT).show();
         } else {
-            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
+            mAccountFlow.showLogin(this, mAccountActions.getSession());
         }
     }
 

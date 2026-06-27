@@ -41,6 +41,7 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountFlow;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import dagger.hilt.android.AndroidEntryPoint;
@@ -54,6 +55,7 @@ public class SubmitActivity extends ThemedActivity {
     private static final String REGEX_FUZZY_URL = "(.*)((http|https)://[^\\s]*)$";
     @Inject AccountActions mAccountActions;
     @Inject AlertDialogBuilder mAlertDialogBuilder;
+    @Inject AccountFlow mAccountFlow;
     @Synthetic TextView mTitleEditText;
     private TextView mContentEditText;
     private TextInputLayout mTitleLayout;
@@ -184,7 +186,7 @@ public class SubmitActivity extends ThemedActivity {
                 mContentEditText.getText().toString(), isUrl, new SubmitCallback(this))
                 == AccountActions.Result.NeedsLogin) {
             toggleControls(false);
-            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
+            mAccountFlow.showLogin(this, mAccountActions.getSession());
         } else {
             Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
         }
@@ -205,7 +207,7 @@ public class SubmitActivity extends ThemedActivity {
                 finish();
             }
         } else if (!isFinishing()) {
-            AppUtils.showLogin(this, mAlertDialogBuilder, mAccountActions.getSession());
+            mAccountFlow.showLogin(this, mAccountActions.getSession());
         }
     }
 

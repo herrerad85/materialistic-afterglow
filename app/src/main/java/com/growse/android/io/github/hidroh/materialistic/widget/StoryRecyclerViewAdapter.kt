@@ -44,6 +44,7 @@ import com.growse.android.io.github.hidroh.materialistic.Preferences.SwipeAction
 import com.growse.android.io.github.hidroh.materialistic.R
 import com.growse.android.io.github.hidroh.materialistic.UserActivity
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountFlowLogic
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic
 import com.growse.android.io.github.hidroh.materialistic.data.FavoriteManager
@@ -55,6 +56,7 @@ import com.growse.android.io.github.hidroh.materialistic.data.ItemManager
 import com.growse.android.io.github.hidroh.materialistic.data.MaterialisticDatabase
 import com.growse.android.io.github.hidroh.materialistic.data.ResponseListener
 import com.growse.android.io.github.hidroh.materialistic.data.ViewedItemStore
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler
 import java.lang.ref.WeakReference
 
 class StoryRecyclerViewAdapter(
@@ -66,6 +68,7 @@ class StoryRecyclerViewAdapter(
     private val mItemManager: ItemManager,
     private val mViewedItemStore: ViewedItemStore,
     private val mOfflineStatusResolver: OfflineStatusResolver,
+    private val mReplyNotificationScheduler: ReplyNotificationScheduler,
 ) :
     ListRecyclerViewAdapter<ListRecyclerViewAdapter.ItemViewHolder?, Item?>(
         context,
@@ -506,7 +509,12 @@ class StoryRecyclerViewAdapter(
             VoteCallback(this, holder.absoluteAdapterPosition, story),
         )
     if (result == AccountActions.Result.NeedsLogin) {
-      AppUtils.showLogin(context, mAlertDialogBuilder, mAccountActions.session)
+      AccountFlowLogic.showLogin(
+          context,
+          mAlertDialogBuilder,
+          mAccountActions.session,
+          mReplyNotificationScheduler,
+      )
     } else {
       Toast.makeText(context, R.string.sending, Toast.LENGTH_SHORT).show()
     }

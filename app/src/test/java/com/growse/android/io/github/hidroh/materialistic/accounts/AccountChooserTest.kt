@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.DialogInterface
 import androidx.test.core.app.ApplicationProvider
 import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder
-import com.growse.android.io.github.hidroh.materialistic.AppUtils
 import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler
 import io.mockk.every
 import io.mockk.mockk
@@ -48,7 +47,7 @@ class AccountChooserTest {
 
   @Test
   fun positive_activatesSelectedAccount() {
-    AppUtils.showAccountChooser(context, builder, session, scheduler)
+    AccountFlowLogic.showAccountChooser(context, builder, session, scheduler)
     val listener = listenerSlot.captured
     listener.onClick(dialog, 0) // select "pg"
     listener.onClick(dialog, DialogInterface.BUTTON_POSITIVE)
@@ -59,7 +58,7 @@ class AccountChooserTest {
   @Test
   fun positive_withNoSelection_doesNothing() {
     every { session.activeUsername } returns null // nothing pre-checked -> selection stays -1
-    AppUtils.showAccountChooser(context, builder, session, scheduler)
+    AccountFlowLogic.showAccountChooser(context, builder, session, scheduler)
     val listener = listenerSlot.captured
     listener.onClick(dialog, DialogInterface.BUTTON_POSITIVE) // tap OK without picking
     verify(exactly = 0) { session.setActive(any()) }
@@ -68,7 +67,7 @@ class AccountChooserTest {
 
   @Test
   fun neutral_removesSelectedAccount() {
-    AppUtils.showAccountChooser(context, builder, session, scheduler)
+    AccountFlowLogic.showAccountChooser(context, builder, session, scheduler)
     val listener = listenerSlot.captured
     listener.onClick(dialog, 1) // select "dang"
     listener.onClick(dialog, DialogInterface.BUTTON_NEUTRAL)

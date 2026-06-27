@@ -42,6 +42,9 @@ public class ThreadPreviewActivity extends ThemedActivity {
     @Inject com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions mAccountActions;
     @Inject com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu mPopupMenu;
     @Inject AlertDialogBuilder mAlertDialogBuilder;
+    @Inject
+    com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler
+            mReplyNotificationScheduler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +64,7 @@ public class ThreadPreviewActivity extends ThemedActivity {
         recyclerView.setLayoutManager(new SnappyLinearLayoutManager(this, false));
         recyclerView.addItemDecoration(new CommentItemDecoration(this));
         recyclerView.setAdapter(new ThreadPreviewRecyclerViewAdapter(mItemManager, mAccountActions,
-                mPopupMenu, mAlertDialogBuilder, item));
+                mPopupMenu, mAlertDialogBuilder, mReplyNotificationScheduler, item));
         mKeyDelegate.setScrollable(
                 new KeyDelegate.RecyclerViewHelper(recyclerView,
                         KeyDelegate.RecyclerViewHelper.SCROLL_ITEM), null);

@@ -26,6 +26,7 @@ import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder;
 import com.growse.android.io.github.hidroh.materialistic.ItemActivity;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 
@@ -38,8 +39,9 @@ public class MultiPageItemRecyclerViewAdapter
                                             AccountActions accountActions,
                                             PopupMenu popupMenu,
                                             AlertDialogBuilder alertDialogBuilder,
+                                            ReplyNotificationScheduler replyNotificationScheduler,
                                             Item[] items) {
-        super(itemManager, accountActions, popupMenu, alertDialogBuilder);
+        super(itemManager, accountActions, popupMenu, alertDialogBuilder, replyNotificationScheduler);
         mItems = Arrays.copyOf(items, items.length + 1);
         mItems[items.length] = null; // footer
     }

@@ -41,6 +41,7 @@ import com.growse.android.io.github.hidroh.materialistic.Preferences;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.ResourcesProvider;
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
@@ -71,10 +72,11 @@ public class SinglePageItemRecyclerViewAdapter
                                              AccountActions accountActions,
                                              PopupMenu popupMenu,
                                              AlertDialogBuilder alertDialogBuilder,
+                                             ReplyNotificationScheduler replyNotificationScheduler,
                                              ResourcesProvider resourcesProvider,
                                              @NonNull SavedState state,
                                              boolean autoExpand) {
-        super(itemManager, accountActions, popupMenu, alertDialogBuilder);
+        super(itemManager, accountActions, popupMenu, alertDialogBuilder, replyNotificationScheduler);
         this.mResourcesProvider = resourcesProvider;
         this.mState = state;
         mAutoExpand = autoExpand;

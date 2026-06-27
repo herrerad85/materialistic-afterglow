@@ -34,6 +34,7 @@ import android.widget.TextView;
 
 import javax.inject.Inject;
 
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountFlow;
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountSession;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
@@ -44,6 +45,7 @@ public abstract class DrawerActivity extends ThemedActivity {
 
     @Inject AlertDialogBuilder mAlertDialogBuilder;
     @Inject AccountSession mAccountSession;
+    @Inject AccountFlow mAccountFlow;
     @Inject ReplyNotificationScheduler mReplyNotificationScheduler;
     private ActionBarDrawerToggle mDrawerToggle;
     private DrawerLayout mDrawerLayout;
@@ -195,8 +197,7 @@ public abstract class DrawerActivity extends ThemedActivity {
         if (mAccountSession.savedAccounts().isEmpty()) {
             startActivity(new Intent(this, LoginActivity.class));
         } else {
-            AppUtils.showAccountChooser(this, mAlertDialogBuilder, mAccountSession,
-                    mReplyNotificationScheduler);
+            mAccountFlow.showAccountChooser(this, mAccountSession);
         }
     }
 

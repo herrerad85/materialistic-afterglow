@@ -59,6 +59,9 @@ public class UserActivity extends ThemedActivity implements Scrollable {
     @Inject com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions mAccountActions;
     @Inject com.growse.android.io.github.hidroh.materialistic.widget.PopupMenu mPopupMenu;
     @Inject AlertDialogBuilder mAlertDialogBuilder;
+    @Inject
+    com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler
+            mReplyNotificationScheduler;
     private KeyDelegate.RecyclerViewHelper mScrollableHelper;
     private String mUsername;
     private UserManager.User mUser;
@@ -243,7 +246,7 @@ public class UserActivity extends ThemedActivity implements Scrollable {
         mTabLayout.addTab(mTabLayout.newTab()
                 .setText(getResources().getQuantityString(R.plurals.submissions_count, count, count)));
         mRecyclerView.setAdapter(new SubmissionRecyclerViewAdapter(mItemManger, mAccountActions,
-                mPopupMenu, mAlertDialogBuilder, mUser.getItems()));
+                mPopupMenu, mAlertDialogBuilder, mReplyNotificationScheduler, mUser.getItems()));
         mRecyclerView.setLayoutFrozen(mBottomSheetBehavior.getState() !=
                 BottomSheetBehavior.STATE_EXPANDED);
     }

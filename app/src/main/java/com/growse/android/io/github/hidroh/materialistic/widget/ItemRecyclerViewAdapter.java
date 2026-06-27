@@ -45,8 +45,10 @@ import com.growse.android.io.github.hidroh.materialistic.Navigable;
 import com.growse.android.io.github.hidroh.materialistic.Preferences;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
+import com.growse.android.io.github.hidroh.materialistic.accounts.AccountFlowLogic;
 import com.growse.android.io.github.hidroh.materialistic.accounts.UserServices;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 import com.growse.android.io.github.hidroh.materialistic.data.NewCommentMarker;
@@ -61,6 +63,7 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     final AccountActions mAccountActions;
     final PopupMenu mPopupMenu;
     final AlertDialogBuilder mAlertDialogBuilder;
+    final ReplyNotificationScheduler mReplyNotificationScheduler;
     private int mTertiaryTextColor;
     private int mSecondaryTextColor;
     private int mCardBackgroundColor;
@@ -82,11 +85,13 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     ItemRecyclerViewAdapter(ItemManager itemManager,
                             AccountActions accountActions,
                             PopupMenu popupMenu,
-                            AlertDialogBuilder alertDialogBuilder) {
+                            AlertDialogBuilder alertDialogBuilder,
+                            ReplyNotificationScheduler replyNotificationScheduler) {
         mItemManager = itemManager;
         mAccountActions = accountActions;
         mPopupMenu = popupMenu;
         mAlertDialogBuilder = alertDialogBuilder;
+        mReplyNotificationScheduler = replyNotificationScheduler;
     }
 
     @Override
@@ -294,7 +299,8 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
 
     private void vote(final Item item) {
         if (mAccountActions.vote(item.getId(), new VoteCallback(this)) == AccountActions.Result.NeedsLogin) {
-            AppUtils.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession());
+            AccountFlowLogic.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession(),
+                    mReplyNotificationScheduler);
         } else {
             Toast.makeText(context, R.string.sending, Toast.LENGTH_SHORT).show();
         }
@@ -307,7 +313,8 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         } else if (successful) {
             Toast.makeText(context, R.string.voted, Toast.LENGTH_SHORT).show();
         } else {
-            AppUtils.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession());
+            AccountFlowLogic.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession(),
+                    mReplyNotificationScheduler);
         }
     }
 

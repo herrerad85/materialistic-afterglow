@@ -30,6 +30,7 @@ import com.growse.android.io.github.hidroh.materialistic.ThreadPreviewActivity;
 import com.growse.android.io.github.hidroh.materialistic.accounts.AccountActions;
 import com.growse.android.io.github.hidroh.materialistic.data.Item;
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
+import com.growse.android.io.github.hidroh.materialistic.reply.ReplyNotificationScheduler;
 
 public class SubmissionRecyclerViewAdapter extends ItemRecyclerViewAdapter<SubmissionViewHolder> {
     private final Item[] mItems;
@@ -38,8 +39,9 @@ public class SubmissionRecyclerViewAdapter extends ItemRecyclerViewAdapter<Submi
                                          AccountActions accountActions,
                                          PopupMenu popupMenu,
                                          AlertDialogBuilder alertDialogBuilder,
+                                         ReplyNotificationScheduler replyNotificationScheduler,
                                          @NonNull Item[] items) {
-        super(itemManager, accountActions, popupMenu, alertDialogBuilder);
+        super(itemManager, accountActions, popupMenu, alertDialogBuilder, replyNotificationScheduler);
         mItems = items;
     }
 
