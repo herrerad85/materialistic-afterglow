@@ -15,8 +15,10 @@
   ~ limitations under the License.
   -->
 
-<TextView
+<!-- Invisible spacer: keeps the bottom clearance the comment list relied on so the FAB and
+     navigation pad never cover the last comment, with no visible end-of-thread bar. -->
+<View
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:text="@string/end_of_thread"
-    style="@style/textEmptyStyle"
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
     android:layout_marginBottom="88dp" />
