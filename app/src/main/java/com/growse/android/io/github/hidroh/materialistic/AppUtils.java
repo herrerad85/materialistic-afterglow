@@ -340,57 +340,30 @@ public class AppUtils {
                 activeNetwork.getType() == ConnectivityManager.TYPE_WIFI;
     }
 
+    // Temporary compatibility wrapper over OfflineRead for callers that cannot inject the
+    // OfflineReadPolicy seam (UserActivity, NetworkModule). Connectivity only, no explicit offline
+    // mode, which NetworkModule's connectivity-only interceptor relies on.
     public static boolean hasConnection(Context context) {
-        NetworkInfo activeNetworkInfo = ((ConnectivityManager) context.getSystemService(
-                Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+        return OfflineRead.hasConnection(context);
     }
 
-    /**
-     * Single source of truth (#22) for whether reading should stay on cached content and avoid the
-     * network: either the user turned on explicit offline mode, or the device has no connectivity.
-     * Read-path screens and the cacheable web view consult this one helper so the effective offline
-     * decision is consistent. Reading-only: it never triggers a download. Note the shared HTTP
-     * interceptor deliberately does NOT use this; see {@link #effectiveCacheMode}.
-     */
+    // Temporary compatibility wrapper over OfflineRead for the plain-View / Java read-path callers
+    // (CacheableWebView, ItemActivity, ItemFragment, WebFragment, BaseStoriesActivity); remove when
+    // they migrate to the injected OfflineReadPolicy. The decision and its rationale live in
+    // OfflineRead / OfflineReadPolicy (#22).
     public static boolean shouldReadCacheOnly(Context context) {
-        return Preferences.isOfflineMode(context) || !hasConnection(context);
+        return OfflineRead.shouldReadCacheOnly(context);
     }
 
-    /**
-     * Maps a reader/list/item read's requested {@link ItemManager.CacheMode} to the mode that should
-     * actually be used given the current offline state (#22). When {@link #shouldReadCacheOnly} holds,
-     * the read becomes strict cache-only ({@link ItemManager#MODE_CACHE_ONLY}: only-if-cached, no
-     * network fallback); otherwise the requested mode is honored unchanged. This keeps the cache-only
-     * choice explicit at the call site rather than overriding the shared HTTP layer, so callers that
-     * genuinely need the network are not silently converted, and it never starts a download.
-     */
+    // Temporary compatibility wrapper over OfflineRead for the Java read-path callers (ItemActivity,
+    // ItemFragment, WebFragment); remove when they migrate to the injected OfflineReadPolicy (#22).
     @ItemManager.CacheMode
     public static int effectiveCacheMode(Context context, @ItemManager.CacheMode int requestedMode) {
-        return shouldReadCacheOnly(context) ? ItemManager.MODE_CACHE_ONLY : requestedMode;
+        return OfflineRead.effectiveCacheMode(context, requestedMode);
     }
 
-    /**
-     * Why a cache-only-capable surface came back empty (#25). Explicit offline mode and a real
-     * no-connection state are different user situations: only the former is cleared by the "turn off
-     * offline mode" off-ramp, so surfaces show distinct copy/actions for them. When the device is
-     * online, an empty result is an ordinary fetch error instead of an offline state. Each surface
-     * (list / comments / article) maps this to its own message so the user sees something specific
-     * rather than one generic connection error.
-     */
-    public enum OfflineEmptyReason { OFFLINE_MODE, NO_CONNECTION, ONLINE_ERROR }
-
-    /** Pure mapping (no Android dependency) so the copy-selection logic is unit-testable. */
-    static OfflineEmptyReason offlineEmptyReason(boolean offlineModeOn, boolean hasConnection) {
-        if (offlineModeOn) {
-            return OfflineEmptyReason.OFFLINE_MODE;
-        }
-        return hasConnection ? OfflineEmptyReason.ONLINE_ERROR : OfflineEmptyReason.NO_CONNECTION;
-    }
-
-    public static OfflineEmptyReason offlineEmptyReason(Context context) {
-        return offlineEmptyReason(Preferences.isOfflineMode(context), hasConnection(context));
-    }
+    // The offline empty-reason mapping (#25) and the OfflineEmptyReason enum moved to OfflineRead /
+    // OfflineReadPolicy; ListFragment now reads them through the injected OfflineReadPolicy seam.
 
     /** Pads view's top by the status-bar/cutout inset (Android 15+ edge-to-edge). For toolbars on
      *  non-CoordinatorLayout screens (CoordinatorLayout screens use fitsSystemWindows instead). */

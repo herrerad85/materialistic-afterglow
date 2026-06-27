@@ -15,9 +15,7 @@
  */
 package com.growse.android.io.github.hidroh.materialistic
 
-import android.content.Context
 import androidx.lifecycle.SavedStateHandle
-import androidx.test.core.app.ApplicationProvider
 import com.growse.android.io.github.hidroh.materialistic.data.Item
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager
 import com.growse.android.io.github.hidroh.materialistic.data.ResponseListener
@@ -49,17 +47,11 @@ import org.robolectric.RobolectricTestRunner
 class StoryListViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private lateinit var context: Context
 
   @Before
   fun setUp() {
     // viewModelScope dispatches on Dispatchers.Main; route it to the controllable test scheduler.
     Dispatchers.setMain(testDispatcher)
-    // The VM now reads offline state (AppUtils.effectiveCacheMode) before fetching, so it needs a
-    // real Context; the default state (offline off, connected) leaves the requested cacheMode
-    // as-is.
-    context = ApplicationProvider.getApplicationContext()
-    Preferences.reset(context)
   }
 
   @After
@@ -72,9 +64,11 @@ class StoryListViewModelTest {
     /** Each load pops the next behavior; the last one repeats once the queue drains. */
     var behaviors: ArrayDeque<() -> Array<Item>?> = ArrayDeque()
     var callCount = 0
+    var lastCacheMode: Int = -1
 
     override fun getStories(filter: String?, cacheMode: Int): Array<Item>? {
       callCount++
+      lastCacheMode = cacheMode
       val next = if (behaviors.size > 1) behaviors.removeFirst() else behaviors.first()
       return next()
     }
@@ -93,7 +87,19 @@ class StoryListViewModelTest {
         throw UnsupportedOperationException()
   }
 
-  private fun viewModel(fake: ItemManager): StoryListViewModel {
+  /** Controllable [OfflineReadPolicy] so offline decisions are set explicitly, no device needed. */
+  private class FakeOfflineReadPolicy(private val forcedMode: Int? = null) : OfflineReadPolicy {
+    override fun shouldReadCacheOnly(): Boolean = forcedMode == ItemManager.MODE_CACHE_ONLY
+
+    override fun effectiveCacheMode(requested: Int): Int = forcedMode ?: requested
+
+    override fun emptyReason(): OfflineEmptyReason = OfflineEmptyReason.ONLINE_ERROR
+  }
+
+  private fun viewModel(
+      fake: ItemManager,
+      offlineReadPolicy: OfflineReadPolicy = FakeOfflineReadPolicy(),
+  ): StoryListViewModel {
     // The HN manager is the default selection (no EXTRA_ITEM_MANAGER set). The other two are
     // distinct dummies so the wrong one being picked would be observable.
     return StoryListViewModel(
@@ -101,7 +107,7 @@ class StoryListViewModelTest {
         algolia = mockk(relaxed = true),
         popular = mockk(relaxed = true),
         io = testDispatcher,
-        context = context,
+        offlineReadPolicy = offlineReadPolicy,
         savedStateHandle = SavedStateHandle(),
     )
   }
@@ -185,5 +191,17 @@ class StoryListViewModelTest {
 
     assertTrue(vm.uiState.value is StoryListUiState.Content)
     assertEquals(2, fake.callCount)
+  }
+
+  @Test
+  fun `load forwards the policy effective cache mode to getStories`() = runTest {
+    val fake = FakeItemManager().apply { behaviors.addLast { arrayOf(item()) } }
+    // The injected seam decides the cache mode; a fake forcing strict cache-only must reach
+    // getStories unchanged (proving the VM no longer consults a static offline helper).
+    val vm = viewModel(fake, FakeOfflineReadPolicy(forcedMode = ItemManager.MODE_CACHE_ONLY))
+
+    advanceUntilIdle()
+
+    assertEquals(ItemManager.MODE_CACHE_ONLY, fake.lastCacheMode)
   }
 }

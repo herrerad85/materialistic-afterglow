@@ -15,7 +15,6 @@
  */
 package com.growse.android.io.github.hidroh.materialistic
 
-import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,7 +22,6 @@ import com.growse.android.io.github.hidroh.materialistic.data.AlgoliaClient
 import com.growse.android.io.github.hidroh.materialistic.data.AlgoliaPopularClient
 import com.growse.android.io.github.hidroh.materialistic.data.ItemManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,7 +51,7 @@ constructor(
     @Algolia algolia: ItemManager,
     @Popular popular: ItemManager,
     @IoDispatcher private val io: CoroutineDispatcher,
-    @ApplicationContext private val context: Context,
+    private val offlineReadPolicy: OfflineReadPolicy,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -98,7 +96,7 @@ constructor(
       _uiState.value = StoryListUiState.Loading
       // Explicit offline mode (or no connectivity) prefers cached stories; the requested cacheMode
       // (e.g. MODE_NETWORK from swipe-refresh) is honored when online and offline mode is off.
-      val effectiveCacheMode = AppUtils.effectiveCacheMode(context, cacheMode)
+      val effectiveCacheMode = offlineReadPolicy.effectiveCacheMode(cacheMode)
       _uiState.value =
           runCatching { withContext(io) { itemManager.getStories(filter, effectiveCacheMode) } }
               .fold(

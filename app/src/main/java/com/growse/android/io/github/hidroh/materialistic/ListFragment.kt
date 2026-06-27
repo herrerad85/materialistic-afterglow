@@ -88,6 +88,7 @@ class ListFragment : BaseListFragment() {
   @Inject lateinit var mFavoriteManager: FavoriteManager
   @Inject lateinit var mViewedItemStore: ViewedItemStore
   @Inject lateinit var mOfflineStatusResolver: OfflineStatusResolver
+  @Inject lateinit var mOfflineReadPolicy: OfflineReadPolicy
   private val mStoryListViewModel: StoryListViewModel by viewModels()
   private lateinit var mErrorView: View
   private lateinit var mEmptyView: View
@@ -277,11 +278,11 @@ class ListFragment : BaseListFragment() {
    * offline-specific message that distinguishes the two; an online empty/error keeps [default].
    */
   private fun listEmptyMessage(default: Int): Int {
-    if (!AppUtils.shouldReadCacheOnly(requireContext())) {
+    if (!mOfflineReadPolicy.shouldReadCacheOnly()) {
       return default
     }
-    return when (AppUtils.offlineEmptyReason(requireContext())) {
-      AppUtils.OfflineEmptyReason.OFFLINE_MODE -> R.string.offline_empty_stories_offline
+    return when (mOfflineReadPolicy.emptyReason()) {
+      OfflineEmptyReason.OFFLINE_MODE -> R.string.offline_empty_stories_offline
       else -> R.string.offline_empty_stories_no_connection
     }
   }
