@@ -36,7 +36,7 @@ import java.util.Set;
 
 import com.growse.android.io.github.hidroh.materialistic.AlertDialogBuilder;
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
-import com.growse.android.io.github.hidroh.materialistic.Navigable;
+import com.growse.android.io.github.hidroh.materialistic.CommentNavigation;
 import com.growse.android.io.github.hidroh.materialistic.Preferences;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.ResourcesProvider;
@@ -225,34 +225,21 @@ public class SinglePageItemRecyclerViewAdapter
             return;
         }
         long id = item.getNeighbour(direction);
-        switch (direction) {
-            case Navigable.DIRECTION_UP:
-                if (id == 0) { // no more previous sibling, try previous list item
-                    setSelectedPosition(position - 1, callback);
-                } else {
-                    setSelectedPosition(mState.indexOf(id), callback);
-                }
+        boolean hasNeighbour = id != 0;
+        switch (CommentNavigation.nextAction(direction, hasNeighbour, mState.isExpanded(item))) {
+            case SELECT_PREVIOUS:
+                setSelectedPosition(position - 1, callback);
                 break;
-            case Navigable.DIRECTION_DOWN:
-                if (id == 0) { // no more next sibling, try next list item
-                    setSelectedPosition(position + 1, callback);
-                } else {
-                    setSelectedPosition(mState.indexOf(id), callback);
-                }
+            case SELECT_NEXT:
+                setSelectedPosition(position + 1, callback);
                 break;
-            case Navigable.DIRECTION_LEFT:
-                if (id != 0) {
-                    setSelectedPosition(mState.indexOf(id), callback);
-                }
+            case SELECT_NEIGHBOUR:
+                setSelectedPosition(mState.indexOf(id), callback);
                 break;
-            case Navigable.DIRECTION_RIGHT:
-                if (id == 0) { // no kids, try next list item
-                    setSelectedPosition(position + 1, callback);
-                } else if (mState.isExpanded(item)) {
-                    setSelectedPosition(mState.indexOf(id), callback);
-                } else {
-                    expand(item, callback);
-                }
+            case EXPAND:
+                expand(item, callback);
+                break;
+            case NONE:
                 break;
         }
     }
