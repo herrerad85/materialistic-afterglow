@@ -33,7 +33,6 @@
             android:theme="@style/AppToolbarTheme"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
-            app:layout_scrollFlags="scroll|enterAlways|snap"
             android:background="?attr/colorPrimary" />
 
     </com.google.android.material.appbar.AppBarLayout>

@@ -35,20 +35,17 @@
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             android:minHeight="0dp"
-            app:layout_scrollFlags="scroll|enterAlwaysCollapsed"
             android:background="?attr/colorPrimary" />
 
         <include layout="@layout/item_header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:minHeight="0dp"
-            app:layout_scrollFlags="scroll|enterAlwaysCollapsed"
             android:id="@id/header_card_view" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout"
             app:tabTextColor="?android:attr/textColorPrimary"
-            app:layout_scrollFlags="scroll|snap|enterAlways"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
