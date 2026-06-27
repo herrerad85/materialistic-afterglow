@@ -144,7 +144,7 @@ public class SyncDelegate {
     }
 
     private void sync(String itemId) {
-        if (!mJob.connectionEnabled) {
+        if (SyncPlan.shouldDefer(mJob.connectionEnabled)) {
             defer(itemId);
             return;
         }
@@ -181,7 +181,8 @@ public class SyncDelegate {
     }
 
     private void syncArticle(@NonNull HackerNewsItem item) {
-        if (mJob.articleEnabled && item.isStoryType() && !TextUtils.isEmpty(item.getUrl())) {
+        if (SyncPlan.shouldSyncArticle(mJob.articleEnabled, item.isStoryType(),
+                !TextUtils.isEmpty(item.getUrl()))) {
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 loadArticle(item);
             } else {
@@ -207,7 +208,7 @@ public class SyncDelegate {
     }
 
     private void syncChildren(@NonNull HackerNewsItem item) {
-        if (mJob.commentsEnabled && item.getKids() != null) {
+        if (SyncPlan.shouldSyncComments(mJob.commentsEnabled, item.getKids() != null)) {
             for (long id : item.getKids()) {
                 sync(String.valueOf(id));
             }
@@ -229,7 +230,7 @@ public class SyncDelegate {
     @Synthetic
     void notifyItem(@NonNull String id, @Nullable HackerNewsItem item) {
         mSyncProgress.finishItem(id, item,
-                mJob.commentsEnabled && mJob.connectionEnabled);
+                SyncPlan.commentsCountTowardProgress(mJob.commentsEnabled, mJob.connectionEnabled));
         updateProgress();
     }
 
