@@ -94,6 +94,7 @@ class ListFragment : BaseListFragment() {
   private var mRefreshCallback: RefreshCallback? = null
   private var mFilter: String? = null
   private var mCacheMode = ItemManager.MODE_DEFAULT
+  private var mLastRenderedState: StoryListUiState? = null
 
   interface RefreshCallback {
     fun onRefreshed()
@@ -294,6 +295,16 @@ class ListFragment : BaseListFragment() {
     if (!isAttached) {
       return
     }
+    // Returning from an item (STOPPED then STARTED) makes repeatOnLifecycle re-collect the
+    // StateFlow, which replays the same value instance. Re-applying an unchanged state would
+    // clear and refill the adapter's SortedList, snapping the list to the top and losing the
+    // user's place. Skipping the redundant re-render keeps the scroll position across an item
+    // open and back. A genuine load (refresh, section, or filter switch) is a new instance
+    // and still renders.
+    if (state === mLastRenderedState) {
+      return
+    }
+    mLastRenderedState = state
     when (state) {
       StoryListUiState.Loading -> mSwipeRefreshLayout.isRefreshing = true
       StoryListUiState.Error -> {
