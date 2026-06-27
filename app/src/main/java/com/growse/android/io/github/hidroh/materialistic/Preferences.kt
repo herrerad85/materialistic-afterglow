@@ -247,7 +247,11 @@ object Preferences {
 
   @JvmStatic
   fun getCommentDisplayOption(context: Context): String {
-    return get(context, R.string.pref_comment_display, R.string.pref_comment_display_value_single)
+    return get(
+        context,
+        R.string.pref_comment_display,
+        R.string.pref_comment_display_value_collapsed,
+    )
   }
 
   @JvmStatic
