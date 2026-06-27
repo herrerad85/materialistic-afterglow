@@ -38,11 +38,6 @@ class FeedbackActivityTest : TestCase() {
   }
 
   @Test
-  fun rateButtonIsVisible() = run {
-    step("Verify the rate/stars button is visible") { FeedbackScreen { rateButton.isVisible() } }
-  }
-
-  @Test
   fun typingInFieldsEnablesSubmission() = run {
     step("Enter a title") { FeedbackScreen { titleEditText.typeText("Test title") } }
     step("Enter a body") { FeedbackScreen { bodyEditText.typeText("Test body text") } }

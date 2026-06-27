@@ -32,7 +32,6 @@ import android.view.View;
 
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 
 import javax.inject.Inject;
@@ -42,7 +41,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -152,28 +150,6 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
                 R.string.pref_external,
                 R.string.pref_story_display,
                 R.string.pref_multi_window);
-    }
-
-    @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        if (!Preferences.isReleaseNotesSeen(this)) {
-            Snackbar snackbar = Snackbar.make(findViewById(R.id.content_frame),
-                    R.string.hint_update, Snackbar.LENGTH_INDEFINITE);
-            snackbar.setAction(R.string.title_activity_release,
-                    v -> {
-                        snackbar.dismiss();
-                        startActivity(new Intent(BaseListActivity.this, ReleaseNotesActivity.class));
-                    })
-                    .setActionTextColor(ContextCompat.getColor(this, R.color.orange500))
-                    .addCallback(new Snackbar.Callback() {
-                        @Override
-                        public void onDismissed(Snackbar transientBottomBar, int event) {
-                            Preferences.setReleaseNotesSeen(BaseListActivity.this);
-                        }
-                    })
-                    .show();
-        }
     }
 
     @Override

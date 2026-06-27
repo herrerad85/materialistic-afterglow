@@ -21,8 +21,8 @@ class ReleaseNotesActivityTest : TestCase() {
   @Test
   fun actionButtonsAreDisplayed() = run {
     step("Verify the 'Got it' button is visible") { ReleaseNotesScreen { okButton.isVisible() } }
-    step("Verify the 'Love it' rate button is visible") {
-      ReleaseNotesScreen { rateButton.isVisible() }
+    step("Verify the 'Love it' rate button is hidden on pre-store builds") {
+      ReleaseNotesScreen { rateButton.isGone() }
     }
   }
 

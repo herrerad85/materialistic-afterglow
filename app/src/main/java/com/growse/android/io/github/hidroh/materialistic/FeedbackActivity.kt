@@ -45,10 +45,6 @@ class FeedbackActivity : ThemedActivity() {
     val title = findViewById<EditText>(R.id.edittext_title)
     val body = findViewById<EditText>(R.id.edittext_body)
     val sendButton = findViewById<View>(R.id.feedback_button)
-    findViewById<View?>(R.id.button_rate).setOnClickListener { v: View? ->
-      AppUtils.openPlayStore(this@FeedbackActivity)
-      finish()
-    }
     sendButton.setOnClickListener { v: View? ->
       titleLayout.isErrorEnabled = false
       bodyLayout.isErrorEnabled = false

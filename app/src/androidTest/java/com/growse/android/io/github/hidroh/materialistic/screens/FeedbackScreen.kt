@@ -14,6 +14,5 @@ object FeedbackScreen : KScreen<FeedbackScreen>() {
   val titleEditText = KEditText { withId(R.id.edittext_title) }
   val bodyEditText = KEditText { withId(R.id.edittext_body) }
   val sendButton = KButton { withId(R.id.feedback_button) }
-  val rateButton = KTextView { withId(R.id.button_rate) }
   val feedbackNote = KTextView { withId(R.id.feedback_note) }
 }
