@@ -56,4 +56,12 @@ object TwoPanePolicy {
   @JvmStatic
   fun shouldOpenExternal(externalBrowser: Boolean, viewMode: Preferences.StoryViewMode): Boolean =
       externalBrowser && viewMode != Preferences.StoryViewMode.Comment
+
+  /**
+   * A back press leaves article fullscreen only in multi-pane mode while fullscreen; otherwise it
+   * is an ordinary back press (#61).
+   */
+  @JvmStatic
+  fun shouldExitFullscreenOnBack(multiPane: Boolean, fullscreen: Boolean): Boolean =
+      multiPane && fullscreen
 }

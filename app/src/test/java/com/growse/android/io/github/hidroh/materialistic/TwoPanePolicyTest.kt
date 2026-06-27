@@ -77,4 +77,12 @@ class TwoPanePolicyTest {
     assertFalse(TwoPanePolicy.shouldOpenExternal(false, Preferences.StoryViewMode.Article))
     assertFalse(TwoPanePolicy.shouldOpenExternal(false, Preferences.StoryViewMode.Comment))
   }
+
+  @Test
+  fun shouldExitFullscreenOnBack_onlyWhenMultiPaneAndFullscreen() {
+    assertTrue(TwoPanePolicy.shouldExitFullscreenOnBack(multiPane = true, fullscreen = true))
+    assertFalse(TwoPanePolicy.shouldExitFullscreenOnBack(multiPane = true, fullscreen = false))
+    assertFalse(TwoPanePolicy.shouldExitFullscreenOnBack(multiPane = false, fullscreen = true))
+    assertFalse(TwoPanePolicy.shouldExitFullscreenOnBack(multiPane = false, fullscreen = false))
+  }
 }

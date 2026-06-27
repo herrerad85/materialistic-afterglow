@@ -227,7 +227,7 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     }
     @Override
     protected void onBackPressedCompat() {
-        if (!mIsMultiPane || !mFullscreen) {
+        if (!TwoPanePolicy.shouldExitFullscreenOnBack(mIsMultiPane, mFullscreen)) {
             super.onBackPressedCompat();
         } else {
             LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(
