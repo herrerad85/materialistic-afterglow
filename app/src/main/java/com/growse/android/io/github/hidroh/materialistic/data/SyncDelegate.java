@@ -16,8 +16,6 @@
 
 package com.growse.android.io.github.hidroh.materialistic.data;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
@@ -25,7 +23,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
@@ -46,11 +43,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.UiThread;
 import androidx.annotation.VisibleForTesting;
-import androidx.core.app.NotificationCompat;
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
 import com.growse.android.io.github.hidroh.materialistic.ItemActivity;
 import com.growse.android.io.github.hidroh.materialistic.Preferences;
-import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
 import com.growse.android.io.github.hidroh.materialistic.widget.AdBlockWebViewClient;
 import com.growse.android.io.github.hidroh.materialistic.widget.CacheableWebView;
@@ -59,14 +54,11 @@ import retrofit2.Callback;
 
 public class SyncDelegate {
     static final String SYNC_PREFERENCES_FILE = "_syncpreferences";
-    private static final String NOTIFICATION_GROUP_KEY = "group";
     private static final long TIMEOUT_MILLIS = DateUtils.MINUTE_IN_MILLIS;
-    private static final String DOWNLOADS_CHANNEL_ID = "downloads";
 
     private final HackerNewsClient.RestService mHnRestService;
     private final SharedPreferences mSharedPreferences;
-    private final NotificationManager mNotificationManager;
-    private final NotificationCompat.Builder mNotificationBuilder;
+    private final SyncNotifier mNotifier;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private SyncProgress mSyncProgress;
     private final Context mContext;
@@ -81,26 +73,7 @@ public class SyncDelegate {
                 context.getPackageName() + SYNC_PREFERENCES_FILE, Context.MODE_PRIVATE);
         mHnRestService = factory.create(HackerNewsClient.BASE_API_URL,
                 HackerNewsClient.RestService.class, new BackgroundThreadExecutor());
-        mNotificationManager = (NotificationManager) context
-                .getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(DOWNLOADS_CHANNEL_ID,
-                    context.getString(R.string.notification_channel_downloads),
-                    NotificationManager.IMPORTANCE_LOW);
-            mNotificationManager.createNotificationChannel(channel);
-            mNotificationBuilder = new NotificationCompat.Builder(context, DOWNLOADS_CHANNEL_ID);
-        } else {
-            //noinspection deprecation
-            mNotificationBuilder = new NotificationCompat.Builder(context);
-        }
-        mNotificationBuilder
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(),
-                        R.mipmap.ic_launcher))
-                .setSmallIcon(R.drawable.ic_notification)
-                .setGroup(NOTIFICATION_GROUP_KEY)
-                .setOnlyAlertOnce(true)
-                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-                .setAutoCancel(true);
+        mNotifier = new SyncNotifier(context);
     }
 
     @UiThread
@@ -249,14 +222,8 @@ public class SyncDelegate {
     }
 
     private void showProgress() {
-        mNotificationManager.notify(Integer.valueOf(mJob.id), mNotificationBuilder
-                .setContentTitle(mSyncProgress.title)
-                .setContentText(mContext.getString(R.string.download_in_progress))
-                .setContentIntent(getItemActivity(mJob.id))
-                .setOnlyAlertOnce(true)
-                .setProgress(mSyncProgress.getMax(), mSyncProgress.getProgress(), false)
-                .setSortKey(mJob.id)
-                .build());
+        mNotifier.showProgress(mJob.id, mSyncProgress.title, getItemActivity(mJob.id),
+                mSyncProgress.getMax(), mSyncProgress.getProgress());
     }
 
     private void finish() {
@@ -271,7 +238,7 @@ public class SyncDelegate {
         // TODO
         mJob.connectionEnabled = false;
         int id = Integer.valueOf(mJob.id);
-        mNotificationManager.cancel(id);
+        mNotifier.cancel(id);
         mHandler.removeMessages(id);
     }
 
