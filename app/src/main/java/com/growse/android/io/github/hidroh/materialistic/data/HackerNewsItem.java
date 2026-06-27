@@ -129,7 +129,9 @@ class HackerNewsItem implements Item {
         url = source.readString();
         text = source.readString();
         type = source.readString();
-        favorite = source.readInt() != 0;
+        // Legacy duplicate favorite slot: consume it in its old position to keep the wire layout,
+        // but do not assign it. The canonical favorite is read from its own slot below.
+        source.readInt();
         descendants = source.readInt();
         score = source.readInt();
         favorite = source.readInt() == 1;
@@ -212,6 +214,8 @@ class HackerNewsItem implements Item {
         dest.writeString(url);
         dest.writeString(text);
         dest.writeString(type);
+        // Legacy duplicate favorite slot, preserved in its old position for saved-state parcel
+        // compatibility (the canonical favorite is written again in its own slot below).
         dest.writeInt(favorite ? 1 : 0);
         dest.writeInt(descendants);
         dest.writeInt(score);
