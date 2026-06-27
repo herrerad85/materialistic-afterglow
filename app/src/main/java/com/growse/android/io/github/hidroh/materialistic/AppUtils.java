@@ -34,17 +34,11 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Parcelable;
-import android.text.Html;
-import android.text.Layout;
-import android.text.Spannable;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-import android.text.style.ClickableSpan;
-import android.text.style.URLSpan;
 import android.view.ContextThemeWrapper;
 import android.view.Display;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -149,70 +143,18 @@ public class AppUtils {
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
+    // Temporary compatibility wrappers over HtmlText (generic HTML/text rendering extracted from
+    // AppUtils); call sites keep calling these.
     public static void setTextWithLinks(TextView textView, CharSequence html) {
-        textView.setText(html);
-        // TODO https://code.google.com/p/android/issues/detail?id=191430
-        //noinspection Convert2Lambda
-        textView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                int action = event.getAction();
-                if (action == MotionEvent.ACTION_UP ||
-                        action == MotionEvent.ACTION_DOWN) {
-                    int x = (int) event.getX();
-                    int y = (int) event.getY();
-
-                    TextView widget = (TextView) v;
-                    x -= widget.getTotalPaddingLeft();
-                    y -= widget.getTotalPaddingTop();
-
-                    x += widget.getScrollX();
-                    y += widget.getScrollY();
-
-                    Layout layout = widget.getLayout();
-                    int line = layout.getLineForVertical(y);
-                    int off = layout.getOffsetForHorizontal(line, x);
-
-                    ClickableSpan[] links = Spannable.Factory.getInstance()
-                            .newSpannable(widget.getText())
-                            .getSpans(off, off, ClickableSpan.class);
-
-                    if (links.length != 0) {
-                        if (action == MotionEvent.ACTION_UP) {
-                            if (links[0] instanceof URLSpan) {
-                                openWebUrlExternal(widget.getContext(), null,
-                                        ((URLSpan) links[0]).getURL(), null);
-                            } else {
-                                links[0].onClick(widget);
-                            }
-                        }
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
+        HtmlText.setTextWithLinks(textView, html);
     }
 
     public static CharSequence fromHtml(String htmlText) {
-        return fromHtml(htmlText, false);
+        return HtmlText.fromHtml(htmlText);
     }
 
     public static CharSequence fromHtml(String htmlText, boolean compact) {
-        if (TextUtils.isEmpty(htmlText)) {
-            return null;
-        }
-        CharSequence spanned;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            //noinspection InlinedApi
-            spanned = Html.fromHtml(htmlText, compact ?
-                    Html.FROM_HTML_MODE_COMPACT : Html.FROM_HTML_MODE_LEGACY);
-        } else {
-            //noinspection deprecation
-            spanned = Html.fromHtml(htmlText);
-        }
-        return trim(spanned);
+        return HtmlText.fromHtml(htmlText, compact);
     }
 
     public static Intent makeSendIntentChooser(Context context, Uri data) {
@@ -524,16 +466,6 @@ public class AppUtils {
         return dimen / context.getResources().getDisplayMetrics().density;
     }
 
-    private static CharSequence trim(CharSequence charSequence) {
-        if (TextUtils.isEmpty(charSequence)) {
-            return charSequence;
-        }
-        int end = charSequence.length() - 1;
-        while (Character.isWhitespace(charSequence.charAt(end))) {
-            end--;
-        }
-        return charSequence.subSequence(0, end + 1);
-    }
 
     @NonNull
     private static Intent createViewIntent(Context context, @Nullable WebItem item,
