@@ -139,7 +139,7 @@ public class SyncDelegate {
         Message message = Message.obtain(mHandler, this::stopSync);
         message.what = Integer.valueOf(mJob.id);
         mHandler.sendMessageDelayed(message, TIMEOUT_MILLIS);
-        mSyncProgress = new SyncProgress(mJob);
+        mSyncProgress = new SyncProgress(mJob.id, mJob.commentsEnabled, mJob.articleEnabled);
         sync(mJob.id);
     }
 
@@ -284,63 +284,6 @@ public class SyncDelegate {
                 Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ?
                         PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE :
                         PendingIntent.FLAG_ONE_SHOT);
-    }
-
-    private static class SyncProgress {
-        private final String id;
-        private Boolean self;
-        private int totalKids, finishedKids, webProgress, maxWebProgress;
-        String title;
-
-        @Synthetic
-        SyncProgress(Job job) {
-            this.id = job.id;
-            if (job.commentsEnabled) {
-                totalKids = 1;
-            }
-            if (job.articleEnabled) {
-                maxWebProgress = 100;
-            }
-        }
-
-        int getMax() {
-            return 1 + totalKids + maxWebProgress;
-        }
-
-        int getProgress() {
-            return (self != null ? 1 : 0) + finishedKids + webProgress;
-        }
-
-        @Synthetic
-        void finishItem(@NonNull String id, @Nullable HackerNewsItem item,
-                        boolean kidsEnabled) {
-            if (TextUtils.equals(id, this.id)) {
-                finishSelf(item, kidsEnabled);
-            } else {
-                finishKid();
-            }
-        }
-
-        @Synthetic
-        void updateArticle(int webProgress, int maxWebProgress) {
-            this.webProgress = webProgress;
-            this.maxWebProgress = maxWebProgress;
-        }
-
-        private void finishSelf(@Nullable HackerNewsItem item, boolean kidsEnabled) {
-            self = item != null;
-            title = item != null ? item.getTitle() : null;
-            if (kidsEnabled && item != null && item.getKids() != null) {
-                // fetch recursively but only notify for immediate children
-                totalKids = item.getKids().length;
-            } else {
-                totalKids = 0;
-            }
-        }
-
-        private void finishKid() {
-            finishedKids++;
-        }
     }
 
     private static class BackgroundThreadExecutor implements Executor {
