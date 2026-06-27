@@ -48,4 +48,12 @@ object TwoPanePolicy {
     val invalidateMenu = (previousId == null) != (newId == null)
     return SelectionRouting(SelectionAction.OPEN_MULTI_PANE, invalidateMenu)
   }
+
+  /**
+   * In single-pane mode, the external-browser preference opens the article URL directly, except
+   * when the default story view is Comments (which always opens the in-app item screen) (#60).
+   */
+  @JvmStatic
+  fun shouldOpenExternal(externalBrowser: Boolean, viewMode: Preferences.StoryViewMode): Boolean =
+      externalBrowser && viewMode != Preferences.StoryViewMode.Comment
 }

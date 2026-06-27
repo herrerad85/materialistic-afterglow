@@ -67,4 +67,14 @@ class TwoPanePolicyTest {
     assertFalse(routing.invalidateMenu)
     assertTrue(TwoPanePolicy.decideSelection(true, null, "1").invalidateMenu)
   }
+
+  @Test
+  fun shouldOpenExternal_onlyWithExternalBrowserAndNonCommentView() {
+    assertTrue(TwoPanePolicy.shouldOpenExternal(true, Preferences.StoryViewMode.Article))
+    assertTrue(TwoPanePolicy.shouldOpenExternal(true, Preferences.StoryViewMode.Readability))
+    // Comments view forces the in-app screen even with external browser on
+    assertFalse(TwoPanePolicy.shouldOpenExternal(true, Preferences.StoryViewMode.Comment))
+    assertFalse(TwoPanePolicy.shouldOpenExternal(false, Preferences.StoryViewMode.Article))
+    assertFalse(TwoPanePolicy.shouldOpenExternal(false, Preferences.StoryViewMode.Comment))
+  }
 }
