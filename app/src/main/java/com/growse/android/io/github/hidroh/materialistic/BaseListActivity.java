@@ -24,7 +24,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -267,18 +266,21 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     public void onItemSelected(@Nullable WebItem item) {
         WebItem previousItem = mSelectedItem;
         mSelectedItem = item;
-        if (mIsMultiPane) {
-            if (previousItem != null && item != null &&
-                    TextUtils.equals(item.getId(), previousItem.getId())) {
-                return;
-            }
-            if (previousItem == null && item != null ||
-                    previousItem != null && item == null) {
-                supportInvalidateOptionsMenu();
-            }
-            openMultiPaneItem();
-        } else if (item != null) {
-            openSinglePaneItem();
+        SelectionRouting routing = TwoPanePolicy.decideSelection(mIsMultiPane,
+                previousItem != null ? previousItem.getId() : null,
+                item != null ? item.getId() : null);
+        if (routing.invalidateMenu) {
+            supportInvalidateOptionsMenu();
+        }
+        switch (routing.action) {
+            case OPEN_MULTI_PANE:
+                openMultiPaneItem();
+                break;
+            case OPEN_SINGLE_PANE:
+                openSinglePaneItem();
+                break;
+            case NONE:
+                break;
         }
     }
 
