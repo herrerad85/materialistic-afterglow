@@ -112,10 +112,6 @@ public class AppUtils {
         return HtmlText.fromHtml(htmlText, compact);
     }
 
-    public static Intent makeSendIntentChooser(Context context, Uri data) {
-        return OutboundIntents.makeSendIntentChooser(context, data);
-    }
-
     public static void openExternal(@NonNull final Context context,
                              @NonNull PopupMenu popupMenu,
                              @NonNull View anchor,
@@ -154,10 +150,6 @@ public class AppUtils {
         float size = a.getDimension(0, 0);
         a.recycle();
         return size;
-    }
-
-    public static boolean isHackerNewsUrl(WebItem item) {
-        return ItemUris.isHackerNewsUrl(item);
     }
 
     public static int getDimensionInDp(Context context, @DimenRes int dimenResId) {
@@ -223,14 +215,6 @@ public class AppUtils {
 
     public static void padBottomSystemBars(View view, boolean includeIme) {
         SystemBars.padBottom(view, includeIme);
-    }
-
-    public static void padVerticalSystemBars(View view, boolean includeIme) {
-        SystemBars.padVertical(view, includeIme);
-    }
-
-    public static void marginBottomSystemBars(View view) {
-        SystemBars.marginBottom(view);
     }
 
     // Account/login flow (showLogin + showAccountChooser) moved to accounts/AccountFlowLogic, behind
@@ -323,10 +307,6 @@ public class AppUtils {
 
     public static Uri createItemUri(@NonNull String itemId) {
         return ItemUris.createItemUri(itemId);
-    }
-
-    public static Uri createUserUri(@NonNull String userId) {
-        return ItemUris.createUserUri(userId);
     }
 
     public static String getDataUriId(@NonNull Intent intent, String altParamId) {

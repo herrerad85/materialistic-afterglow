@@ -144,7 +144,7 @@ public class WebFragment extends LazyLoadFragment
             mReadability = false;
             mItem = getArguments().getParcelable(EXTRA_ITEM);
         }
-        mIsHackerNewsUrl = AppUtils.isHackerNewsUrl(mItem);
+        mIsHackerNewsUrl = ItemUris.isHackerNewsUrl(mItem);
     }
 
     @Override

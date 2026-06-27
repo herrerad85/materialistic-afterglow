@@ -167,8 +167,8 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         mTabLayout = findViewById(R.id.tab_layout);
         mViewPager = findViewById(R.id.view_pager);
         AppUtils.padBottomSystemBars(findViewById(R.id.view_pager), false);
-        AppUtils.marginBottomSystemBars(findViewById(R.id.reply_button));
-        AppUtils.marginBottomSystemBars(findViewById(R.id.navigation_button));
+        SystemBars.marginBottom(findViewById(R.id.reply_button));
+        SystemBars.marginBottom(findViewById(R.id.navigation_button));
         AppUtils.toggleFab(mNavButton, false);
         AppUtils.toggleFab(mReplyButton, false);
         final Intent intent = getIntent();

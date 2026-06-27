@@ -38,6 +38,7 @@ import android.text.style.StyleSpan;
 import android.view.View;
 
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
+import com.growse.android.io.github.hidroh.materialistic.ItemUris;
 import com.growse.android.io.github.hidroh.materialistic.Navigable;
 import com.growse.android.io.github.hidroh.materialistic.R;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
@@ -353,7 +354,7 @@ class HackerNewsItem implements Item {
             @Override
             public void onClick(View view) {
                 view.getContext().startActivity(new Intent(Intent.ACTION_VIEW)
-                        .setData(AppUtils.createUserUri(getBy())));
+                        .setData(ItemUris.createUserUri(getBy())));
             }
 
             @Override

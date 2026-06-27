@@ -23,7 +23,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
-import com.growse.android.io.github.hidroh.materialistic.AppUtils
+import com.growse.android.io.github.hidroh.materialistic.OutboundIntents
 import java.io.Closeable
 import java.io.File
 
@@ -37,7 +37,7 @@ inline fun File.getUri(context: Context, authority: String) =
     FileProvider.getUriForFile(context, authority, this)!!
 
 inline fun Uri.toSendIntentChooser(context: Context) =
-    AppUtils.makeSendIntentChooser(context, this)!!
+    OutboundIntents.makeSendIntentChooser(context, this)!!
 
 fun NotificationCompat.Builder.setChannel(
     context: Context,

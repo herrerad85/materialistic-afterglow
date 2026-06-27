@@ -67,7 +67,7 @@ public abstract class DrawerActivity extends ThemedActivity {
         super.onCreate(savedInstanceState);
         super.setContentView(R.layout.activity_drawer);
         mDrawer = findViewById(R.id.drawer);
-        AppUtils.padVerticalSystemBars(mDrawer, false);
+        SystemBars.padVertical(mDrawer, false);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         mDrawerAccount = (TextView) findViewById(R.id.drawer_account);
         mDrawerLogout = findViewById(R.id.drawer_logout);
