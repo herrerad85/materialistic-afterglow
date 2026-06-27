@@ -283,7 +283,7 @@ public class WebFragment extends LazyLoadFragment
     @Override
     protected void load() {
         mWebView.setVisibility(View.INVISIBLE);
-        if (mIsHackerNewsUrl) {
+        if (ArticleContentMode.forItem(mIsHackerNewsUrl) == ArticleContentMode.SELF_POST) {
             bindContent();
         } else {
             // Reader (Readability) mode is unavailable because the hosted Mercury parser is dead;
@@ -358,7 +358,7 @@ public class WebFragment extends LazyLoadFragment
 
     private void loadUrl() {
         restoreContentView();
-        setWebSettings(true);
+        setWebSettings(ArticleContentMode.REMOTE_ARTICLE);
         reloadUrl(mItem.getUrl());
     }
 
@@ -397,7 +397,7 @@ public class WebFragment extends LazyLoadFragment
     @Synthetic
     void loadContent() {
         restoreContentView();
-        setWebSettings(false);
+        setWebSettings(ArticleContentMode.SELF_POST);
         mWebView.reloadHtml(AppUtils.wrapHtml(getActivity(), mContent));
     }
 
@@ -542,7 +542,8 @@ public class WebFragment extends LazyLoadFragment
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private void setWebSettings(boolean isRemote) {
+    private void setWebSettings(ArticleContentMode mode) {
+        boolean isRemote = mode.isRemote();
         mReadability = !isRemote;
         mWebView.setBackgroundColor(isRemote ? Color.WHITE : Color.TRANSPARENT);
         mWebView.getSettings().setLoadWithOverviewMode(isRemote);
