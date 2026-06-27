@@ -254,21 +254,14 @@ class HackerNewsItem implements Item {
 
     @Override
     public String getDisplayedTitle() {
-        switch (getType()) {
-            case COMMENT_TYPE:
-                return text;
-            case JOB_TYPE:
-            case STORY_TYPE:
-            case POLL_TYPE: // TODO poll need to display options
-            default:
-                return title;
-        }
+        // TODO poll need to display options
+        return ItemDisplay.displayedTitle(getType(), text, title);
     }
 
     @NonNull
     @Override
     public String getType() {
-        return !TextUtils.isEmpty(type) ? type : STORY_TYPE;
+        return ItemDisplay.effectiveType(type);
     }
 
     @Override
@@ -421,15 +414,7 @@ class HackerNewsItem implements Item {
 
     @Override
     public boolean isStoryType() {
-        switch (getType()) {
-            case STORY_TYPE:
-            case POLL_TYPE:
-            case JOB_TYPE:
-                return true;
-            case COMMENT_TYPE:
-            default:
-                return false;
-        }
+        return ItemDisplay.isStoryType(getType());
     }
 
     @Override
