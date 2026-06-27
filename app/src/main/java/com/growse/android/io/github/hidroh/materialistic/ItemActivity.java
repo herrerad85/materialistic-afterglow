@@ -557,9 +557,8 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
             return;
         }
         mNavNudgeHandled = true; // never enqueue a second nudge within this Activity instance
-        Snackbar.make(mCoordinatorLayout, R.string.comment_nav_nudge, Snackbar.LENGTH_LONG)
-                .setAction(R.string.comment_nav_nudge_action, v ->
-                        startActivity(new Intent(ItemActivity.this, SettingsActivity.class)))
+        Snackbar.make(mCoordinatorLayout, R.string.comment_nav_nudge, Snackbar.LENGTH_INDEFINITE)
+                .setAction(R.string.got_it, v -> { /* dismiss; the tip text already names Settings */ })
                 .addCallback(new Snackbar.Callback() {
                     @Override
                     public void onShown(Snackbar sb) {
