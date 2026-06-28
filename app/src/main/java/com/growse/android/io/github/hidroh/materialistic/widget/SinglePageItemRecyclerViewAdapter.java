@@ -48,7 +48,6 @@ import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 
 public class SinglePageItemRecyclerViewAdapter
         extends ItemRecyclerViewAdapter<ToggleItemViewHolder> {
-    private static final int VIEW_TYPE_FOOTER = -1;
     private final Object TOGGLE = new Object();
     private final RecyclerView.OnScrollListener mScrollListener = new RecyclerView.OnScrollListener() {
         @Override
@@ -140,9 +139,6 @@ public class SinglePageItemRecyclerViewAdapter
 
     @Override
     public ToggleItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (viewType == VIEW_TYPE_FOOTER) {
-            return new ToggleItemViewHolder(mLayoutInflater.inflate(R.layout.item_footer, parent, false), null);
-        }
         final ToggleItemViewHolder holder =
                 new ToggleItemViewHolder(mLayoutInflater.inflate(R.layout.item_comment, parent, false));
         final RecyclerView.LayoutParams params = (RecyclerView.LayoutParams)
@@ -166,9 +162,6 @@ public class SinglePageItemRecyclerViewAdapter
 
     @Override
     public void onBindViewHolder(ToggleItemViewHolder holder, int position) {
-        if (holder.isFooter()) {
-            return;
-        }
         if (mLock != null && mLock[0] <= position && position <= mLock[1]) {
             clear(holder);
             return;
@@ -185,11 +178,7 @@ public class SinglePageItemRecyclerViewAdapter
 
     @Override
     public int getItemViewType(int position) {
-        Item item = getItem(position);
-        if (item == null) { // footer
-            return VIEW_TYPE_FOOTER;
-        }
-        return item.getLevel() - 1;
+        return getItem(position).getLevel() - 1;
     }
 
     @Override
@@ -200,8 +189,7 @@ public class SinglePageItemRecyclerViewAdapter
     /**
      * The loaded comments in display order, exactly as rendered. In single-page mode the list index
      * is the adapter position, so a find-in-page search can map a match index straight to a scroll
-     * position. The list ends with a null footer entry ; callers must tolerate a null element (the
-     * search matcher does). Returned live, for read-only traversal only ; do not mutate.
+     * position. Returned live, for read-only traversal only ; do not mutate.
      */
     @NonNull
     public List<Item> getLoadedItems() {
@@ -382,7 +370,6 @@ public class SinglePageItemRecyclerViewAdapter
         private final Set<String> expanded = new HashSet<>();
 
         public SavedState(ArrayList<Item> list) {
-            list.add(null); // footer
             addAll(0, list);
         }
 

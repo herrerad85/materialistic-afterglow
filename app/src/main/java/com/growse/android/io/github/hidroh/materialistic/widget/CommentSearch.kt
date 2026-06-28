@@ -95,9 +95,9 @@ private constructor(
  * empty query matches nothing. Scope is loaded-only by construction: it searches exactly the list
  * it is given, so an honest empty state ("No matches in loaded comments") is a host concern.
  *
- * The list may contain null elements (the single-page comment adapter ends its loaded list with a
- * null footer): a null element simply never matches, and indices are kept so a match index still
- * maps one-to-one onto the adapter position.
+ * The list may contain null elements (tolerated defensively, not a footer contract): a null element
+ * simply never matches, and indices are kept so a match index still maps one-to-one onto the
+ * adapter position.
  */
 object CommentSearch {
 

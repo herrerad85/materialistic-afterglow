@@ -325,7 +325,6 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     }
 
     static class ItemViewHolder extends RecyclerView.ViewHolder {
-        boolean mIsFooter;
         TextView mPostedTextView;
         TextView mContentTextView;
         TextView mReadMoreTextView;
@@ -346,15 +345,6 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
             mContentView = itemView.findViewById(R.id.content);
             // G6: present only in item_comment.xml, so null in any other holder layout.
             mNewIndicator = itemView.findViewById(R.id.comment_new_indicator);
-        }
-
-        ItemViewHolder(View itemView, @SuppressWarnings("UnusedParameters") Object payload) {
-            super(itemView);
-            mIsFooter = true;
-        }
-
-        boolean isFooter() {
-            return mIsFooter;
         }
     }
 

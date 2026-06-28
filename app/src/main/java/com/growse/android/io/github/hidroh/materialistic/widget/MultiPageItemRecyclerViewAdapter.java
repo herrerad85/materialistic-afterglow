@@ -32,7 +32,6 @@ import com.growse.android.io.github.hidroh.materialistic.data.ItemManager;
 
 public class MultiPageItemRecyclerViewAdapter
         extends ItemRecyclerViewAdapter<ItemRecyclerViewAdapter.ItemViewHolder> {
-    private static final int VIEW_TYPE_FOOTER = -1;
     private final Item[] mItems;
 
     public MultiPageItemRecyclerViewAdapter(ItemManager itemManager,
@@ -42,31 +41,12 @@ public class MultiPageItemRecyclerViewAdapter
                                             ReplyNotificationScheduler replyNotificationScheduler,
                                             Item[] items) {
         super(itemManager, accountActions, popupMenu, alertDialogBuilder, replyNotificationScheduler);
-        mItems = Arrays.copyOf(items, items.length + 1);
-        mItems[items.length] = null; // footer
+        mItems = Arrays.copyOf(items, items.length);
     }
 
     @Override
     public ItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        if (viewType == VIEW_TYPE_FOOTER) {
-            return new ItemViewHolder(mLayoutInflater.inflate(R.layout.item_footer, parent, false), null);
-        }
         return new ItemViewHolder(mLayoutInflater.inflate(R.layout.item_comment, parent, false));
-    }
-
-    @Override
-    public void onBindViewHolder(ItemViewHolder holder, int position) {
-        if (!holder.isFooter()) {
-            super.onBindViewHolder(holder, position);
-        }
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        if (getItem(position) == null) {
-            return VIEW_TYPE_FOOTER;
-        }
-        return super.getItemViewType(position);
     }
 
     @Override
@@ -77,9 +57,6 @@ public class MultiPageItemRecyclerViewAdapter
     @Override
     protected void bind(final ItemViewHolder holder, final Item item) {
         super.bind(holder, item);
-        if (item == null) {
-            return;
-        }
         holder.mPostedTextView.setText(item.getDisplayedTime(context));
         holder.mPostedTextView.append(item.getDisplayedAuthor(context, true, 0));
         if (item.getKidCount() > 0) {

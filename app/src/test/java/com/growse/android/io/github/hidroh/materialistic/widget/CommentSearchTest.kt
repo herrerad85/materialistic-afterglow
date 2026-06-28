@@ -72,9 +72,9 @@ class CommentSearchTest {
   }
 
   @Test
-  fun `a null element (the adapter footer) never matches and indices stay aligned`() {
-    // The single-page adapter ends its loaded list with a null footer; matching must skip it
-    // without crashing and keep indices mapping one-to-one onto adapter positions.
+  fun `a null element never matches and indices stay aligned`() {
+    // A null element (tolerated defensively, not a footer) must be skipped without crashing,
+    // keeping indices mapping one-to-one onto adapter positions.
     val comments = listOf(comment("first match"), comment("second match"), null)
 
     assertEquals(listOf(0, 1), CommentSearch.match(comments, "match"))

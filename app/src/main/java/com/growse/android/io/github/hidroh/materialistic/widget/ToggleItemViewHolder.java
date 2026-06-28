@@ -32,8 +32,4 @@ public class ToggleItemViewHolder extends ItemRecyclerViewAdapter.ItemViewHolder
         mToggle = (TextView) itemView.findViewById(R.id.toggle);
         mLevel = itemView.findViewById(R.id.level);
     }
-
-    ToggleItemViewHolder(View itemView, Object payload) {
-        super(itemView, payload);
-    }
 }

@@ -427,7 +427,7 @@ public class ItemFragment extends LazyLoadFragment implements Scrollable, Naviga
         }
         java.util.List<Long> commentIds = new ArrayList<>();
         for (Item loaded : ((SinglePageItemRecyclerViewAdapter) mAdapter).getLoadedItems()) {
-            if (loaded != null) { // the loaded list ends with a null footer
+            if (loaded != null) { // defensive: tolerate any null element
                 commentIds.add(loaded.getLongId());
             }
         }

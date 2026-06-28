@@ -44,7 +44,7 @@ import com.growse.android.io.github.hidroh.materialistic.data.Item
  * @param barView the inflated find-bar root (initially gone).
  * @param recyclerView the comment list, used to resolve a row view by position for highlighting.
  * @param loadedItems supplies the current loaded comments in display order ; the index returned by
- *   the matcher is the adapter position. The list may end with a null footer element, which never
+ *   the matcher is the adapter position. Any null element is tolerated defensively and never
  *   matches.
  * @param scrollToPosition jumps the list to an adapter position, reusing the host scroll path.
  * @param onRowRebind asks the host to rebind a row to its resting state, used to clear a highlight
