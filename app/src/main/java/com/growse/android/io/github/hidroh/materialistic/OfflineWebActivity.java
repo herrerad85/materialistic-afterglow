@@ -47,7 +47,9 @@ public class OfflineWebActivity extends ThemedActivity {
         }
         setTitle(url);
         setContentView(R.layout.activity_offline_web);
-        AppUtils.padBottomSystemBars(findViewById(R.id.web_view_container), false);
+        // No bottom inset padding here: activity_offline_web's root CoordinatorLayout has
+        // fitsSystemWindows="true", which already reserves the nav-bar area for the included
+        // fragment_web (web_view_container). Padding it again would double the inset.
         final NestedScrollView scrollView = (NestedScrollView) findViewById(R.id.nested_scroll_view);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setOnClickListener(v -> scrollView.smoothScrollTo(0, 0));

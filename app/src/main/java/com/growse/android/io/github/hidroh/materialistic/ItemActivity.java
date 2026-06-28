@@ -164,7 +164,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
         mAppBar = findViewById(R.id.appbar);
         mTabLayout = findViewById(R.id.tab_layout);
         mViewPager = findViewById(R.id.view_pager);
-        AppUtils.padBottomSystemBars(findViewById(R.id.view_pager), false);
+        // No bottom inset padding here: activity_item's root CoordinatorLayout has
+        // fitsSystemWindows="true", which already reserves the nav-bar area for the scrolling
+        // view_pager child. Padding it again would double the inset (themed band below content).
         SystemBars.marginBottom(findViewById(R.id.reply_button));
         SystemBars.marginBottom(findViewById(R.id.navigation_button));
         AppUtils.toggleFab(mNavButton, false);

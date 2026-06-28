@@ -95,7 +95,10 @@ public abstract class BaseListActivity extends DrawerActivity implements MultiPa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list);
-        AppUtils.padBottomSystemBars(findViewById(android.R.id.list), false);
+        // No bottom inset padding here: activity_list's root CoordinatorLayout has
+        // fitsSystemWindows="true", which already reserves the nav-bar area for the scrolling
+        // @android:id/list child. Padding it again would double the inset and expose the window
+        // background as a themed band below the last row.
         setTitle(getDefaultTitle());
         setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
         getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME |

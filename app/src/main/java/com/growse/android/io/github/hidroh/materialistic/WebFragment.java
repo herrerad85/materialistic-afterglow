@@ -161,7 +161,14 @@ public class WebFragment extends LazyLoadFragment
             mButtonNext = mFragmentView.findViewById(R.id.button_next);
             mButtonNext.setEnabled(false);
             mEditText = (EditText) mFragmentView.findViewById(R.id.edittext);
-            AppUtils.padBottomSystemBars(mFragmentView.findViewById(R.id.web_view_container), false);
+            // No bottom inset padding here. Every host nests this fragment under a
+            // fitsSystemWindows="true" CoordinatorLayout that already reserves the nav-bar area
+            // (ItemActivity's view_pager; the two-pane detail content pager in
+            // layout-w820dp-land/activity_list). Those hosts are ViewPagers, which do not dispatch
+            // window insets to their page fragments, so an inset listener on web_view_container
+            // never fired anyway (verified by bounds: web_view filled web_view_container exactly).
+            // OfflineWebActivity inflates fragment_web directly and handles the inset at its own
+            // call site.
             setUpWebControls(mFragmentView);
             setUpWebView(mFragmentView);
         }
