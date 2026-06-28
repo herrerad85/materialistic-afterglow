@@ -64,14 +64,6 @@
 
     <androidx.preference.SwitchPreferenceCompat
         app:iconSpaceReserved="false"
-        android:dependency="@string/pref_external"
-        android:key="@string/pref_ad_block"
-        android:title="@string/pref_ad_block_title"
-        android:summary="@string/pref_ad_block_summary"
-        android:defaultValue="true" />
-
-    <androidx.preference.SwitchPreferenceCompat
-        app:iconSpaceReserved="false"
         android:key="@string/pref_custom_tab"
         android:title="@string/pref_custom_tab_title"
         android:summary="@string/pref_custom_tab_summary"

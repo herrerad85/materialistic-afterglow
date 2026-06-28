@@ -28,7 +28,7 @@ import android.webkit.WebView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.growse.android.io.github.hidroh.materialistic.widget.AdBlockWebViewClient;
+import android.webkit.WebViewClient;
 import com.growse.android.io.github.hidroh.materialistic.widget.CacheableWebView;
 import dagger.hilt.android.AndroidEntryPoint;
 
@@ -60,7 +60,7 @@ public class OfflineWebActivity extends ThemedActivity {
         final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progress);
         final WebView webView = (WebView) findViewById(R.id.web_view);
         webView.setBackgroundColor(Color.TRANSPARENT);
-        webView.setWebViewClient(new AdBlockWebViewClient(Preferences.adBlockEnabled(this)) {
+        webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
                 setTitle(view.getTitle());

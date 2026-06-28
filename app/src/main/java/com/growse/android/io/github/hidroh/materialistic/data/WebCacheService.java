@@ -21,9 +21,8 @@ import android.content.Intent;
 import android.os.IBinder;
 import androidx.annotation.Nullable;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
-import com.growse.android.io.github.hidroh.materialistic.Preferences;
-import com.growse.android.io.github.hidroh.materialistic.widget.AdBlockWebViewClient;
 import com.growse.android.io.github.hidroh.materialistic.widget.CacheableWebView;
 
 public class WebCacheService extends Service {
@@ -42,7 +41,7 @@ public class WebCacheService extends Service {
             return START_STICKY;
         }
         CacheableWebView webView = new CacheableWebView(this);
-        webView.setWebViewClient(new AdBlockWebViewClient(Preferences.adBlockEnabled(this)));
+        webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new CacheableWebView.ArchiveClient() {
             @Override
             public void onProgressChanged(WebView view, int newProgress) {

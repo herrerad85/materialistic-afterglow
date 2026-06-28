@@ -48,16 +48,15 @@ Firebase SDK.)
 All FOSS-licensed: pdf.js (Apache-2.0), DroidSans/DroidSerif/RobotoSlab fonts (Apache-2.0),
 LibreBaskerville (SIL OFL 1.1). `THIRD-PARTY-NOTICES.txt` and `docs/licenses.html` are
 generated from the release classpath plus a bundled-assets block.
-- Loose end (UNRESOLVED): the `pgl.yoyo.org` ad-host blocklist (used by the default-on ad
-  blocker) is attributed by source URL but with no explicit license name. Researched
-  2026-06-28: `pgl.yoyo.org/adservers/` publishes no formal license, no SPDX id, and no
-  copyright notice; the author only states informal permission to redistribute ("Feel free
-  to combine this list with yours or lists from other sites and put it up on the web"). That
-  is not a recognized FOSS license, so this is left UNRESOLVED rather than labelled with an
-  invented license. Before F-Droid submission, either get explicit license/terms from the
-  maintainer (pgl@yoyo.org) or drop the bundled list and resolve hosts another way. The
-  generated notices already attribute it by source URL without claiming a license, so no
-  false license is asserted today.
+- RESOLVED 2026-06-28: the `pgl.yoyo.org` ad-host blocklist was REMOVED. Research found
+  `pgl.yoyo.org/adservers/` publishes no formal license, no SPDX id, and no copyright,
+  only an informal "feel free to combine this list" note, which is not a recognized FOSS
+  license. Per the no-invented-license rule, the asset `app/src/main/assets/pgl.yoyo.org.txt`
+  was deleted and the simple ad blocker it fed (`AdBlocker`, `AdBlockWebViewClient`, the
+  `Block ads` preference) was retired. The reader WebViews now use a plain `WebViewClient`.
+  No replacement blocklist was bundled (no narrow, explicitly-licensed equivalent exists;
+  Steven Black's MIT hosts file is large and a different format, which would bloat the APK
+  and widen scope). The repo now bundles no asset that lacks a valid redistributable license.
 
 ### Network disclosure
 Default (no opt-in): HN API `hacker-news.firebaseio.com/v0/`, `news.ycombinator.com`
@@ -83,8 +82,9 @@ a strict reviewer may consider it covered by the same flag.)
 - Build: `gradle assembleRelease`; signing is env-driven, so F-Droid signs with its own key.
 
 ### F-Droid pre-submit checklist
-- [ ] Resolve the `pgl.yoyo.org` blocklist license (UNRESOLVED, see Bundled assets): confirm
-  terms with the maintainer or drop the bundled list. Blocks submission until resolved.
+- [x] Resolve the `pgl.yoyo.org` blocklist license: RESOLVED by removing the unlicensed list
+  and retiring the simple ad blocker (see Bundled assets). No bundled asset now lacks a
+  valid redistributable license.
 - [ ] Author the `fdroiddata` metadata YAML with the fields above (include `NonFreeNet`).
 - [ ] Do not submit until the owner authorizes.
 
@@ -119,10 +119,10 @@ Maps this repo to the official guide
 | versionName/versionCode in extractable Gradle locations | `app/build.gradle.kts` `defaultConfig` literals `versionName = "1.0.0"`, `versionCode = 10000` (no dynamic compute) | MET |
 | Auto-update from `v*` tags | `UpdateCheckMode: Tags ^v`, `AutoUpdateMode: Version v%v`; release workflow fires on `v*` | MET (config) |
 | Reproducible builds | Best practice, not required; `dependenciesInfo` blob disabled, env-driven signing so F-Droid signs with its own key | OPTIONAL |
-| Reviewer risks: binary blobs / non-free resources / AntiFeatures / buildability | No binary blobs or non-free deps; one AntiFeature `NonFreeNet` (BYO-key AI summaries); builds via `gradle assembleRelease`; one UNRESOLVED asset-license item (pgl.yoyo.org) | MOSTLY MET, 1 open |
+| Reviewer risks: binary blobs / non-free resources / AntiFeatures / buildability | No binary blobs or non-free deps; no unlicensed bundled assets (pgl.yoyo.org blocklist removed); one AntiFeature `NonFreeNet` (BYO-key AI summaries); builds via `gradle assembleRelease` | MET |
 
-Remaining before an F-Droid submission: tag `v1.0.0` (promotion), resolve the pgl.yoyo.org
-license, and author the `metadata/com.herrerad85.afterglow.yml` in a fork of `fdroiddata`
-(License `Apache-2.0`, Categories `Internet`, AntiFeatures `NonFreeNet`, RepoType `git`,
-UpdateCheckMode `Tags ^v`, AutoUpdateMode `Version v%v`). Do not submit until the owner
-authorizes.
+Remaining before an F-Droid submission: tag `v1.0.0` (promotion) and author the
+`metadata/com.herrerad85.afterglow.yml` in a fork of `fdroiddata` (License `Apache-2.0`,
+Categories `Internet`, AntiFeatures `NonFreeNet`, RepoType `git`, UpdateCheckMode `Tags ^v`,
+AutoUpdateMode `Version v%v`). The pgl.yoyo.org asset-license blocker is resolved (list
+removed, ad blocker retired). Do not submit until the owner authorizes.
