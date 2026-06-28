@@ -94,6 +94,8 @@
     <string name="pref_launch_screen_title">默认</string>
     <string name="pref_volume_title">使用音量键导航</string>
     <string name="pref_volume_summary">使用音量键控制上下滑动</string>
+    <string name="pref_ad_block_title">广告屏蔽</string>
+    <string name="pref_ad_block_summary">启用内部浏览器简易广告屏蔽</string>
     <string name="pref_line_height_title">行间距</string>
     <string name="pref_list_item_view_title">卡片式</string>
     <string name="pref_thread_indicator_title">引用指示</string>

@@ -313,6 +313,11 @@ object Preferences {
   }
 
   @JvmStatic
+  fun adBlockEnabled(context: Context): Boolean {
+    return get(context, R.string.pref_ad_block, true)
+  }
+
+  @JvmStatic
   fun saveDraft(context: Context, parentId: String, draft: String?) {
     context
         .getSharedPreferences(context.getPackageName() + PREFERENCES_DRAFT, Context.MODE_PRIVATE)

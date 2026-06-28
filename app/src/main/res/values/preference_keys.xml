@@ -16,6 +16,7 @@
   -->
 
 <resources>
+    <string translatable="false" name="pref_ad_block">pref_ad_block</string>
     <string translatable="false" name="pref_ai_summaries_enabled">pref_ai_summaries_enabled</string>
     <string translatable="false" name="pref_ai_api_key">pref_ai_api_key</string>
     <string translatable="false" name="pref_ai_consent_accepted">pref_ai_consent_accepted</string>

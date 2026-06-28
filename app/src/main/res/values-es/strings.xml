@@ -70,6 +70,8 @@
     <string name="pref_launch_screen_title">Pantalla por defecto</string>
     <string name="pref_volume_title">Navegar mediante los botones de volumen</string>
     <string name="pref_volume_summary">Desplazarse arriba/abajo con los botones de volumen</string>
+    <string name="pref_ad_block_title">Bloquear anuncios</string>
+    <string name="pref_ad_block_summary">Activar bloqueador de anuncios sencillo en el navegador interno de la aplicación</string>
     <string name="pref_line_height_title">Espacio entre líneas</string>
     <string name="pref_list_item_view_title">Mostrar vista como carta</string>
     <string name="pref_thread_indicator_title">Indicador del hilo</string>

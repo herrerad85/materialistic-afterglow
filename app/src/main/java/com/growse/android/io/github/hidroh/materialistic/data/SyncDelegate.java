@@ -45,9 +45,9 @@ import androidx.annotation.UiThread;
 import androidx.annotation.VisibleForTesting;
 import com.growse.android.io.github.hidroh.materialistic.AppUtils;
 import com.growse.android.io.github.hidroh.materialistic.ItemActivity;
-import android.webkit.WebViewClient;
 import com.growse.android.io.github.hidroh.materialistic.Preferences;
 import com.growse.android.io.github.hidroh.materialistic.annotation.Synthetic;
+import com.growse.android.io.github.hidroh.materialistic.widget.AdBlockWebViewClient;
 import com.growse.android.io.github.hidroh.materialistic.widget.CacheableWebView;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -168,7 +168,7 @@ public class SyncDelegate {
 
     private void loadArticle(@NonNull final HackerNewsItem item) {
         mWebView = new CacheableWebView(mContext);
-        mWebView.setWebViewClient(new WebViewClient());
+        mWebView.setWebViewClient(new AdBlockWebViewClient(Preferences.adBlockEnabled(mContext)));
         mWebView.setWebChromeClient(new CacheableWebView.ArchiveClient() {
             @Override
             public void onProgressChanged(WebView view, int newProgress) {

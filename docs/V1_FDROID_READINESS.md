@@ -46,17 +46,21 @@ Firebase SDK.)
 
 ### Bundled assets
 All FOSS-licensed: pdf.js (Apache-2.0), DroidSans/DroidSerif/RobotoSlab fonts (Apache-2.0),
-LibreBaskerville (SIL OFL 1.1). `THIRD-PARTY-NOTICES.txt` and `docs/licenses.html` are
-generated from the release classpath plus a bundled-assets block.
-- RESOLVED 2026-06-28: the `pgl.yoyo.org` ad-host blocklist was REMOVED. Research found
-  `pgl.yoyo.org/adservers/` publishes no formal license, no SPDX id, and no copyright,
-  only an informal "feel free to combine this list" note, which is not a recognized FOSS
-  license. Per the no-invented-license rule, the asset `app/src/main/assets/pgl.yoyo.org.txt`
-  was deleted and the simple ad blocker it fed (`AdBlocker`, `AdBlockWebViewClient`, the
-  `Block ads` preference) was retired. The reader WebViews now use a plain `WebViewClient`.
-  No replacement blocklist was bundled (no narrow, explicitly-licensed equivalent exists;
-  Steven Black's MIT hosts file is large and a different format, which would bloat the APK
-  and widen scope). The repo now bundles no asset that lacks a valid redistributable license.
+LibreBaskerville (SIL OFL 1.1), and the AdAway ad-host blocklist (CC BY 3.0).
+`THIRD-PARTY-NOTICES.txt` and `docs/licenses.html` are generated from the release classpath
+plus a bundled-assets block.
+- RESOLVED 2026-06-28: the unlicensed `pgl.yoyo.org` ad-host blocklist (no formal license, no
+  SPDX, only an informal "feel free to combine this list" note) was replaced with AdAway's
+  default blocklist, which carries an explicit FOSS license in its file header: Creative
+  Commons Attribution 3.0 (`https://adaway.org/`, source
+  `https://github.com/AdAway/adaway.github.io`). The asset
+  `app/src/main/assets/adaway-hosts.txt` keeps AdAway's header/license intact, and the
+  attribution is recorded in `license.xml`, the `bundledAssetsNotice` block, and the generated
+  notices. The simple internal-browser ad blocker (`AdBlocker` + `AdBlockWebViewClient` + the
+  `Block ads` preference) is intact; `AdBlocker.parseHostLine` reads the hosts format
+  (`0.0.0.0 host` / `127.0.0.1 host`, bare hostnames, `#` comments, blank/malformed lines).
+  No pgl.yoyo.org asset remains. The repo bundles no asset that lacks a valid redistributable
+  license.
 
 ### Network disclosure
 Default (no opt-in): HN API `hacker-news.firebaseio.com/v0/`, `news.ycombinator.com`
@@ -82,9 +86,9 @@ a strict reviewer may consider it covered by the same flag.)
 - Build: `gradle assembleRelease`; signing is env-driven, so F-Droid signs with its own key.
 
 ### F-Droid pre-submit checklist
-- [x] Resolve the `pgl.yoyo.org` blocklist license: RESOLVED by removing the unlicensed list
-  and retiring the simple ad blocker (see Bundled assets). No bundled asset now lacks a
-  valid redistributable license.
+- [x] Resolve the `pgl.yoyo.org` blocklist license: RESOLVED by replacing it with AdAway's
+  default blocklist (CC BY 3.0, explicitly licensed; see Bundled assets). The ad blocker is
+  retained. No bundled asset now lacks a valid redistributable license.
 - [ ] Author the `fdroiddata` metadata YAML with the fields above (include `NonFreeNet`).
 - [ ] Do not submit until the owner authorizes.
 
@@ -119,7 +123,7 @@ Maps this repo to the official guide
 | versionName/versionCode in extractable Gradle locations | `app/build.gradle.kts` `defaultConfig` literals `versionName = "1.0.0"`, `versionCode = 10000` (no dynamic compute) | MET |
 | Auto-update from `v*` tags | `UpdateCheckMode: Tags ^v`, `AutoUpdateMode: Version v%v`; release workflow fires on `v*` | MET (config) |
 | Reproducible builds | Best practice, not required; `dependenciesInfo` blob disabled, env-driven signing so F-Droid signs with its own key | OPTIONAL |
-| Reviewer risks: binary blobs / non-free resources / AntiFeatures / buildability | No binary blobs or non-free deps; no unlicensed bundled assets (pgl.yoyo.org blocklist removed); one AntiFeature `NonFreeNet` (BYO-key AI summaries); builds via `gradle assembleRelease` | MET |
+| Reviewer risks: binary blobs / non-free resources / AntiFeatures / buildability | No binary blobs or non-free deps; no unlicensed bundled assets (ad-host list is AdAway, CC BY 3.0); one AntiFeature `NonFreeNet` (BYO-key AI summaries); builds via `gradle assembleRelease` | MET |
 
 Remaining before an F-Droid submission: tag `v1.0.0` (promotion) and author the
 `metadata/com.herrerad85.afterglow.yml` in a fork of `fdroiddata` (License `Apache-2.0`,

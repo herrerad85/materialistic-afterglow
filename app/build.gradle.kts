@@ -173,6 +173,7 @@ val bundledAssetsNotice =
     |  - Droid Serif - Apache License v2.0 - https://github.com/google/fonts
     |  - Libre Baskerville - SIL Open Font License v1.1 - https://github.com/google/fonts
     |  - Roboto Slab - Apache License v2.0 - https://github.com/google/fonts
+    |  - AdAway default blocklist (ad-host list) - Creative Commons Attribution 3.0 - https://adaway.org/
     |  - algolia/hn-search (Hacker News search API reference) - MIT License - https://github.com/algolia/hn-search
     |
     |Maven and runtime dependencies (generated from the release classpath)

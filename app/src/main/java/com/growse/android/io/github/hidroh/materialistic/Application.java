@@ -73,6 +73,7 @@ public class Application extends android.app.Application implements Configuratio
         EntryPointAccessors.fromApplication(this, ReplyNotificationEntryPoint.class)
                 .replyNotificationScheduler()
                 .reconcile();
+        AdBlocker.init(this);
     }
 
     @NonNull

@@ -48,6 +48,7 @@
             <p>&nbsp;&nbsp;&nbsp;&nbsp;Droid Serif - Apache License v2.0</p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;Libre Baskerville - OFL License v1.1</p>
             <p>&nbsp;&nbsp;&nbsp;&nbsp;Roboto Slab - Apache License v2.0</p>
+            <p>Ad-host blocklist by <a href="https://adaway.org/">AdAway</a> - Creative Commons Attribution 3.0</p>
         ]]>
     </string>
     <string translatable="false" name="third_party_licenses_text" tools:ignore="TypographyOther">
