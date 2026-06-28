@@ -65,15 +65,13 @@
                 </style>
             </head>
             <body>
-                <h2>Afterglow v0.2.0</h2>
-                <p>A pre-release update. Thanks for testing.</p>
+                <h2>Afterglow 1.0</h2>
+                <p>Afterglow reaches 1.0: a Material Design Hacker News client with accounts, voting, threaded comments, search, Material You themes, reply notifications, and offline reading.</p>
                 <ul>
-                    <li>A new Afterglow launcher icon.</li>
-                    <li>Removed the persistent footer band at the bottom of story and comment screens, in both gesture and 3-button navigation.</li>
-                    <li>Comment threads now open collapsed by default.</li>
-                    <li>Internal architecture and test hardening for offline reading, account flow, sync, story reading decisions, and two-pane behavior.</li>
+                    <li>Fixed a crash that could happen while quickly scrolling story lists.</li>
+                    <li>Release and packaging cleanup.</li>
                 </ul>
-                <p>This is a pre-release installed directly as an APK, not from the Play Store.</p>
+                <p>Installed directly as an APK, not from the Play Store.</p>
             </body>
         </html>
         ]]>

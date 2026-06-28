@@ -1,29 +1,35 @@
 # 1.0 and F-Droid Readiness
 
-Status as of v0.2.0 (versionCode 200): pre-store, pre-1.0. This is a tracking
-checklist. Nothing here promotes, tags, or submits anything; it records what must
-happen first. See `CONTRIBUTING.md` for the versionName/versionCode mapping and the
+Status: version files bumped to v1.0.0 (versionName `1.0.0`, versionCode `10000`) on
+`development`; NOT yet promoted, tagged, released, or submitted to F-Droid. This is a
+tracking checklist. See `CONTRIBUTING.md` for the versionName/versionCode mapping and the
 development to main promotion checklist.
 
 ## 1.0 readiness checklist
 
-Before declaring v1.0.0 (or a higher store-facing version, per CONTRIBUTING):
+Done in the v1.0.0 prep commit on `development`:
 
-- [ ] Owner judges the app feature-complete and stable enough to drop the pre-1.0 framing.
-- [ ] `app/build.gradle.kts`: versionName `1.0.0`, versionCode `10000`.
-- [ ] Remove the pre-1.0 disclaimers (identify, do not change before the bump):
-  - `README.md`: "Afterglow is under active development and has not yet reached a stable 1.0 release."
-  - `fastlane/metadata/android/en-US/full_description.txt`: same sentence.
-- [ ] Add `fastlane/metadata/android/en-US/changelogs/10000.txt` and update the in-app
-  `release_notes` string in `res/values/non_translatable.xml`.
-- [ ] In-app What's New: currently dormant. `Preferences.isReleaseNotesSeen` /
+- [x] Owner directed dropping the pre-1.0 framing (this bump).
+- [x] `app/build.gradle.kts`: versionName `1.0.0`, versionCode `10000`.
+- [x] Removed the pre-1.0 disclaimers in `README.md` and
+  `fastlane/metadata/android/en-US/full_description.txt`.
+- [x] Added `fastlane/metadata/android/en-US/changelogs/10000.txt` and updated the in-app
+  `release_notes` string in `res/values/non_translatable.xml` for 1.0.
+- [x] Gates green (ktfmtCheck, testDebugUnitTest, lintDebug, assembleDebug,
+  `generateLicenseNotices --no-configuration-cache` no-diff).
+
+Still open before promoting/tagging v1.0.0:
+
+- [ ] In-app What's New: still dormant. `Preferences.isReleaseNotesSeen` /
   `BuildConfig.LATEST_RELEASE` (=77) exist, but `isReleaseNotesSeen` has no production
-  caller, so the notes screen only opens manually from Settings. Bumping `LATEST_RELEASE`
-  has no user-visible effect today. Decide whether to wire auto-show-on-upgrade; if yes,
-  add the launch call and bump `LATEST_RELEASE` every release.
-- [ ] Refresh screenshots if the UI changed (`fastlane/.../phoneScreenshots/` and `assets/`).
-- [ ] All gates green (ktfmtCheck, testDebugUnitTest, lintDebug, assembleDebug,
-  `generateLicenseNotices --no-configuration-cache` no-diff) plus device QA.
+  caller, so the notes screen only opens manually from Settings. `LATEST_RELEASE` was left
+  unchanged (bumping it has no user-visible effect today). Decide whether to wire
+  auto-show-on-upgrade; if yes, add the launch call and bump `LATEST_RELEASE` every release.
+- [ ] Refresh screenshots if the UI no longer matches (`fastlane/.../phoneScreenshots/` and
+  `assets/`); the new launcher icon and the removed footer band postdate the current set.
+- [ ] Device QA the v1.0.0 candidate build on a real device/emulator.
+- [ ] Decide the GitHub release type for v1.0.0 (the v0.1.0/v0.2.0 releases were marked
+  pre-release; 1.0 may be a full release). Promotion-time choice, out of this prep.
 - [ ] Promote development to main (fast-forward), tag `v1.0.0`, let the release workflow build.
 
 ## F-Droid readiness

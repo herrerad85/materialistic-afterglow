@@ -22,8 +22,8 @@ android {
     minSdk = 23
     targetSdk = 36
     // Pre-store versioning (see CONTRIBUTING.md). versionCode = major*10000 + minor*100 + patch.
-    versionCode = 200
-    versionName = "0.2.0"
+    versionCode = 10000
+    versionName = "1.0.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     buildConfigField("int", "LATEST_RELEASE", "77")
     buildConfigField("String", "GITHUB_TOKEN", "\"\"")

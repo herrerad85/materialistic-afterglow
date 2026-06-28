@@ -1,7 +1,5 @@
 Afterglow is a Material Design Hacker News client for Android. A modern fork of Materialistic (https://github.com/hidroh/materialistic) by Ha Duy Trung.
 
-Afterglow is under active development and has not yet reached a stable 1.0 release.
-
 Features:
 - Browse the top, new, best, ask, show, and jobs stories
 - Log in to Hacker News to vote, comment, reply, and submit
