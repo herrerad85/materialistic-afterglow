@@ -224,6 +224,19 @@ object Preferences {
     set(context, R.string.pref_comment_nav_nudge_shown, true)
   }
 
+  // Non-user-facing flag: tracks whether the one-time "saving does not download" hint (#67) has
+  // been
+  // shown. Not exposed in any settings screen; it only suppresses repeat hints across launches.
+  @JvmStatic
+  fun isOfflineSaveHintShown(context: Context): Boolean {
+    return get(context, R.string.pref_offline_save_hint_shown, false)
+  }
+
+  @JvmStatic
+  fun setOfflineSaveHintShown(context: Context) {
+    set(context, R.string.pref_offline_save_hint_shown, true)
+  }
+
   @JvmStatic
   fun customTabsEnabled(context: Context): Boolean {
     return get(context, R.string.pref_custom_tab, true)
@@ -603,6 +616,16 @@ object Preferences {
     @JvmStatic
     fun isEnabled(context: Context): Boolean {
       return get(context, R.string.pref_saved_item_sync, false)
+    }
+
+    /**
+     * Turns "Save for offline reading" on (the offline-save hint's Enable action, #67). Downloads
+     * still honor the existing Wi-Fi / offline-data constraint, so this never starts an
+     * unconstrained cellular download.
+     */
+    @JvmStatic
+    fun setEnabled(context: Context, enabled: Boolean) {
+      set(context, R.string.pref_saved_item_sync, enabled)
     }
 
     @JvmStatic

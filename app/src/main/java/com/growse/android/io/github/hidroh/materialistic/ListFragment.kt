@@ -60,9 +60,28 @@ class ListFragment : BaseListFragment() {
   private val mObserver =
       Observer<Uri?> { uri ->
         if (uri == null) return@Observer
+        val context = requireContext()
+        val added = FavoriteManager.isAdded(uri)
+        if (
+            OfflineSaveHint.shouldShow(
+                added,
+                Preferences.Offline.isEnabled(context),
+                Preferences.isOfflineSaveHintShown(context),
+            )
+        ) {
+          // One-time discoverability hint (#67): saving keeps the story but does not download it
+          // unless Save for offline reading is on. Swap this one save's Undo for an Enable action
+          // (enabling still honors the Wi-Fi constraint); later saves show the usual Saved + Undo.
+          // Marked shown on display so it never nags again.
+          Preferences.setOfflineSaveHintShown(context)
+          Snackbar.make(mRecyclerView, R.string.offline_save_hint, Snackbar.LENGTH_LONG)
+              .setAction(R.string.action_enable) { Preferences.Offline.setEnabled(context, true) }
+              .show()
+          return@Observer
+        }
         val toastMessageResId =
             when {
-              FavoriteManager.isAdded(uri) -> R.string.toast_saved
+              added -> R.string.toast_saved
               FavoriteManager.isRemoved(uri) -> R.string.toast_removed
               else -> 0
             }

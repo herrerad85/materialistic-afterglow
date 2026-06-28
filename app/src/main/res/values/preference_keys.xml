@@ -53,6 +53,7 @@
     <string translatable="false" name="pref_multi_window">pref_multi_window</string>
     <string translatable="false" name="pref_navigation">pref_navigation</string>
     <string translatable="false" name="pref_comment_nav_nudge_shown">pref_comment_nav_nudge_shown</string> <!-- non-user-facing flag, not in any settings screen -->
+    <string translatable="false" name="pref_offline_save_hint_shown">pref_offline_save_hint_shown</string> <!-- non-user-facing flag, not in any settings screen -->
     <string translatable="false" name="pref_navigation_help">pref_navigation_help</string>
     <string translatable="false" name="pref_navigation_vibrate">pref_navigation_vibrate</string>
     <string translatable="false" name="pref_popular_range">pref_popular_range</string>
