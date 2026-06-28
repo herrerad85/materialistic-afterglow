@@ -114,6 +114,7 @@ class StoryRecyclerViewAdapter(
 
   @Synthetic var mFavoriteRevision: Int = 1
   private var mUsername: String? = null
+  private var mBoundRecyclerView: RecyclerView? = null
   private var mHighlightUpdated = true
   private var mShowAll = true
   private var mCacheMode = ItemManager.MODE_DEFAULT
@@ -222,6 +223,7 @@ class StoryRecyclerViewAdapter(
   @SuppressLint("NotifyDataSetChanged")
   override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
     super.onAttachedToRecyclerView(recyclerView)
+    mBoundRecyclerView = recyclerView
     MaterialisticDatabase.getInstance(recyclerView.context).liveData.observeForever(mObserver)
     mItemTouchHelper.attachToRecyclerView(recyclerView)
     toggleAutoMarkAsViewed(recyclerView)
@@ -241,6 +243,7 @@ class StoryRecyclerViewAdapter(
 
   override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
     super.onDetachedFromRecyclerView(recyclerView)
+    mBoundRecyclerView = null
     MaterialisticDatabase.getInstance(recyclerView.context).liveData.removeObserver(mObserver)
     mItemTouchHelper.attachToRecyclerView(null)
     mPrefObservable.unsubscribe(recyclerView.context)
@@ -363,12 +366,31 @@ class StoryRecyclerViewAdapter(
     // loop).
     holder.setOfflineStatus(mOfflineStatusResolver.cached(story.getId()))
     mOfflineStatusResolver.resolve(story.getId(), story.getUrl()) {
-      val pos = items.indexOf(story)
-      if (pos in 0..<itemCount) {
-        notifyItemChanged(pos)
-      }
+      notifyOfflineStatusChanged(story)
     }
     holder.bindMoreOptions({ anchor: View? -> showMoreOptions(anchor, story, holder) }, true)
+  }
+
+  /**
+   * The [OfflineStatusResolver.resolve] callback resumes on the main thread on every bind, so it
+   * can land while the RecyclerView is computing a layout or scrolling (e.g. mid-fling), where
+   * notifyItemChanged throws IllegalStateException. Defer to after the current pass in that case;
+   * the next bind reads the now-updated cached status (see bindItem), so a deferred update that is
+   * later skipped is not lost.
+   */
+  private fun notifyOfflineStatusChanged(story: Item) {
+    val recyclerView = mBoundRecyclerView
+    if (recyclerView != null && recyclerView.isComputingLayout) {
+      recyclerView.post {
+        if (!recyclerView.isComputingLayout) {
+          val pos = items.indexOf(story)
+          if (pos in 0..<itemCount) notifyItemChanged(pos)
+        }
+      }
+      return
+    }
+    val pos = items.indexOf(story)
+    if (pos in 0..<itemCount) notifyItemChanged(pos)
   }
 
   override fun isItemAvailable(item: Item?): Boolean {
