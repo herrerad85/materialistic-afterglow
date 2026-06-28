@@ -39,6 +39,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -499,6 +501,23 @@ public class WebFragment extends LazyLoadFragment
                 super.onPageFinished(view, url);
                 if (getActivity() != null) {
                     getActivity().invalidateOptionsMenu();
+                }
+            }
+
+            @Override
+            public void onReceivedError(android.webkit.WebView view, WebResourceRequest request,
+                    WebResourceError error) {
+                super.onReceivedError(view, request, error);
+                // The article's own page failed to load: a network/connection-level error (host
+                // lookup, connect, timeout), not an HTTP status, which routes to
+                // onReceivedHttpError. Replace WebView's stock "Update your app" error page with
+                // our branded not-available state, which also fits the no-connection case missed by
+                // load()'s pre-check when the link reports connected but cannot actually reach the
+                // network. Only the main frame: a failed subresource (image, blocked ad) must never
+                // blank a working article. Refresh re-runs load() -> loadUrl() -> restoreContentView
+                // so reconnecting recovers normally.
+                if (request.isForMainFrame() && getActivity() != null) {
+                    showArticleUnavailable();
                 }
             }
         });
