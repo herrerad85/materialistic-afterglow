@@ -48,8 +48,16 @@ Firebase SDK.)
 All FOSS-licensed: pdf.js (Apache-2.0), DroidSans/DroidSerif/RobotoSlab fonts (Apache-2.0),
 LibreBaskerville (SIL OFL 1.1). `THIRD-PARTY-NOTICES.txt` and `docs/licenses.html` are
 generated from the release classpath plus a bundled-assets block.
-- Loose end: the `pgl.yoyo.org` ad-host blocklist (used by the default-on ad blocker) is
-  attributed by source URL but with no explicit license name. Add a license/usage note.
+- Loose end (UNRESOLVED): the `pgl.yoyo.org` ad-host blocklist (used by the default-on ad
+  blocker) is attributed by source URL but with no explicit license name. Researched
+  2026-06-28: `pgl.yoyo.org/adservers/` publishes no formal license, no SPDX id, and no
+  copyright notice; the author only states informal permission to redistribute ("Feel free
+  to combine this list with yours or lists from other sites and put it up on the web"). That
+  is not a recognized FOSS license, so this is left UNRESOLVED rather than labelled with an
+  invented license. Before F-Droid submission, either get explicit license/terms from the
+  maintainer (pgl@yoyo.org) or drop the bundled list and resolve hosts another way. The
+  generated notices already attribute it by source URL without claiming a license, so no
+  false license is asserted today.
 
 ### Network disclosure
 Default (no opt-in): HN API `hacker-news.firebaseio.com/v0/`, `news.ycombinator.com`
@@ -75,6 +83,46 @@ a strict reviewer may consider it covered by the same flag.)
 - Build: `gradle assembleRelease`; signing is env-driven, so F-Droid signs with its own key.
 
 ### F-Droid pre-submit checklist
-- [ ] Add a license/usage note for the `pgl.yoyo.org` blocklist in the notices.
+- [ ] Resolve the `pgl.yoyo.org` blocklist license (UNRESOLVED, see Bundled assets): confirm
+  terms with the maintainer or drop the bundled list. Blocks submission until resolved.
 - [ ] Author the `fdroiddata` metadata YAML with the fields above (include `NonFreeNet`).
 - [ ] Do not submit until the owner authorizes.
+
+### Screenshot freshness (checked 2026-06-28)
+Device-compared the v1.0.0 candidate UI against the three fastlane phone screenshots and the
+`assets/` set: story list, comment thread, and article views still match the current layout.
+NOT refreshed, and this does NOT block F-Droid inclusion (F-Droid builds from source;
+screenshots are listing content that only needs to exist, which it does). Reasons the current
+set is still representative: the new launcher icon does not appear in any in-app screenshot
+(it is a launcher-only asset), and the removed footer band was at the very bottom of lists,
+not captured in these frames. The one minor drift is that comment threads now open collapsed
+by default (the comments screenshot shows an expanded thread), which is still a valid feature
+view. Recommend (non-blocking) a future refresh that showcases the new icon and the
+collapsed-comments state before any Play Store / F-Droid listing polish.
+
+## F-Droid Quick Start Guide mapping
+
+Maps this repo to the official guide
+(https://f-droid.org/docs/Submitting_to_F-Droid_Quick_Start_Guide/). Status as of
+`development` v1.0.0 prep.
+
+| Guide requirement | This repo | Status |
+| --- | --- | --- |
+| Public source repo + FOSS license file | `github.com/herrerad85/materialistic-afterglow`, `LICENSE.txt` = Apache-2.0 | MET |
+| FOSS dependencies only (no Firebase/GMS) | All deps FOSS; zero Firebase/GMS/Crashlytics/Ads | MET |
+| FOSS build tools (no proprietary IDE) | Gradle + AGP/Kotlin/Hilt/ktfmt, all FOSS | MET |
+| Author notified / does not oppose | Owner (`herrerad85`) is the fork maintainer and approves | MET |
+| Fastlane/Triple-T metadata present | `fastlane/metadata/android/en-US/` with short/full description, icon, 3 phoneScreenshots | MET |
+| Changelog matching the build's versionCode | `changelogs/10000.txt` matches versionCode `10000` (also `100.txt`, `200.txt`) | MET |
+| Each release commit is tagged (`vX.Y.Z`) | v0.1.0/v0.2.0 tagged; v1.0.0 tag is created during promotion, NOT in this prep | PENDING (promotion-time) |
+| fdroiddata metadata uses the applicationId | `metadata/com.herrerad85.afterglow.yml` (NOT the code namespace `com.growse...`) | TO AUTHOR |
+| versionName/versionCode in extractable Gradle locations | `app/build.gradle.kts` `defaultConfig` literals `versionName = "1.0.0"`, `versionCode = 10000` (no dynamic compute) | MET |
+| Auto-update from `v*` tags | `UpdateCheckMode: Tags ^v`, `AutoUpdateMode: Version v%v`; release workflow fires on `v*` | MET (config) |
+| Reproducible builds | Best practice, not required; `dependenciesInfo` blob disabled, env-driven signing so F-Droid signs with its own key | OPTIONAL |
+| Reviewer risks: binary blobs / non-free resources / AntiFeatures / buildability | No binary blobs or non-free deps; one AntiFeature `NonFreeNet` (BYO-key AI summaries); builds via `gradle assembleRelease`; one UNRESOLVED asset-license item (pgl.yoyo.org) | MOSTLY MET, 1 open |
+
+Remaining before an F-Droid submission: tag `v1.0.0` (promotion), resolve the pgl.yoyo.org
+license, and author the `metadata/com.herrerad85.afterglow.yml` in a fork of `fdroiddata`
+(License `Apache-2.0`, Categories `Internet`, AntiFeatures `NonFreeNet`, RepoType `git`,
+UpdateCheckMode `Tags ^v`, AutoUpdateMode `Version v%v`). Do not submit until the owner
+authorizes.
