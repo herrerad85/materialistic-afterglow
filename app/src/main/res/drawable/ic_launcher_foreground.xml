@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Afterglow up/down arrows mark (from afterglow_arrows_cream_vector.svg, viewBox 377x694),
+         scaled to ~0.68 of the 108 canvas and centred. group: child = svgCoord * scale + translate. -->
+    <group
+        android:scaleX="0.1125" android:scaleY="0.1125"
+        android:translateX="32.86" android:translateY="15.0">
+        <path android:fillColor="#FBF1E1"
+            android:pathData="M 20 290 L 20 301 L 27 307 L 347 307 L 353 304 L 356 298 L 353 286 L 350 285 L 350 281 L 201 28 L 195 21 L 186 20 L 179 25 L 70 206 L 70 210 L 67 211 L 67 215 L 61 221 L 60 227 L 30 273 L 30 278 Z"/>
+        <path android:fillColor="#FBF1E1"
+            android:pathData="M 347 382 L 30 383 L 20 388 L 21 401 L 29 411 L 30 417 L 40 430 L 44 441 L 61 466 L 65 477 L 177 668 L 184 673 L 193 672 L 198 667 L 354 401 L 355 389 Z"/>
+    </group>
+</vector>
