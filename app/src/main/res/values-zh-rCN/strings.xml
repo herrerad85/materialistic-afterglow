@@ -45,6 +45,8 @@
     <string name="title_activity_favorite">已收藏帖子</string>
     <string name="saved">收藏于 %1$s</string>
     <string name="toast_saved">帖子已收藏</string>
+    <string name="offline_save_hint">已收藏。启用「离线阅读」即可下载帖子供离线使用。</string>
+    <string name="action_enable">启用</string>
     <string name="clear_all">清除全部</string>
     <string name="toast_removed">帖子已取消收藏</string>
     <string name="no_saved_stories">暂无收藏</string>

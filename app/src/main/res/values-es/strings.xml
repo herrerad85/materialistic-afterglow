@@ -19,6 +19,8 @@
     <string name="title_activity_favorite">Historias guardadas</string>
     <string name="saved">Guardado hace %1$s</string>
     <string name="toast_saved">Historia guardada</string>
+    <string name="offline_save_hint">Guardada. Activa el acceso sin conexión para descargar las historias y leerlas sin conexión.</string>
+    <string name="action_enable">Activar</string>
     <string name="clear_all">Limpiar todo</string>
     <string name="toast_removed">Historia borrada</string>
     <string name="no_saved_stories">Sin historias guardadas</string>
