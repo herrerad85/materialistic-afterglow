@@ -1,0 +1,1 @@
+New launcher icon. Removed the persistent footer band at the bottom of story and comment screens, in both gesture and 3-button navigation. Comment threads now open collapsed by default. Internal architecture and test hardening for offline reading, account flow, sync, story reading decisions, and two-pane behavior.
