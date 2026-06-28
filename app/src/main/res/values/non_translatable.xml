@@ -65,12 +65,13 @@
                 </style>
             </head>
             <body>
-                <h2>Afterglow v0.1.0</h2>
-                <p>The first public pre-release. Thanks for testing.</p>
+                <h2>Afterglow v0.2.0</h2>
+                <p>A pre-release update. Thanks for testing.</p>
                 <ul>
-                    <li>Offline reading: an explicit offline mode, per-item cache status indicators, cache size and clear controls, and clearer empty states when you are offline.</li>
-                    <li>Polish from testing: the app bar stays pinned at the top, Settings returns to Top Stories, the theme picker is tidied up, and the launcher icon has more breathing room.</li>
-                    <li>The story list now keeps its place after you open a story and press Back.</li>
+                    <li>A new Afterglow launcher icon.</li>
+                    <li>Removed the persistent footer band at the bottom of story and comment screens, in both gesture and 3-button navigation.</li>
+                    <li>Comment threads now open collapsed by default.</li>
+                    <li>Internal architecture and test hardening for offline reading, account flow, sync, story reading decisions, and two-pane behavior.</li>
                 </ul>
                 <p>This is a pre-release installed directly as an APK, not from the Play Store.</p>
             </body>
