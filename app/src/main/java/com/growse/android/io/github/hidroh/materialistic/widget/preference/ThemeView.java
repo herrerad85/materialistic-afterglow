@@ -55,8 +55,12 @@ public class ThemeView extends CardView {
             themed = new ContextThemeWrapper(context, ta.getResourceId(0, R.style.AppTheme));
             ta.recycle();
         }
+        // Swatch fills with the theme's header colour (the toolbar reads ?attr/colorPrimary
+        // everywhere), so the picker shows the actual theme colour rather than the muted card
+        // surface. The Dark/Black/Solarized Dark headers are all grey900 by design, so those
+        // three swatches read alike; the summary text below the picker names the selected theme.
         setCardBackgroundColor(
-                AppUtils.getThemedColor(themed, R.attr.colorCardBackground, Color.TRANSPARENT));
+                AppUtils.getThemedColor(themed, R.attr.colorPrimary, Color.TRANSPARENT));
         ((TextView) findViewById(R.id.content)).setTextColor(
                 AppUtils.getThemedColor(themed, android.R.attr.textColorTertiary, Color.BLACK));
     }
