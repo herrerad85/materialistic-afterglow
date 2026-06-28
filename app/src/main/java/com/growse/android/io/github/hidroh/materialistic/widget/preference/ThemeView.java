@@ -19,6 +19,7 @@ package com.growse.android.io.github.hidroh.materialistic.widget.preference;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import androidx.cardview.widget.CardView;
 import android.util.AttributeSet;
 import android.view.ContextThemeWrapper;
@@ -63,6 +64,19 @@ public class ThemeView extends CardView {
                 AppUtils.getThemedColor(themed, R.attr.colorPrimary, Color.TRANSPARENT));
         ((TextView) findViewById(R.id.content)).setTextColor(
                 AppUtils.getThemedColor(themed, android.R.attr.textColorTertiary, Color.BLACK));
+        // Differentiate the themes whose header is the same grey900 (Dark / Black / Solarized Dark)
+        // without misrepresenting that header: frame the swatch with the theme's own body surface
+        // colour, which IS distinct (grey900 vs black vs solarized base03). A foreground
+        // GradientDrawable border, not an overlay child (the prior body-strip child did not render
+        // inside the CardView). Read colorSurfaceContainer directly rather than the colorCardBackground
+        // alias: the Black theme has no parent to inherit that alias but does set colorSurfaceContainer.
+        int bodyColor =
+                AppUtils.getThemedColor(themed, R.attr.colorSurfaceContainer, Color.TRANSPARENT);
+        GradientDrawable border = new GradientDrawable();
+        border.setColor(Color.TRANSPARENT);
+        border.setStroke(Math.round(getResources().getDisplayMetrics().density * 2f), bodyColor);
+        border.setCornerRadius(getRadius());
+        setForeground(border);
     }
 
 }
