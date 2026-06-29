@@ -65,11 +65,14 @@
                 </style>
             </head>
             <body>
-                <h2>Afterglow 1.0</h2>
-                <p>Afterglow reaches 1.0: a Material Design Hacker News client with accounts, voting, threaded comments, search, Material You themes, reply notifications, and offline reading.</p>
+                <h2>Afterglow 1.1</h2>
+                <p>Maintenance update with offline reading and account-action improvements.</p>
                 <ul>
-                    <li>Fixed a crash that could happen while quickly scrolling story lists.</li>
-                    <li>Release and packaging cleanup.</li>
+                    <li>App-branded placeholder when an uncached article cannot load offline.</li>
+                    <li>One-time hint to enable Save for offline reading.</li>
+                    <li>Dark theme swatches are easier to tell apart.</li>
+                    <li>In-app unvote and retract for stories and comments.</li>
+                    <li>Localization updates.</li>
                 </ul>
                 <p>Installed directly as an APK, not from the Play Store.</p>
             </body>

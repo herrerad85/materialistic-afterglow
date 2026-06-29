@@ -1,0 +1,1 @@
+Afterglow 1.1. Maintenance update for offline reading and account actions. Uncached articles that can't load offline now show an app-branded placeholder instead of a generic error. A one-time hint helps you enable Save for offline reading. Dark theme swatches are easier to tell apart. Stories and comments can be unvoted or retracted in-app. Includes localization updates.
