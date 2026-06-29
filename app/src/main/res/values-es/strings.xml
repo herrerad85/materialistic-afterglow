@@ -193,8 +193,11 @@
     <string name="unsave">Quitar de guardados</string>
     <string name="re_enter_password">Vuelve a escribir tu contraseña</string>
     <string name="vote_up">Votar arriba</string>
+    <string name="unvote">Retirar voto</string>
     <string name="voted">Votada correctamente</string>
+    <string name="unvoted">Voto retirado</string>
     <string name="vote_failed">Ha sido imposible contabilizar tu voto. Intentalo de nuevo por favor.</string>
+    <string name="unvote_failed">No se pudo retirar el voto. Inténtalo de nuevo.</string>
     <string name="sending">Enviando…</string>
     <string name="add_comment">Añadir comentario</string>
     <string name="title_activity_compose">Crear nueva</string>
