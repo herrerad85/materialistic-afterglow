@@ -15,6 +15,7 @@ import okhttp3.Protocol
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
+import okio.Buffer
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -58,6 +59,10 @@ class UserServicesClientTest {
       )
 
   private fun drain() = shadowOf(Looper.getMainLooper()).idle()
+
+  // The posted form body as a string, so a test can assert which how value (up/un) was sent.
+  private fun formBody(request: Request): String =
+      Buffer().also { request.body!!.writeTo(it) }.readUtf8()
 
   private fun response(
       request: Request,
@@ -104,6 +109,50 @@ class UserServicesClientTest {
     drain()
     assertEquals(true, ok.done)
     assertNull(ok.error)
+  }
+
+  @Test
+  fun unvote_movedTemporarily_reportsSuccess() {
+    val ok = CapturingCallback()
+    client { response(it, 302) }.unvote(creds, "1", ok)
+    drain()
+    assertEquals(true, ok.done)
+    assertNull(ok.error)
+  }
+
+  @Test
+  fun unvote_nonRedirect_reportsUnexpectedResponse() {
+    // A non-302 unvote outcome is an unexpected flow result, not a silent failure.
+    val cb = CapturingCallback()
+    client { response(it, 200) }.unvote(creds, "1", cb)
+    drain()
+
+    assertNull(cb.done)
+    val err = cb.error
+    assertTrue(err is UserServices.Exception)
+    assertEquals(
+        R.string.account_action_unexpected_response,
+        (err as UserServices.Exception).messageRes,
+    )
+  }
+
+  @Test
+  fun voteUp_postsHowUp_and_unvote_postsHowUn() {
+    // The only difference between the two is HN's how parameter; both hit /vote with the item id.
+    var body = ""
+    val c = client { req ->
+      body = formBody(req)
+      response(req, 302)
+    }
+    c.voteUp(creds, "42", CapturingCallback())
+    drain()
+    assertTrue("upvote posts how=up", body.contains("how=up"))
+    assertTrue("upvote posts the item id", body.contains("id=42"))
+
+    c.unvote(creds, "42", CapturingCallback())
+    drain()
+    assertTrue("unvote posts how=un", body.contains("how=un"))
+    assertTrue("unvote posts the item id", body.contains("id=42"))
   }
 
   @Test

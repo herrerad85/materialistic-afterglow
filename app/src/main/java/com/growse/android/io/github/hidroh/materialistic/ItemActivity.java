@@ -101,6 +101,9 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     @Synthetic AppBarLayout mAppBar;
     @Synthetic CoordinatorLayout mCoordinatorLayout;
     private ImageButton mVoteButton;
+    // In-app upvote state for the story vote button toggle. HN does not expose prior vote state via
+    // the API, so this is local to the session: it resets on reopen, where the button reads unvoted.
+    private boolean mStoryVoted;
     private FloatingActionButton mReplyButton;
     private NavFloatingActionButton mNavButton;
     private ItemPagerAdapter mAdapter;
@@ -509,7 +512,12 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     }
 
     private void vote(final WebItem story) {
-        if (mAccountActions.vote(story.getId(), new VoteCallback(this)) == AccountActions.Result.NeedsLogin) {
+        // Toggle: when the story is already upvoted in this session, retract (unvote); else upvote.
+        final boolean unvote = mStoryVoted;
+        AccountActions.Result result = unvote
+                ? mAccountActions.unvote(story.getId(), new VoteCallback(this, true))
+                : mAccountActions.vote(story.getId(), new VoteCallback(this, false));
+        if (result == AccountActions.Result.NeedsLogin) {
             mAccountFlow.showLogin(this, mAccountActions.getSession());
         } else {
             Toast.makeText(this, R.string.sending, Toast.LENGTH_SHORT).show();
@@ -517,13 +525,21 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
     }
 
     @Synthetic
-    void onVoted(Boolean successful) {
+    void onVoted(boolean unvote, Boolean successful) {
         if (successful == null) {
-            Toast.makeText(this, R.string.vote_failed, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, unvote ? R.string.unvote_failed : R.string.vote_failed,
+                    Toast.LENGTH_SHORT).show();
         } else if (successful) {
+            mStoryVoted = !unvote;
             Drawable drawable = DrawableCompat.wrap(mVoteButton.getDrawable());
-            DrawableCompat.setTint(drawable, ContextCompat.getColor(this, R.color.greenA700));
-            Toast.makeText(this, R.string.voted, Toast.LENGTH_SHORT).show();
+            if (unvote) {
+                // Back to the not-voted look: drop the green tint override.
+                DrawableCompat.setTintList(drawable, null);
+            } else {
+                DrawableCompat.setTint(drawable, ContextCompat.getColor(this, R.color.greenA700));
+            }
+            Toast.makeText(this, unvote ? R.string.unvoted : R.string.voted,
+                    Toast.LENGTH_SHORT).show();
         } else {
             mAccountFlow.showLogin(this, mAccountActions.getSession());
         }
@@ -595,16 +611,18 @@ public class ItemActivity extends ThemedActivity implements ItemFragment.ItemCha
 
     static class VoteCallback extends UserServices.Callback {
         private final WeakReference<ItemActivity> mItemActivity;
+        private final boolean mUnvote;
 
         @Synthetic
-        VoteCallback(ItemActivity itemActivity) {
+        VoteCallback(ItemActivity itemActivity, boolean unvote) {
             mItemActivity = new WeakReference<>(itemActivity);
+            mUnvote = unvote;
         }
 
         @Override
         public void onDone(boolean successful) {
             if (mItemActivity.get() != null && !mItemActivity.get().isActivityDestroyed()) {
-                mItemActivity.get().onVoted(successful);
+                mItemActivity.get().onVoted(mUnvote, successful);
             }
         }
 

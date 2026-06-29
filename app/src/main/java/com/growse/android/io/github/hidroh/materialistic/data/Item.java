@@ -212,6 +212,13 @@ public interface Item extends WebItem {
     void clearPendingVoted();
 
     /**
+     * Reverts an in-app upvote (retract / unvote): undoes {@link #incrementScore()} so the item
+     * reads as not voted again.
+     * @see #incrementScore()
+     */
+    void decrementScore();
+
+    /**
      * Checks if item is collapsed
      * @return true if collapsed, false otherwise
      */

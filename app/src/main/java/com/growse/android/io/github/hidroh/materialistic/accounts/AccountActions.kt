@@ -31,6 +31,13 @@ constructor(val session: AccountSession, private val userServices: UserServices)
     return Result.Started
   }
 
+  /** Retract a prior upvote on the item. Same session gate as [vote]. */
+  fun unvote(itemId: String, callback: UserServices.Callback): Result {
+    val credentials = session.credentials() ?: return Result.NeedsLogin
+    userServices.unvote(credentials, itemId, callback)
+    return Result.Started
+  }
+
   fun reply(parentId: String, text: String, callback: UserServices.Callback): Result {
     val credentials = session.credentials() ?: return Result.NeedsLogin
     userServices.reply(credentials, parentId, text, callback)

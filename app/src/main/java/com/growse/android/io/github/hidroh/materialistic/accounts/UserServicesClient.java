@@ -65,6 +65,8 @@ public class UserServicesClient implements UserServices {
     private static final String SUBMIT_PARAM_FNID = "fnid";
     private static final String SUBMIT_PARAM_FNOP = "fnop";
     private static final String VOTE_DIR_UP = "up";
+    // HN's own unvote action value (the how=un its un_NNN links carry); not downvote.
+    private static final String VOTE_DIR_UN = "un";
     private static final String DEFAULT_REDIRECT = "news";
     private static final String CREATING_TRUE = "t";
     private static final String DEFAULT_FNOP = "submit-page";
@@ -142,16 +144,26 @@ public class UserServicesClient implements UserServices {
 
     @Override
     public void voteUp(Credentials credentials, String itemId, Callback callback) {
-        dispatch(() -> {
-            int code = exec(postVote(credentials.getUsername(), credentials.getPassword(), itemId)).code();
-            // A successful vote redirects (302). Anything else means HN did not accept the action as the
-            // scraped flow expects; surface it as a flow failure instead of a silent unsuccessful no-op.
-            if (code != HttpURLConnection.HTTP_MOVED_TEMP) {
-                breadcrumb("vote", KIND_FLOW, "status=" + code);
-                throw new UserServices.Exception(R.string.account_action_unexpected_response);
-            }
-            return true;
-        }, callback);
+        dispatch(() -> vote(credentials, itemId, VOTE_DIR_UP, "vote"), callback);
+    }
+
+    @Override
+    public void unvote(Credentials credentials, String itemId, Callback callback) {
+        // Same endpoint, auth, and parameter as voteUp, only how=un (HN's own unvote action). The
+        // acct/pw POST authenticates per request, so no session/auth-token scrape is needed.
+        dispatch(() -> vote(credentials, itemId, VOTE_DIR_UN, "unvote"), callback);
+    }
+
+    private boolean vote(Credentials credentials, String itemId, String how, String action)
+            throws java.lang.Exception {
+        int code = exec(postVote(credentials.getUsername(), credentials.getPassword(), itemId, how)).code();
+        // A successful vote/unvote redirects (302). Anything else means HN did not accept the action as
+        // the scraped flow expects; surface it as a flow failure instead of a silent unsuccessful no-op.
+        if (code != HttpURLConnection.HTTP_MOVED_TEMP) {
+            breadcrumb(action, KIND_FLOW, "status=" + code);
+            throw new UserServices.Exception(R.string.account_action_unexpected_response);
+        }
+        return true;
     }
 
     @Override
@@ -234,7 +246,7 @@ public class UserServicesClient implements UserServices {
                 .build();
     }
 
-    private Request postVote(String username, String password, String itemId) {
+    private Request postVote(String username, String password, String itemId, String how) {
         return new Request.Builder()
                 .url(HttpUrl.parse(BASE_WEB_URL)
                         .newBuilder()
@@ -244,7 +256,7 @@ public class UserServicesClient implements UserServices {
                         .add(LOGIN_PARAM_ACCT, username)
                         .add(LOGIN_PARAM_PW, password)
                         .add(VOTE_PARAM_ID, itemId)
-                        .add(VOTE_PARAM_HOW, VOTE_DIR_UP)
+                        .add(VOTE_PARAM_HOW, how)
                         .build())
                 .build();
     }

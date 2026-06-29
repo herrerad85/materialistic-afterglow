@@ -34,6 +34,21 @@ class AccountActionsTest {
   }
 
   @Test
+  fun unvote_noSession_needsLoginAndDoesNotCallUserServices() {
+    every { session.credentials() } returns null
+    assertEquals(AccountActions.Result.NeedsLogin, actions.unvote("123", callback))
+    verify(exactly = 0) { userServices.unvote(any(), any(), any()) }
+  }
+
+  @Test
+  fun unvote_withSession_startedAndCallsUserServicesWithCredentials() {
+    val creds = Credentials("pg", "s3cret")
+    every { session.credentials() } returns creds
+    assertEquals(AccountActions.Result.Started, actions.unvote("123", callback))
+    verify { userServices.unvote(creds, "123", callback) }
+  }
+
+  @Test
   fun reply_noSession_needsLogin() {
     every { session.credentials() } returns null
     assertEquals(AccountActions.Result.NeedsLogin, actions.reply("1", "hi", callback))

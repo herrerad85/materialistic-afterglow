@@ -511,6 +511,13 @@ class HackerNewsItem implements Item {
     }
 
     @Override
+    public void decrementScore() {
+        score--;
+        voted = false;
+        pendingVoted = true;
+    }
+
+    @Override
     public boolean isCollapsed() {
         return collapsed;
     }

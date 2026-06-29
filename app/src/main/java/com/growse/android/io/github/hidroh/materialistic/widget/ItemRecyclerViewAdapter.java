@@ -273,6 +273,10 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
         holder.mMoreButton.setOnClickListener(v ->
             mPopupMenu.create(context, holder.mMoreButton, Gravity.NO_GRAVITY)
                 .inflate(R.menu.menu_contextual_comment)
+                // Toggle label so an already-upvoted comment offers Unvote (retract); HN only
+                // exposes prior vote state via the page, not the API, so this reflects in-app state.
+                .setMenuItemTitle(R.id.menu_contextual_vote,
+                        item.isVoted() ? R.string.unvote : R.string.vote_up)
                 .setOnMenuItemClickListener(menuItem -> {
                     if (menuItem.getItemId() == R.id.menu_contextual_vote) {
                         vote(item);
@@ -298,7 +302,12 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     }
 
     private void vote(final Item item) {
-        if (mAccountActions.vote(item.getId(), new VoteCallback(this)) == AccountActions.Result.NeedsLogin) {
+        // Toggle: an already-voted comment retracts (unvote), otherwise upvote. Same session gate.
+        final boolean unvote = item.isVoted();
+        AccountActions.Result result = unvote
+                ? mAccountActions.unvote(item.getId(), new VoteCallback(this, item, true))
+                : mAccountActions.vote(item.getId(), new VoteCallback(this, item, false));
+        if (result == AccountActions.Result.NeedsLogin) {
             AccountFlowLogic.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession(),
                     mReplyNotificationScheduler);
         } else {
@@ -307,11 +316,19 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
     }
 
     @Synthetic
-    void onVoted(Boolean successful) {
+    void onVoted(Item item, boolean unvote, Boolean successful) {
         if (successful == null) {
-            Toast.makeText(context, R.string.vote_failed, Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, unvote ? R.string.unvote_failed : R.string.vote_failed,
+                    Toast.LENGTH_SHORT).show();
         } else if (successful) {
-            Toast.makeText(context, R.string.voted, Toast.LENGTH_SHORT).show();
+            // Record the in-app vote state so the menu offers the opposite action next time.
+            if (unvote) {
+                item.decrementScore();
+            } else {
+                item.incrementScore();
+            }
+            Toast.makeText(context, unvote ? R.string.unvoted : R.string.voted,
+                    Toast.LENGTH_SHORT).show();
         } else {
             AccountFlowLogic.showLogin(context, mAlertDialogBuilder, mAccountActions.getSession(),
                     mReplyNotificationScheduler);
@@ -377,16 +394,20 @@ public abstract class ItemRecyclerViewAdapter<VH extends ItemRecyclerViewAdapter
 
     static class VoteCallback extends UserServices.Callback {
         private final WeakReference<ItemRecyclerViewAdapter> mAdapter;
+        private final Item mItem;
+        private final boolean mUnvote;
 
         @Synthetic
-        VoteCallback(ItemRecyclerViewAdapter adapter) {
+        VoteCallback(ItemRecyclerViewAdapter adapter, Item item, boolean unvote) {
             mAdapter = new WeakReference<>(adapter);
+            mItem = item;
+            mUnvote = unvote;
         }
 
         @Override
         public void onDone(boolean successful) {
             if (mAdapter.get() != null && mAdapter.get().isAttached()) {
-                mAdapter.get().onVoted(successful);
+                mAdapter.get().onVoted(mItem, mUnvote, successful);
             }
         }
 

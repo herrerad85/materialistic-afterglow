@@ -33,6 +33,9 @@ interface UserServices {
 
   fun voteUp(credentials: Credentials, itemId: String, callback: Callback)
 
+  /** Retract a prior upvote (HN's own unvote action, `how=un` on the vote endpoint). */
+  fun unvote(credentials: Credentials, itemId: String, callback: Callback)
+
   fun reply(credentials: Credentials, parentId: String, text: String, callback: Callback)
 
   fun submit(
